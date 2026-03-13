@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: lm-passo
+    runtime: node
+    buildCommand: npm install
+    startCommand: node server.js
+    envVars:
+      - key: NODE_ENV
+        value: production
+    disk:
+      name: lm-passo-data
+      mountPath: /opt/render/project/src
+      sizeGB: 1

@@ -1,0 +1,6 @@
+node_modules/
+database.sqlite
+error_log.txt
+*.exe
+public/uploads/
+.env
