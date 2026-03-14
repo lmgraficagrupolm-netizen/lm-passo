@@ -47,6 +47,9 @@ if (fs.existsSync(diskPublic)) {
 // Serve external uploads (user files) always from disk
 app.use('/uploads', express.static(path.join(process.cwd(), 'public/uploads')));
 
+// Health check (Railway / Render)
+app.get('/api/health', (req, res) => res.json({ status: 'ok' }));
+
 // Routes
 const authRoutes = require('./server/routes/auth.routes');
 const apiRoutes = require('./server/routes/api.routes');
