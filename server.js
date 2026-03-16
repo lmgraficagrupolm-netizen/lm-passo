@@ -47,6 +47,15 @@ const PORT = process.env.PORT || 3000;
 // Middleware
 app.use(cors());
 app.use(express.json());
+// Force no-cache for JS and CSS so browser always fetches fresh versions after deploy
+app.use((req, res, next) => {
+    if (req.path.endsWith('.js') || req.path.endsWith('.css')) {
+        res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+        res.setHeader('Pragma', 'no-cache');
+        res.setHeader('Expires', '0');
+    }
+    next();
+});
 // Serve internal assets — prefer disk (allows live updates), fall back to embedded snapshot
 const diskPublic = path.join(process.cwd(), 'public');
 if (fs.existsSync(diskPublic)) {
