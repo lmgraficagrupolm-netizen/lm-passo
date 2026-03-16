@@ -1,4 +1,4 @@
-const CACHE_NAME = 'lm-passo-v16';
+const CACHE_NAME = 'lm-passo-v17';
 const STATIC_ASSETS = [
     '/',
     '/index.html',
@@ -69,7 +69,10 @@ self.addEventListener('activate', (event) => {
     self.clients.claim(); // Take control immediately
 });
 
-// Fetch — Network first for API, Cache first for static
+// Fetch strategy:
+// - JS / CSS: Network First (sempre pega versão mais recente do servidor)
+// - API: Network First com fallback offline
+// - Outros estáticos (fontes, SVGs): Cache First (mudam raramente)
 self.addEventListener('fetch', (event) => {
     const url = new URL(event.request.url);
 
@@ -97,7 +100,26 @@ self.addEventListener('fetch', (event) => {
         return;
     }
 
-    // Static assets: cache first, then network (and update cache)
+    // JS and CSS: Network First — always fetch fresh, fallback to cache if offline
+    if (url.pathname.endsWith('.js') || url.pathname.endsWith('.css')) {
+        event.respondWith(
+            fetch(event.request)
+                .then(networkResponse => {
+                    if (networkResponse.ok) {
+                        const clone = networkResponse.clone();
+                        caches.open(CACHE_NAME).then(cache => cache.put(event.request, clone));
+                    }
+                    return networkResponse;
+                })
+                .catch(() => {
+                    // Offline fallback: serve from cache
+                    return caches.match(event.request);
+                })
+        );
+        return;
+    }
+
+    // Other static assets (fonts, SVGs, images): Cache First
     event.respondWith(
         caches.match(event.request).then(cached => {
             const fetchPromise = fetch(event.request).then(networkResponse => {
