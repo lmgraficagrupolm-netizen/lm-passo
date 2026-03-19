@@ -760,11 +760,19 @@ export const render = () => {
                    </div>
                </div>
                <div style="margin-top: 1rem; border-top: 1px solid #eee; padding-top: 1rem;">
-                   <p style="margin-bottom:0.5rem"><b>Entrega:</b> Colete a assinatura e anexe a foto.</p>
-                   <form id="conclude-form" style="display:flex; gap:0.5rem; flex-direction:column">
-                        <input type="file" id="pickup-photo" accept="image/*" required>
-                        <button type="submit" class="btn btn-success">📦 Finalizar Pedido</button>
-                   </form>
+                   ${order.is_internal
+                       ? `<div style="padding:0.6rem 0.75rem; background:#eff6ff; border:1px solid #bfdbfe; border-radius:6px; margin-bottom:0.75rem; font-size:0.9rem; color:#1d4ed8;">
+                              🏢 Serviço interno — assinatura não necessária
+                          </div>
+                          <form id="conclude-form" style="display:flex; gap:0.5rem; flex-direction:column">
+                              <button type="submit" class="btn btn-success">📦 Finalizar Pedido</button>
+                          </form>`
+                       : `<p style="margin-bottom:0.5rem"><b>Entrega:</b> Colete a assinatura e anexe a foto.</p>
+                          <form id="conclude-form" style="display:flex; gap:0.5rem; flex-direction:column">
+                              <input type="file" id="pickup-photo" accept="image/*" required>
+                              <button type="submit" class="btn btn-success">📦 Finalizar Pedido</button>
+                          </form>`
+                   }
                </div>
             `;
         } else if (order.status === 'finalizado' && order.pickup_photo) {
