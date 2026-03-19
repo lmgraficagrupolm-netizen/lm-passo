@@ -41,6 +41,9 @@ export const render = () => {
 
         <!-- Filters -->
         <div style="display:flex; gap:0.5rem; flex-wrap:wrap; margin-bottom:1rem; padding:0.75rem; background:white; border-radius:8px; border:1px solid var(--border);">
+            <select id="cf-filter-event" style="flex:1; min-width:130px; padding:0.5rem; border:1px solid var(--border); border-radius:6px; font-size:0.9rem;">
+                <option value="">Todos os eventos</option>
+            </select>
             <input type="text" id="cf-filter-search" placeholder="🔍 Buscar produto..." style="flex:2; min-width:180px; padding:0.5rem 0.75rem; border:1px solid var(--border); border-radius:6px; font-size:0.9rem;">
             <select id="cf-filter-month" style="flex:1; min-width:130px; padding:0.5rem; border:1px solid var(--border); border-radius:6px; font-size:0.9rem;">
                 <option value="">Todos os meses</option>
@@ -67,10 +70,11 @@ export const render = () => {
         const monthFilter = container.querySelector('#cf-filter-month').value;
         const minVal = parseFloat(container.querySelector('#cf-filter-min').value) || 0;
         const maxVal = parseFloat(container.querySelector('#cf-filter-max').value) || Infinity;
+        const eventFilter = container.querySelector('#cf-filter-event').value;
 
         const filtered = allData.filter(s => {
             if (search) {
-                const haystack = removeAccents(`${s.products_summary || ''} ${s.description || ''} ${s.payment_method || ''}`.toLowerCase());
+                const haystack = removeAccents(`${s.products_summary || ''} ${s.description || ''} ${s.payment_method || ''} ${s.event_name || ''}`.toLowerCase());
                 if (!haystack.includes(search)) return false;
             }
             if (monthFilter) {
@@ -78,6 +82,7 @@ export const render = () => {
                 const key = `${d.getFullYear()}-${String(d.getMonth()).padStart(2, '0')}`;
                 if (key !== monthFilter) return false;
             }
+            if (eventFilter && s.event_name !== eventFilter) return false;
             const val = s.total_value || 0;
             if (val < minVal || val > maxVal) return false;
             return true;
@@ -120,7 +125,7 @@ export const render = () => {
                 const rows = m.items.map(s => `
                     <tr>
                         <td>${new Date(s.created_at).toLocaleDateString('pt-BR')}</td>
-                        <td style="font-size:0.85rem">${s.products_summary || '-'}</td>
+                        <td style="font-size:0.85rem">${s.products_summary || '-'}${s.event_name ? `<br><span style="background:#f3e8ff; color:#7c3aed; padding:1px 6px; border-radius:10px; font-size:0.7rem; font-weight:600; display:inline-block; margin-top:2px;">🏷️ ${s.event_name}</span>` : ''}</td>
                         <td style="font-size:0.85rem; max-width:200px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${(s.description || '').replace(/"/g, '&quot;')}">${s.description || '-'}</td>
                         <td style="font-weight:bold; color:#7c3aed">R$ ${(s.total_value || 0).toFixed(2)}</td>
                         <td style="color:${(s.discount_value || 0) > 0 ? '#dc2626' : '#94a3b8'}; font-weight:${(s.discount_value || 0) > 0 ? '600' : 'normal'}">${(s.discount_value || 0) > 0 ? `- R$ ${(s.discount_value).toFixed(2)}` : '-'}</td>
@@ -139,13 +144,38 @@ export const render = () => {
                 const methodKeys = Object.keys(byMethod).sort();
                 const methodRows = methodKeys.map(pm => `
                     <tr style="background:#f8f9fa;">
-                        <td colspan="4" style="text-align:right; font-size:0.9rem; color:#475569; padding:6px 12px;">
+                        <td colspan="3" style="text-align:right; font-size:0.9rem; color:#475569; padding:6px 12px;">
                             💳 <b>${pm}</b> <span style="color:#94a3b8">(${byMethod[pm].count} pedido${byMethod[pm].count > 1 ? 's' : ''})</span>
                         </td>
                         <td style="font-weight:bold; color:#7c3aed; font-size:0.95rem;">R$ ${byMethod[pm].total.toFixed(2)}</td>
-                        <td></td>
+                        <td colspan="2"></td>
                     </tr>
                 `).join('');
+
+                // Event breakdown inside the month
+                const byEvent = {};
+                m.items.forEach(s => {
+                    if (s.event_name) {
+                        if (!byEvent[s.event_name]) byEvent[s.event_name] = { count: 0, total: 0 };
+                        byEvent[s.event_name].count++;
+                        byEvent[s.event_name].total += (s.total_value || 0);
+                    }
+                });
+                const eventKeys = Object.keys(byEvent).sort();
+                let eventRows = '';
+                if (eventKeys.length > 0) {
+                    eventRows = `<tr style="background:#f3e8ff;">
+                        <td colspan="6" style="padding:4px 12px; font-size:0.8rem; font-weight:bold; color:#7c3aed;">🏷️ Gastos por Evento neste mês:</td>
+                    </tr>` + eventKeys.map(evt => `
+                        <tr style="background:#faf5ff;">
+                            <td colspan="3" style="text-align:right; font-size:0.85rem; color:#6b21a8; padding:4px 12px;">
+                                ${evt} <span style="color:#a855f7">(${byEvent[evt].count} util.)</span>
+                            </td>
+                            <td style="font-weight:bold; color:#7c3aed; font-size:0.9rem;">R$ ${byEvent[evt].total.toFixed(2)}</td>
+                            <td colspan="2"></td>
+                        </tr>
+                    `).join('');
+                }
 
                 const now = new Date();
                 const isCurrentMonth = m.year === now.getFullYear() && m.month === now.getMonth();
@@ -172,10 +202,11 @@ export const render = () => {
                         <tfoot>
                             <tr><td colspan="6" style="padding:0"><hr style="border:none; border-top:2px dashed #a7f3d0; margin:0;"></td></tr>
                             ${methodRows}
+                            ${eventRows}
                             <tr style="background:linear-gradient(135deg, #f0fdf4, #dcfce7); font-weight:bold;">
-                                <td colspan="4" style="text-align:right; font-size:1.05rem; color:#166534; padding:10px 12px;">${closingLabel} ${m.label}:</td>
+                                <td colspan="3" style="text-align:right; font-size:1.05rem; color:#166534; padding:10px 12px;">${closingLabel} ${m.label}:</td>
                                 <td style="font-size:1.15rem; color:#166534;">R$ ${m.total.toFixed(2)}</td>
-                                <td></td>
+                                <td colspan="2"></td>
                             </tr>
                         </tfoot>
                     </table>
@@ -200,12 +231,14 @@ export const render = () => {
             const { data } = await res.json();
             allData = data || [];
 
-            // Populate month filter
+            // Populate month and event filters
             const monthSet = new Set();
+            const eventSet = new Set();
             allData.forEach(s => {
                 const d = new Date(s.created_at);
                 const key = `${d.getFullYear()}-${String(d.getMonth()).padStart(2, '0')}`;
                 monthSet.add(key);
+                if (s.event_name) eventSet.add(s.event_name);
             });
             const monthSelect = container.querySelector('#cf-filter-month');
             const currentVal = monthSelect.value;
@@ -214,6 +247,11 @@ export const render = () => {
                     const [y, m] = key.split('-');
                     return `<option value="${key}" ${key === currentVal ? 'selected' : ''}>${monthNames[parseInt(m)]} ${y}</option>`;
                 }).join('');
+                
+            const eventSelect = container.querySelector('#cf-filter-event');
+            const currentEvent = eventSelect.value;
+            eventSelect.innerHTML = '<option value="">Todos os eventos</option>' + 
+                [...eventSet].sort().map(e => `<option value="${e}" ${e === currentEvent ? 'selected' : ''}>${e}</option>`).join('');
 
             applyFilters();
         } catch (e) {
@@ -223,11 +261,13 @@ export const render = () => {
     };
 
     // Filter event listeners
+    container.querySelector('#cf-filter-event').onchange = applyFilters;
     container.querySelector('#cf-filter-search').oninput = applyFilters;
     container.querySelector('#cf-filter-month').onchange = applyFilters;
     container.querySelector('#cf-filter-min').oninput = applyFilters;
     container.querySelector('#cf-filter-max').oninput = applyFilters;
     container.querySelector('#cf-btn-clear').onclick = () => {
+        container.querySelector('#cf-filter-event').value = '';
         container.querySelector('#cf-filter-search').value = '';
         container.querySelector('#cf-filter-month').value = '';
         container.querySelector('#cf-filter-min').value = '';

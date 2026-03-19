@@ -175,7 +175,12 @@ export const render = () => {
                                     <option value="CORE">CORE</option>
                                 </select>
                                 <div id="core-auto-info" style="display:none; margin-top:4px; font-size:0.75rem; color:#7c3aed; font-weight:600;"></div>
-                            </div>
+                             </div>
+                             <!-- Event Name Field (visible only for CORE) -->
+                             <div id="event-name-group" style="display:none; flex:1; min-width:180px; margin-left:1rem;">
+                                 <label style="font-weight:600; color:#7c3aed; display:block; margin-bottom:0.25rem; font-size:0.9rem;">🏷️ Nome do Evento</label>
+                                 <input type="text" id="order-event-name" placeholder="Ex: Festa Junina 2025" style="width:100%; padding:0.5rem; border:2px solid #7c3aed; border-radius:4px; font-size:0.9rem; box-sizing:border-box;">
+                             </div>
                             <div style="text-align:right">
                                 <label style="display:block; font-size: 0.9rem; color: #666;">Valor a Cobrar (R$)</label>
                                 <input type="number" step="0.01" min="0" id="cart-total-input" name="total_value" value="0" style="font-size:1.5rem; font-weight:bold; color:#2563eb; width:150px; text-align:right; border:1px solid #ccc; border-radius:4px; padding:0.3rem 0.5rem;">
@@ -351,13 +356,20 @@ export const render = () => {
 
         const applyClientDefaults = (client) => {
             if (!client) return;
+            const eventGroup = container.querySelector('#event-name-group');
             if (client.origin === 'CORE') {
                 paymentSelect.value = 'CORE';
                 paymentSelect.disabled = true;
+                if (eventGroup) eventGroup.style.display = 'block';
                 coreInfo.style.display = 'block';
                 coreInfo.textContent = '🔒 Cliente CORE — pagamento travado em CORE' + (client.core_discount ? ' | 15% desconto aplicado' : '');
             } else {
                 paymentSelect.disabled = false;
+                if (paymentSelect.value === 'CORE') {
+                    if (eventGroup) eventGroup.style.display = 'block';
+                } else {
+                    if (eventGroup) eventGroup.style.display = 'none';
+                }
                 if (client.core_discount) {
                     coreInfo.style.display = 'block';
                     coreInfo.textContent = '🏷️ 15% desconto aplicado automaticamente';
@@ -367,6 +379,14 @@ export const render = () => {
                 }
             }
         };
+
+        // Show/hide event name based on payment method
+        paymentSelect.addEventListener('change', (e) => {
+            const eventGroup = container.querySelector('#event-name-group');
+            if (eventGroup) {
+                eventGroup.style.display = e.target.value === 'CORE' ? 'block' : 'none';
+            }
+        });
 
         const removeAccents = (str) => str.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
 
@@ -1592,7 +1612,10 @@ export const render = () => {
                 color_variant_id: i.color_variant_id || null,
                 color_name: i.color_name || null
             })),
-            is_internal: container.querySelector('#internal-toggle').checked ? 1 : 0
+            is_internal: container.querySelector('#internal-toggle').checked ? 1 : 0,
+            event_name: (container.querySelector('#internal-toggle').checked ? 'Interno' : container.querySelector('#order-payment-method').value) === 'CORE' 
+                        ? container.querySelector('#order-event-name').value 
+                        : ''
         };
 
         // Apply 15% discount if client has core_discount

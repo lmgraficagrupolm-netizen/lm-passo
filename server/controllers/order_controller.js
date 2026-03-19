@@ -78,7 +78,7 @@ exports.getOrderItems = (req, res) => {
 
 
 exports.createOrder = (req, res) => {
-    const { client_id, payment_method, created_by, description, deadline_option, items, total_value, discount_value, is_internal } = req.body;
+    const { client_id, payment_method, created_by, description, deadline_option, items, total_value, discount_value, is_internal, event_name } = req.body;
 
     if (!items || !Array.isArray(items) || items.length === 0) {
         return res.status(400).json({ error: 'Nenhum item no pedido.' });
@@ -137,10 +137,11 @@ exports.createOrder = (req, res) => {
                 const finalDiscount = discount_value || 0;
                 const finalInternal = is_internal ? 1 : 0;
                 const finalTerceirizado = hasTerceirizado ? 1 : 0;
+                const finalEventName = event_name || '';
 
-                const sqlOrder = `INSERT INTO orders (client_id, description, total_value, discount_value, payment_method, created_by, status, deadline_type, deadline_at, products_summary, is_internal, is_terceirizado) VALUES (?, ?, ?, ?, ?, ?, 'aguardando_aceite', ?, ?, ?, ?, ?)`;
+                const sqlOrder = `INSERT INTO orders (client_id, description, total_value, discount_value, payment_method, created_by, status, deadline_type, deadline_at, products_summary, is_internal, is_terceirizado, event_name) VALUES (?, ?, ?, ?, ?, ?, 'aguardando_aceite', ?, ?, ?, ?, ?, ?)`;
 
-                db.run(sqlOrder, [client_id, description, finalTotal, finalDiscount, payment_method, created_by, effective_deadline_option, deadline_at, summaryStr, finalInternal, finalTerceirizado], function (err) {
+                db.run(sqlOrder, [client_id, description, finalTotal, finalDiscount, payment_method, created_by, effective_deadline_option, deadline_at, summaryStr, finalInternal, finalTerceirizado, finalEventName], function (err) {
                     if (err) {
                         db.run("ROLLBACK");
                         return res.status(500).json({ error: err.message });
@@ -370,7 +371,7 @@ exports.getComments = (req, res) => {
 exports.getSalesReport = (req, res) => {
     const sql = `
         SELECT o.id, o.created_at, o.description, o.total_value, o.discount_value, o.payment_method,
-               o.products_summary, o.launched_to_core, o.is_internal,
+               o.products_summary, o.launched_to_core, o.is_internal, o.event_name,
                c.name as client_name, c.phone as client_phone
         FROM orders o
         LEFT JOIN clients c ON o.client_id = c.id
@@ -410,7 +411,7 @@ exports.getClientFinancial = (req, res) => {
     const clientId = req.params.clientId;
     const sql = `
         SELECT o.id, o.created_at, o.description, o.total_value, o.discount_value, o.payment_method,
-               o.products_summary
+               o.products_summary, o.event_name
         FROM orders o
         WHERE o.client_id = ? AND o.status IN ('em_balcao', 'finalizado', 'arquivado')
         ORDER BY o.created_at DESC

@@ -298,6 +298,8 @@ function initDb() {
         FOREIGN KEY(requested_by) REFERENCES users(id),
         FOREIGN KEY(received_by) REFERENCES users(id)
     )`);
+    // Migration: add event_name for CORE orders
+    db.run("ALTER TABLE orders ADD COLUMN event_name TEXT DEFAULT ''", (err) => { /* ignore if exists */ });
 }
 
 module.exports = db;
