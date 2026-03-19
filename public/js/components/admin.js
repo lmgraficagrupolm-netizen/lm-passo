@@ -24,6 +24,16 @@ export const render = () => {
         </div>
 
         <div style="max-width:700px">
+
+            <!-- Backup Card -->
+            <div style="background:linear-gradient(135deg,#1e3a5f,#1e40af); color:white; border-radius:10px; padding:1.25rem 1.5rem; margin-bottom:1.5rem; display:flex; justify-content:space-between; align-items:center;">
+                <div>
+                    <div style="font-size:1.05rem; font-weight:700; margin-bottom:0.25rem;">🛡️ Backup do Banco de Dados</div>
+                    <div style="font-size:0.85rem; opacity:0.85;">Faça o download do arquivo SQLite com todos os dados do sistema.</div>
+                </div>
+                <button id="btn-backup-db" style="background:white; color:#1e40af; border:none; padding:0.55rem 1.1rem; border-radius:7px; font-weight:700; cursor:pointer; font-size:0.9rem; white-space:nowrap;">⬇️ Baixar Backup</button>
+            </div>
+
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
                 <h3 style="margin:0; color:#334155">👥 Usuários do Sistema</h3>
                 <button class="btn btn-primary" id="btn-new-user" style="width:auto;">+ Novo Usuário</button>
@@ -297,6 +307,22 @@ export const render = () => {
             alert('Erro de conexão: ' + err.message);
         }
     };
+
+    // Backup Handler
+    const btnBackup = container.querySelector('#btn-backup-db');
+    if (btnBackup) {
+        btnBackup.onclick = () => {
+            const token = localStorage.getItem('token');
+            if (!token) { alert('Sessão expirada. Faça login novamente.'); return; }
+            const url = `/api/backup/db?token=${encodeURIComponent(token)}`;
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = '';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+        };
+    }
 
     loadUsers();
     return container;

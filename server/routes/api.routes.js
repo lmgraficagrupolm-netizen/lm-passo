@@ -108,5 +108,33 @@ router.post('/open-edge', (req, res) => {
     });
 });
 
+// ── Backup ────────────────────────────────────────────────────────────────────
+const fs  = require('fs');
+const jwt = require('jsonwebtoken');
+const BACKUP_SECRET = 'lm-passo-secret-key-change-me';
+
+router.get('/backup/db', (req, res) => {
+    const token = req.query.token || (req.headers.authorization || '').replace('Bearer ', '');
+    if (!token) return res.status(401).json({ error: 'Não autorizado' });
+    try {
+        const decoded = jwt.verify(token, BACKUP_SECRET);
+        if (decoded.role !== 'master') return res.status(403).json({ error: 'Apenas master pode fazer backup' });
+    } catch {
+        return res.status(401).json({ error: 'Token inválido' });
+    }
+
+    const dbPath = process.env.DB_PATH || path.resolve(process.cwd(), 'database.sqlite');
+    if (!fs.existsSync(dbPath)) return res.status(404).json({ error: 'Banco não encontrado' });
+
+    const now = new Date();
+    const stamp = `${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}_${String(now.getHours()).padStart(2,'0')}${String(now.getMinutes()).padStart(2,'0')}`;
+    const filename = `backup_lmpasso_${stamp}.sqlite`;
+
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+    res.setHeader('Content-Type', 'application/octet-stream');
+    res.sendFile(dbPath);
+});
+
 module.exports = router;
+
 
