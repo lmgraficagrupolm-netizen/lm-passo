@@ -25,6 +25,7 @@ router.post('/clients', clientController.createClient);
 router.put('/clients/:id', clientController.updateClient);
 router.delete('/clients/:id', clientController.deleteClient);
 router.post('/clients/:id/toggle-access', clientController.toggleClientAccess);
+router.post('/clients/:id/reset-access', clientController.resetClientAccess);
 
 // Products
 router.get('/products', productController.getAllProducts);

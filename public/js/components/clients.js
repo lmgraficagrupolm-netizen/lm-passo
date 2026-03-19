@@ -88,9 +88,10 @@ export const render = () => {
                             <label for="client-access-toggle" style="margin:0; cursor:pointer; font-weight:600; color:#065f46;">🔐 Acesso Financeiro (Portal do Cliente)</label>
                         </div>
                         <div id="access-info" style="display:none; margin-top:0.5rem; padding:0.75rem; background:#f0fdf4; border-radius:8px; border:1px solid #86efac;">
-                            <div style="font-size:0.85rem; color:#065f46; font-weight:600; margin-bottom:0.5rem;">✅ Acesso ativo</div>
-                            <div style="font-size:0.85rem; color:#374151;">Usuário: <b id="access-username-display">-</b></div>
-                        </div>
+                        <div style="font-size:0.85rem; color:#065f46; font-weight:600; margin-bottom:0.4rem;">✅ Acesso ativo</div>
+                        <div style="font-size:0.85rem; color:#374151; margin-bottom:0.5rem;">Usuário: <b id="access-username-display">-</b></div>
+                        <button type="button" id="btn-reset-access" style="background:#eff6ff; color:#1d4ed8; border:1px solid #bfdbfe; padding:0.35rem 0.75rem; border-radius:6px; font-size:0.8rem; font-weight:600; cursor:pointer;">🔁 Reenviar / Resetar Acesso</button>
+                    </div>
                     </div>
 
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-top:1rem">
@@ -316,6 +317,31 @@ export const render = () => {
     };
 
     container.querySelector('#cred-close').onclick = () => credModal.classList.remove('open');
+
+    // Helper to show credentials modal
+    const showCredentials = (data) => {
+        container.querySelector('#cred-username').textContent = data.username;
+        container.querySelector('#cred-password').textContent = data.password;
+        container.querySelector('#cred-link').textContent = data.link;
+        credModal.classList.add('open');
+    };
+
+    // Reset access button inside access-info
+    container.querySelector('#btn-reset-access').onclick = async () => {
+        if (!currentEditClient) return;
+        if (!confirm(`Isso vai gerar uma NOVA senha para o cliente "${currentEditClient.name}". A senha antiga será invalidada. Continuar?`)) return;
+        try {
+            const res  = await fetch(`/api/clients/${currentEditClient.id}/reset-access`, { method: 'POST' });
+            const json = await res.json();
+            if (res.ok) {
+                showCredentials(json);
+            } else {
+                alert('Erro: ' + (json.error || 'Falha ao resetar acesso'));
+            }
+        } catch (e) {
+            alert('Erro de conexão: ' + e.message);
+        }
+    };
 
     const openNewModal = () => {
         form.reset();

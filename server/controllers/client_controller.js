@@ -117,3 +117,27 @@ exports.toggleClientAccess = (req, res) => {
         });
     }
 };
+
+// Reset client access — generate new password and return credentials to admin
+exports.resetClientAccess = (req, res) => {
+    const clientId = req.params.id;
+
+    db.get("SELECT u.id, u.username, c.name FROM users u JOIN clients c ON c.id = u.client_id WHERE u.client_id = ? AND u.role = 'cliente'", [clientId], (err, row) => {
+        if (err) return res.status(500).json({ error: err.message });
+        if (!row) return res.status(404).json({ error: 'Este cliente não possui acesso ativo.' });
+
+        const newPassword = String(Math.floor(100000 + Math.random() * 900000));
+        const hashedPassword = bcrypt.hashSync(newPassword, 8);
+
+        db.run("UPDATE users SET password = ? WHERE id = ?", [hashedPassword, row.id], function (err) {
+            if (err) return res.status(500).json({ error: err.message });
+            const link = `${req.protocol}://${req.get('host')}`;
+            res.json({
+                message: 'Senha resetada com sucesso',
+                username: row.username,
+                password: newPassword,
+                link: link
+            });
+        });
+    });
+};
