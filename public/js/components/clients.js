@@ -176,6 +176,72 @@ export const render = () => {
         extendedFields.style.display = extendedToggle.checked ? 'block' : 'none';
     };
 
+    // ── CEP auto-fill via ViaCEP ──────────────────────────────────────────
+    const zipInput     = container.querySelector('#client-zip');
+    const addressInput = container.querySelector('#client-address');
+    const cityInput    = container.querySelector('#client-city');
+    const stateInput   = container.querySelector('#client-state');
+
+    const fetchCep = async (cep) => {
+        const digits = cep.replace(/\D/g, '');
+        if (digits.length !== 8) return;
+
+        zipInput.style.borderColor = '#f59e0b';
+        zipInput.title = 'Buscando...';
+
+        try {
+            const res  = await fetch(`https://viacep.com.br/ws/${digits}/json/`);
+            const data = await res.json();
+
+            if (data.erro) {
+                zipInput.style.borderColor = '#dc2626';
+                zipInput.title = 'CEP não encontrado';
+                return;
+            }
+
+            // Auto-open extended fields if not already open
+            if (!extendedToggle.checked) {
+                extendedToggle.checked = true;
+                extendedFields.style.display = 'block';
+            }
+
+            // Fill fields — preserve number/complement if address already typed
+            const currentAddr = addressInput.value.trim();
+            addressInput.value = data.logradouro
+                ? (currentAddr && !currentAddr.startsWith(data.logradouro) ? data.logradouro : data.logradouro)
+                : currentAddr;
+
+            // Bairro goes into address as suffix if logradouro exists, else standalone
+            if (data.bairro && !addressInput.value.includes(data.bairro)) {
+                addressInput.value = addressInput.value
+                    ? `${addressInput.value}, ${data.bairro}`
+                    : data.bairro;
+            }
+
+            cityInput.value  = data.localidade || '';
+            stateInput.value = data.uf || '';
+
+            zipInput.style.borderColor = '#22c55e';
+            zipInput.title = `${data.localidade} - ${data.uf}`;
+        } catch {
+            zipInput.style.borderColor = '#dc2626';
+            zipInput.title = 'Erro ao buscar CEP';
+        }
+    };
+
+    zipInput.addEventListener('blur', () => fetchCep(zipInput.value));
+    zipInput.addEventListener('input', () => {
+        const digits = zipInput.value.replace(/\D/g, '');
+        // Auto-format: 00000-000
+        if (digits.length <= 8) {
+            zipInput.value = digits.length > 5
+                ? digits.slice(0,5) + '-' + digits.slice(5)
+                : digits;
+        }
+        if (digits.length === 8) fetchCep(digits);
+    });
+
+
     // Access toggle handler
     const accessToggle = container.querySelector('#client-access-toggle');
     accessToggle.onchange = async () => {
