@@ -380,13 +380,7 @@ export const render = () => {
             }
         };
 
-        // Show/hide event name based on payment method
-        paymentSelect.addEventListener('change', (e) => {
-            const eventGroup = container.querySelector('#event-name-group');
-            if (eventGroup) {
-                eventGroup.style.display = e.target.value === 'CORE' ? 'block' : 'none';
-            }
-        });
+        // (event name visibility is wired at component init, outside fetchSelectData)
 
         const removeAccents = (str) => str.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
 
@@ -1507,6 +1501,16 @@ export const render = () => {
     // Events
     const orderModal = container.querySelector('#order-modal');
     const btnNewOrder = container.querySelector('#btn-new-order');
+
+    // Wire payment method → event name field visibility at component level
+    const paymentSelectEl = container.querySelector('#order-payment-method');
+    const eventNameGroup = container.querySelector('#event-name-group');
+    if (paymentSelectEl && eventNameGroup) {
+        paymentSelectEl.addEventListener('change', (e) => {
+            eventNameGroup.style.display = e.target.value === 'CORE' ? 'block' : 'none';
+        });
+    }
+
     if (btnNewOrder) {
         btnNewOrder.onclick = () => {
             fetchSelectData();
@@ -1517,7 +1521,10 @@ export const render = () => {
             const fileInput = container.querySelector('#order-attachments');
             if (fileInput) { fileInput.value = ''; }
             renderAttachmentPreview();
-            console.log('Opening Order Modal');
+            // Reset event name field
+            if (eventNameGroup) eventNameGroup.style.display = 'none';
+            const eventNameInput = container.querySelector('#order-event-name');
+            if (eventNameInput) eventNameInput.value = '';
             const internalToggle = container.querySelector('#internal-toggle');
             if (internalToggle) internalToggle.checked = false;
             // Reset internal toggle UI
