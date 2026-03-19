@@ -1193,7 +1193,11 @@ export const render = () => {
         return checked ? checked.value : '3D';
     };
 
+    const isInternalMode = () => !!(container.querySelector('#internal-toggle') && container.querySelector('#internal-toggle').checked);
+
     const getProductPrice = (product) => {
+        // Internal service: always use unit_cost
+        if (isInternalMode()) return parseFloat(product.unit_cost) || 0;
         const type = getDeadline();
         const p1 = parseFloat(product.price_1_day) || 0;
         const p3 = parseFloat(product.price_3_days) || parseFloat(product.price) || 0;
@@ -1238,7 +1242,10 @@ export const render = () => {
         }
 
         totalInput.value = total.toFixed(2);
-        totalAutoLabel.textContent = total > 0 ? `Sugestão: R$ ${total.toFixed(2)}` : '';
+        const isCostMode = isInternalMode();
+        totalAutoLabel.textContent = total > 0
+            ? (isCostMode ? `💰 Custo total: R$ ${total.toFixed(2)}` : `Sugestão: R$ ${total.toFixed(2)}`)
+            : '';
     };
 
     // Deadline Toggle -> Recalculate
@@ -1297,6 +1304,13 @@ export const render = () => {
         const product = loadedProducts.find(p => p.id == pid);
         if (!product) return;
 
+        // Internal service: require unit_cost
+        if (isInternalMode() && !(parseFloat(product.unit_cost) > 0)) {
+            warning.innerText = '⚠️ Este produto não tem valor de custo cadastrado. Vá em Produtos e adicione o custo antes de usar em Serviço Interno.';
+            warning.style.color = '#dc2626';
+            return;
+        }
+
         let color_variant_id = null;
         let color_name = null;
 
@@ -1315,6 +1329,7 @@ export const render = () => {
 
         qtyInput.value = 1;
         warning.innerText = '';
+        warning.style.color = '';
     };
 
 
