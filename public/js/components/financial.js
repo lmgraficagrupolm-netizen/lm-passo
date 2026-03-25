@@ -79,6 +79,15 @@ export const render = (user) => {
                     <div class="stock-card-label">&#128274; A Receber (Em Prod.)</div>
                 </div>
             </div>
+            <div class="stock-card">
+                <div class="stock-card-icon" style="background:#7c3aed20; color:#7c3aed">
+                    <ion-icon name="airplane-outline"></ion-icon>
+                </div>
+                <div class="stock-card-info">
+                    <div class="stock-card-value" id="fin-dispatch-costs" style="color:#dc2626">R$ 0</div>
+                    <div class="stock-card-label">Custos de Despacho</div>
+                </div>
+            </div>
         </div>
 
         <!-- Filters -->
@@ -107,6 +116,9 @@ export const render = (user) => {
 
         <!-- Material Costs Section -->
         <div id="fin-costs-container" style="margin-top:2rem;"></div>
+
+        <!-- Dispatch Costs Section -->
+        <div id="fin-dispatch-container" style="margin-top:2rem;"></div>
 
 
     `;
@@ -496,8 +508,71 @@ export const render = (user) => {
             applyFilters();
             // Also load material costs
             loadMaterialCosts();
+            // Also load dispatch costs
+            loadDispatchCosts();
         } catch (e) {
             console.error('Erro ao carregar financeiro:', e);
+        }
+    };
+
+    // Load and render dispatch costs
+    const loadDispatchCosts = async () => {
+        try {
+            const res = await fetch('/api/reports/dispatch-costs');
+            const { data, total } = await res.json();
+
+            // Update dispatch cost card
+            const dispEl = container.querySelector('#fin-dispatch-costs');
+            if (dispEl) dispEl.textContent = `R$ ${(total || 0).toFixed(2)}`;
+
+            const dispContainer = container.querySelector('#fin-dispatch-container');
+            if (!data || data.length === 0) { if (dispContainer) dispContainer.innerHTML = ''; return; }
+
+            // Group by month
+            const byMonth = {};
+            data.forEach(d => {
+                const dt = new Date(d.created_at);
+                const key = `${dt.getFullYear()}-${String(dt.getMonth()).padStart(2, '0')}`;
+                if (!byMonth[key]) byMonth[key] = { label: `${monthNames[dt.getMonth()]} ${dt.getFullYear()}`, items: [], total: 0 };
+                byMonth[key].items.push(d);
+                byMonth[key].total += (d.amount || 0);
+            });
+
+            const sortedKeys = Object.keys(byMonth).sort((a, b) => b.localeCompare(a));
+            dispContainer.innerHTML = `
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+                    <h3 style="margin:0; font-size:1.15rem; color:#1e293b;">🚚 Custos de Despacho</h3>
+                    <span style="font-size:0.9rem; color:#dc2626; font-weight:700;">Total: R$ ${(total || 0).toFixed(2)}</span>
+                </div>
+                ${sortedKeys.map(key => {
+                    const m = byMonth[key];
+                    const rows = m.items.map(d => `
+                        <tr>
+                            <td>${new Date(d.created_at).toLocaleDateString('pt-BR')}</td>
+                            <td><b>${d.carrier || '-'}</b></td>
+                            <td>${d.client_name || '-'}</td>
+                            <td>Pedido #${d.order_id || '-'}</td>
+                            <td style="font-weight:bold; color:#dc2626;">R$ ${(d.amount || 0).toFixed(2)}</td>
+                        </tr>`).join('');
+                    return `
+                        <div style="margin-bottom:1.5rem;">
+                            <div style="display:flex; justify-content:space-between; align-items:center; padding:0.6rem 1rem; background:linear-gradient(135deg,#4c1d95,#7c3aed); color:white; border-radius:8px 8px 0 0;">
+                                <h4 style="margin:0; font-size:1rem;">📅 ${m.label}</h4>
+                                <span style="font-size:0.85rem; opacity:0.9;">${m.items.length} despacho${m.items.length > 1 ? 's' : ''}</span>
+                            </div>
+                            <table class="data-table" style="border-radius:0 0 8px 8px; margin-top:0;">
+                                <thead><tr><th>Data</th><th>Transportadora</th><th>Cliente</th><th>Pedido</th><th>Valor</th></tr></thead>
+                                <tbody>${rows}</tbody>
+                                <tfoot><tr style="background:#fef2f2; font-weight:bold;">
+                                    <td colspan="4" style="text-align:right; color:#991b1b; padding:8px 12px;">Total ${m.label}:</td>
+                                    <td style="color:#dc2626; font-size:1.05rem;">R$ ${m.total.toFixed(2)}</td>
+                                </tr></tfoot>
+                            </table>
+                        </div>`;
+                }).join('')}
+            `;
+        } catch (e) {
+            console.error('Erro ao carregar custos de despacho:', e);
         }
     };
 

@@ -1,5 +1,6 @@
 const express = require('express');
 const cors = require('cors');
+const compression = require('compression');
 const path = require('path');
 const db = require('./server/database/db');
 const fs = require('fs');
@@ -45,6 +46,7 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 // Middleware
+app.use(compression()); // gzip all responses
 app.use(cors());
 app.use(express.json());
 // Force no-cache for JS and CSS so browser always fetches fresh versions after deploy
@@ -83,6 +85,18 @@ app.get('/', (req, res) => {
 });
 
 // Start Server
-app.listen(PORT, () => {
+const os = require('os');
+app.listen(PORT, '0.0.0.0', () => {
+    const nets = os.networkInterfaces();
+    let localIp = 'localhost';
+    for (const iface of Object.values(nets)) {
+        for (const alias of iface) {
+            if (alias.family === 'IPv4' && !alias.internal) {
+                localIp = alias.address;
+                break;
+            }
+        }
+    }
     console.log(`Server running on http://localhost:${PORT}`);
+    console.log(`Acesso em rede:  http://${localIp}:${PORT}`);
 });

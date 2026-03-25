@@ -1,18 +1,8 @@
-const CACHE_NAME = 'lm-passo-v17';
+const CACHE_NAME = 'lm-passo-v19';
 const STATIC_ASSETS = [
     '/',
     '/index.html',
-    '/css/main.css',
-    '/js/app.js',
-    '/js/components/clients.js',
-    '/js/components/estoque.js',
-    '/js/components/financial.js',
-    '/js/components/kanban.js',
-    '/js/components/layout.js',
-    '/js/components/login.js',
-    '/js/components/products.js',
-    '/js/components/admin.js',
-    '/js/components/fornecedores.js',
+    // NOTE: JS and CSS are NOT cached by the SW — always fetched fresh from server
     // Local fonts
     '/fonts/inter-300.ttf',
     '/fonts/inter-400.ttf',
@@ -100,19 +90,12 @@ self.addEventListener('fetch', (event) => {
         return;
     }
 
-    // JS and CSS: Network First — always fetch fresh, fallback to cache if offline
+    // JS and CSS: Network ONLY — never serve from cache, always get latest from server
     if (url.pathname.endsWith('.js') || url.pathname.endsWith('.css')) {
         event.respondWith(
-            fetch(event.request)
-                .then(networkResponse => {
-                    if (networkResponse.ok) {
-                        const clone = networkResponse.clone();
-                        caches.open(CACHE_NAME).then(cache => cache.put(event.request, clone));
-                    }
-                    return networkResponse;
-                })
+            fetch(event.request, { cache: 'no-store' })
                 .catch(() => {
-                    // Offline fallback: serve from cache
+                    // Only fall back to cache if network is completely unavailable
                     return caches.match(event.request);
                 })
         );

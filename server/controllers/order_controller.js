@@ -79,7 +79,7 @@ exports.getOrderItems = (req, res) => {
 
 
 exports.createOrder = (req, res) => {
-    const { client_id, payment_method, created_by, description, deadline_option, items, total_value, discount_value, is_internal, event_name } = req.body;
+    const { client_id, payment_method, created_by, description, deadline_option, items, total_value, discount_value, is_internal, event_name, payment_code } = req.body;
 
     if (!items || !Array.isArray(items) || items.length === 0) {
         return res.status(400).json({ error: 'Nenhum item no pedido.' });
@@ -140,9 +140,9 @@ exports.createOrder = (req, res) => {
                 const finalTerceirizado = hasTerceirizado ? 1 : 0;
                 const finalEventName = event_name || '';
 
-                const sqlOrder = `INSERT INTO orders (client_id, description, total_value, discount_value, payment_method, created_by, status, deadline_type, deadline_at, products_summary, is_internal, is_terceirizado, event_name) VALUES (?, ?, ?, ?, ?, ?, 'aguardando_aceite', ?, ?, ?, ?, ?, ?)`;
+                const sqlOrder = `INSERT INTO orders (client_id, description, total_value, discount_value, payment_method, created_by, status, deadline_type, deadline_at, products_summary, is_internal, is_terceirizado, event_name, payment_code) VALUES (?, ?, ?, ?, ?, ?, 'aguardando_aceite', ?, ?, ?, ?, ?, ?, ?)`;
 
-                db.run(sqlOrder, [client_id, description, finalTotal, finalDiscount, payment_method, created_by, effective_deadline_option, deadline_at, summaryStr, finalInternal, finalTerceirizado, finalEventName], function (err) {
+                db.run(sqlOrder, [client_id, description, finalTotal, finalDiscount, payment_method, created_by, effective_deadline_option, deadline_at, summaryStr, finalInternal, finalTerceirizado, finalEventName, payment_code || ''], function (err) {
                     if (err) {
                         db.run("ROLLBACK");
                         return res.status(500).json({ error: err.message });
@@ -373,12 +373,46 @@ exports.finalizeOrder = (req, res) => {
 exports.concludeOrder = (req, res) => {
     // Moves to 'finalizado' with photo
     const pickup_photo = req.file ? req.file.filename : null;
+    const { carrier, dispatch_amount } = req.body;
 
     db.run("UPDATE orders SET status = 'finalizado', pickup_photo = ? WHERE id = ?", [pickup_photo, req.params.id], function (err) {
         if (err) return res.status(500).json({ error: err.message });
+
+        // If a carrier was selected, record the dispatch cost
+        if (carrier && dispatch_amount && parseFloat(dispatch_amount) > 0) {
+            const amount = parseFloat(dispatch_amount);
+            db.run(
+                "INSERT INTO dispatch_costs (order_id, carrier, amount) VALUES (?, ?, ?)",
+                [req.params.id, carrier, amount],
+                (err2) => {
+                    if (err2) console.error('Erro ao salvar custo de despacho:', err2.message);
+                }
+            );
+        }
+
         res.json({ message: 'Pedido concluído com sucesso' });
     });
 };
+
+// Dispatch Costs Report — grouped by month for the financial view
+exports.getDispatchCosts = (req, res) => {
+    const sql = `
+        SELECT dc.id, dc.order_id, dc.carrier, dc.amount, dc.created_at,
+               c.name as client_name
+        FROM dispatch_costs dc
+        LEFT JOIN orders o ON dc.order_id = o.id
+        LEFT JOIN clients c ON o.client_id = c.id
+        ORDER BY dc.created_at DESC
+    `;
+    db.all(sql, [], (err, rows) => {
+        if (err) return res.status(500).json({ error: err.message });
+        db.get("SELECT SUM(amount) as total FROM dispatch_costs", [], (err2, totRow) => {
+            res.json({ data: rows, total: (totRow && totRow.total) || 0 });
+        });
+    });
+};
+
+
 
 exports.rejectOrder = (req, res) => {
     const { rejection_reason } = req.body;
@@ -490,7 +524,7 @@ exports.getClientOrders = (req, res) => {
     const clientId = req.params.clientId;
     const sql = `
         SELECT o.id, o.created_at, o.description, o.total_value, o.discount_value, o.payment_method,
-               o.products_summary, o.status, o.deadline_at, o.deadline_type, o.checklist,
+               o.products_summary, o.status, o.deadline_at, o.deadline_type, o.checklist, o.payment_code,
                c.name as client_name, c.cpf as client_cpf, c.address as client_address, c.city as client_city, c.state as client_state, c.zip_code as client_zip_code
         FROM orders o
         LEFT JOIN clients c ON o.client_id = c.id
@@ -512,7 +546,7 @@ exports.getClientFinancial = (req, res) => {
     const clientId = req.params.clientId;
     const sql = `
         SELECT o.id, o.created_at, o.description, o.total_value, o.discount_value, o.payment_method,
-               o.products_summary, o.event_name
+               o.products_summary, o.event_name, o.payment_code
         FROM orders o
         WHERE o.client_id = ? AND o.status IN ('em_balcao', 'finalizado', 'arquivado')
         ORDER BY o.created_at DESC

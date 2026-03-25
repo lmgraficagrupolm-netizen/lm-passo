@@ -302,6 +302,18 @@ function initDb() {
     db.run("ALTER TABLE orders ADD COLUMN event_name TEXT DEFAULT ''", (err) => { /* ignore if exists */ });
     // Migration: flag indicating stock was reserved at order creation
     db.run("ALTER TABLE orders ADD COLUMN stock_reserved INTEGER DEFAULT 0", (err) => { /* ignore if exists */ });
+    // Migration: add payment_code for Cartão orders
+    db.run("ALTER TABLE orders ADD COLUMN payment_code TEXT DEFAULT ''", (err) => { /* ignore if exists */ });
+
+    // Dispatch Costs Table (tracks despacho expenses per order)
+    db.run(`CREATE TABLE IF NOT EXISTS dispatch_costs (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        order_id INTEGER,
+        carrier TEXT,
+        amount REAL DEFAULT 0,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY(order_id) REFERENCES orders(id)
+    )`);
 }
 
 module.exports = db;

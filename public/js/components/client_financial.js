@@ -50,7 +50,7 @@ export const render = () => {
             </select>
             <input type="number" id="cf-filter-min" placeholder="Valor mín" step="0.01" min="0" style="width:100px; padding:0.5rem; border:1px solid var(--border); border-radius:6px; font-size:0.9rem;">
             <input type="number" id="cf-filter-max" placeholder="Valor máx" step="0.01" min="0" style="width:100px; padding:0.5rem; border:1px solid var(--border); border-radius:6px; font-size:0.9rem;">
-            <button class="btn btn-secondary" id="cf-btn-clear" style="width:auto; padding:0.5rem 0.75rem; font-size:0.85rem;">Limpar</button>
+
         </div>
 
         <div id="cf-monthly-container"></div>
@@ -266,14 +266,7 @@ export const render = () => {
     container.querySelector('#cf-filter-month').onchange = applyFilters;
     container.querySelector('#cf-filter-min').oninput = applyFilters;
     container.querySelector('#cf-filter-max').oninput = applyFilters;
-    container.querySelector('#cf-btn-clear').onclick = () => {
-        container.querySelector('#cf-filter-event').value = '';
-        container.querySelector('#cf-filter-search').value = '';
-        container.querySelector('#cf-filter-month').value = '';
-        container.querySelector('#cf-filter-min').value = '';
-        container.querySelector('#cf-filter-max').value = '';
-        applyFilters();
-    };
+
 
     loadFinancial();
     return container;

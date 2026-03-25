@@ -1,4 +1,4 @@
-export const render = () => {
+﻿export const render = () => {
     const user = JSON.parse(localStorage.getItem('user'));
     const container = document.createElement('div');
     const isClient = user.role === 'cliente';
@@ -8,7 +8,7 @@ export const render = () => {
     container.innerHTML = `
         <div class="view-header">
             <div class="view-title">${isClient ? '📋 Meus Pedidos' : 'Quadro de Produção'}</div>
-            ${(isClient || isProducao) ? '' : `<div style="display:flex; gap:0.5rem">
+            ${isClient ? '' : `<div style="display:flex; gap:0.5rem">
                 <button class="btn btn-secondary" style="width:auto;" id="btn-archived">📁 Pedidos Arquivados</button>
                 <button class="btn btn-primary" style="width: auto;" id="btn-new-order">Novo Pedido</button>
             </div>`}
@@ -753,7 +753,27 @@ export const render = () => {
         } else if (order.status === 'em_balcao') {
             const _clEb = order.checklist || {};
             const _itemsEb = ['arte', 'impressao', 'corte', 'embalagem'];
-            const _itemLabelsEb = { arte: 'Arte', impressao: 'Impressão', corte: 'Corte', embalagem: 'Embalagem' };
+            const _itemLabelsEb = { arte: 'Arte', impressao: 'Impresso', corte: 'Corte', embalagem: 'Embalagem' };
+            const dispatchHtml = `
+                <div style="margin-top:0.75rem; padding:0.75rem; background:#fdfae7; border:1px solid #fde68a; border-radius:8px;">
+                    <div style="font-weight:700; color:#92400e; margin-bottom:0.5rem; font-size:0.95rem;">🚚 Despacho (opcional)</div>
+                    <div style="display:flex; gap:0.6rem; margin-bottom:0.5rem;">
+                        <label style="display:flex; align-items:center; gap:0.4rem; cursor:pointer; padding:0.4rem 0.75rem; border-radius:6px; border:2px solid #e5e7eb; background:#fff; font-weight:600; font-size:0.9rem; transition:border-color 0.2s;" id="dispatch-label-none">
+                            <input type="radio" name="dispatch_carrier" value="" checked> Nenhum
+                        </label>
+                        <label style="display:flex; align-items:center; gap:0.4rem; cursor:pointer; padding:0.4rem 0.75rem; border-radius:6px; border:2px solid #e5e7eb; background:#fff; font-weight:600; font-size:0.9rem; transition:border-color 0.2s;" id="dispatch-label-unida">
+                            <input type="radio" name="dispatch_carrier" value="UNIDA"> UNIDA — R$ 55,00
+                        </label>
+                        <label style="display:flex; align-items:center; gap:0.4rem; cursor:pointer; padding:0.4rem 0.75rem; border-radius:6px; border:2px solid #e5e7eb; background:#fff; font-weight:600; font-size:0.9rem; transition:border-color 0.2s;" id="dispatch-label-correios">
+                            <input type="radio" name="dispatch_carrier" value="CORREIOS"> CORREIOS
+                        </label>
+                    </div>
+                    <div id="dispatch-correios-amount" style="display:none;">
+                        <label style="font-size:0.85rem; color:#555;">Taxa (R$):</label>
+                        <input type="number" id="dispatch-amount" step="0.01" min="0" placeholder="0,00" style="width:100%; padding:0.4rem 0.6rem; border:1px solid #fcd34d; border-radius:4px; font-size:0.95rem; margin-top:0.25rem;">
+                    </div>
+                </div>
+            `;
             const _doneEb = _itemsEb.filter(i => _clEb[i]).length;
             const _pctEb = Math.round((_doneEb / _itemsEb.length) * 100);
             const _colorEb = _pctEb === 100 ? '#22c55e' : _pctEb >= 50 ? '#f59e0b' : '#ef4444';
@@ -779,11 +799,13 @@ export const render = () => {
                               🏢 Serviço interno — assinatura não necessária
                           </div>
                           <form id="conclude-form" style="display:flex; gap:0.5rem; flex-direction:column">
+                               ${dispatchHtml}
                               <button type="submit" class="btn btn-success">📦 Finalizar Pedido</button>
                           </form>`
                        : `<p style="margin-bottom:0.5rem"><b>Entrega:</b> Colete a assinatura e anexe a foto.</p>
                           <form id="conclude-form" style="display:flex; gap:0.5rem; flex-direction:column">
                               <input type="file" id="pickup-photo" accept="image/*" required>
+                               ${dispatchHtml}
                               <button type="submit" class="btn btn-success">📦 Finalizar Pedido</button>
                           </form>`
                    }
@@ -1164,13 +1186,32 @@ export const render = () => {
             };
             } // end else (!isVendedor) for producao
         } else if (order.status === 'em_balcao') {
+            // Wire dispatch radio buttons behavior
+            const dispatchRadios = content.querySelectorAll('input[name="dispatch_carrier"]');
+            const correiosAmountDiv = content.querySelector('#dispatch-correios-amount');
+            dispatchRadios.forEach(r => {
+                r.addEventListener('change', () => {
+                    if (correiosAmountDiv) correiosAmountDiv.style.display = r.value === 'CORREIOS' ? 'block' : 'none';
+                    content.querySelectorAll('input[name="dispatch_carrier"]').forEach(rb => {
+                        const lbl = rb.closest('label');
+                        if (lbl) lbl.style.borderColor = (rb.checked && rb.value) ? '#f59e0b' : '#e5e7eb';
+                    });
+                });
+            });
             content.querySelector('#conclude-form').onsubmit = async (e) => {
                 e.preventDefault();
                 const formData = new FormData();
                 const fileField = content.querySelector('#pickup-photo');
-                formData.append('pickup_photo', fileField.files[0]);
+                if (fileField && fileField.files[0]) formData.append('pickup_photo', fileField.files[0]);
 
-                await fetch(`/api/orders/${order.id}/conclude`, {
+                const selectedCarrier = content.querySelector('input[name="dispatch_carrier"]:checked');
+                if (selectedCarrier && selectedCarrier.value) {
+                    formData.append('carrier', selectedCarrier.value);
+                    const dispatchAmt = selectedCarrier.value === 'UNIDA' ? 55 : parseFloat(content.querySelector('#dispatch-amount')?.value || '0');
+                    formData.append('dispatch_amount', dispatchAmt);
+                }
+
+                await fetch('/api/orders/' + order.id + '/conclude', {
                     method: 'POST',
                     body: formData
                 });
