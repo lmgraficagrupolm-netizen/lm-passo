@@ -128,10 +128,17 @@ export const render = () => {
                         </div>
                         <!-- Color selector for pulseiras -->
                         <div id="color-select-container" style="display:none; margin-bottom:0.5rem; background:#fefce8; border:1px solid #fde68a; border-radius:6px; padding:8px 10px;">
-                            <small style="display:block; margin-bottom:4px; color:#92400e; font-weight:600;">🎨 Selecione a cor da pulseira:</small>
-                            <select id="color-select" class="form-control" style="width:100%; padding:0.4rem; border:1px solid #fcd34d; border-radius:4px;">
-                                <option value="">Carregando cores...</option>
-                            </select>
+                            <small id="pulseira-price-label" style="display:block; margin-bottom:6px; color:#92400e; font-weight:600;">🎨 Selecione a cor da pulseira:</small>
+                            <!-- Toggle sem personalização -->
+                            <label id="sem-personaliz-label" style="display:flex; align-items:center; gap:0.5rem; margin-bottom:6px; cursor:pointer; background:#fff7ed; border:1px solid #fed7aa; border-radius:6px; padding:5px 8px;">
+                                <input type="checkbox" id="sem-personalizacao" style="width:16px; height:16px; cursor:pointer; accent-color:#ea580c;">
+                                <span style="font-size:0.875rem; font-weight:600; color:#c2410c;">Sem personalização — <b>R$ 0,20/un</b></span>
+                            </label>
+                            <div id="color-select-wrap">
+                                <select id="color-select" class="form-control" style="width:100%; padding:0.4rem; border:1px solid #fcd34d; border-radius:4px;">
+                                    <option value="">Carregando cores...</option>
+                                </select>
+                            </div>
                         </div>
                         <div id="stock-warning" style="font-size:0.8rem; color:red; margin-top:0.25rem; min-height: 1.2em;"></div>
 
@@ -1305,7 +1312,7 @@ export const render = () => {
         } else {
             createBtn.disabled = false;
             cart.forEach((item, index) => {
-                const price = getProductPrice(item.product);
+                const price = item.sem_personalizacao ? PULSEIRA_DEFAULT_PRICE : getProductPrice(item.product);
                 const subtotal = price * item.qty;
                 total += subtotal;
 
@@ -1362,11 +1369,27 @@ export const render = () => {
         }
         // It's a pulseira — load colors
         colorSelectContainer.style.display = 'block';
+        // Reset the sem-personalizacao toggle
+        const semPersToggle = container.querySelector('#sem-personalizacao');
+        const colorSelectWrap = container.querySelector('#color-select-wrap');
+        if (semPersToggle) { semPersToggle.checked = false; }
+        if (colorSelectWrap) colorSelectWrap.style.display = 'block';
         // Price label for pulseira
         const basePrice = parseFloat(product.price_3_days) || parseFloat(product.price) || 0;
         const displayPrice = basePrice > 0 ? basePrice : PULSEIRA_DEFAULT_PRICE;
-        const priceLabelEl = colorSelectContainer.querySelector('small');
+        const priceLabelEl = colorSelectContainer.querySelector('#pulseira-price-label');
         if (priceLabelEl) priceLabelEl.innerHTML = `🎨 Selecione a cor da pulseira: <span style="background:#d1fae5; color:#065f46; padding:1px 8px; border-radius:10px; font-size:0.8rem; font-weight:700; margin-left:6px;">R$ ${displayPrice.toFixed(2).replace('.', ',')}/un</span>`;
+        // Wire toggle: sem-personalização hides color select
+        if (semPersToggle) {
+            semPersToggle.onchange = () => {
+                if (colorSelectWrap) colorSelectWrap.style.display = semPersToggle.checked ? 'none' : 'block';
+                if (priceLabelEl) {
+                    priceLabelEl.innerHTML = semPersToggle.checked
+                        ? `🎨 Pulseira <span style="background:#fef3c7; color:#c2410c; padding:1px 8px; border-radius:10px; font-size:0.8rem; font-weight:700; margin-left:6px;">R$ 0,20/un — Sem personalização</span>`
+                        : `🎨 Selecione a cor da pulseira: <span style="background:#d1fae5; color:#065f46; padding:1px 8px; border-radius:10px; font-size:0.8rem; font-weight:700; margin-left:6px;">R$ ${displayPrice.toFixed(2).replace('.', ',')}/un</span>`;
+                }
+            };
+        }
         colorSelect.innerHTML = '<option value="">Carregando...</option>';
         try {
             const res = await fetch(`/api/products/${pid}/colors`);
@@ -1408,17 +1431,26 @@ export const render = () => {
         let color_variant_id = null;
         let color_name = null;
 
+        const semPersToggle = container.querySelector('#sem-personalizacao');
+        const isSemPers = isPulseiraProd(product) && semPersToggle && semPersToggle.checked;
+
         if (isPulseiraProd(product)) {
-            const selectedColorOpt = colorSelect.options[colorSelect.selectedIndex];
-            if (!selectedColorOpt || !selectedColorOpt.value) {
-                alert('Selecione a cor da pulseira antes de adicionar.');
-                return;
+            if (isSemPers) {
+                // Sem personalização: sem cor, preço fixo R$0,20
+                color_variant_id = null;
+                color_name = 'Sem personalização';
+            } else {
+                const selectedColorOpt = colorSelect.options[colorSelect.selectedIndex];
+                if (!selectedColorOpt || !selectedColorOpt.value) {
+                    alert('Selecione a cor da pulseira antes de adicionar.');
+                    return;
+                }
+                color_variant_id = parseInt(selectedColorOpt.value);
+                color_name = selectedColorOpt.dataset.color;
             }
-            color_variant_id = parseInt(selectedColorOpt.value);
-            color_name = selectedColorOpt.dataset.color;
         }
 
-        cart.push({ product, qty, color_variant_id, color_name });
+        cart.push({ product, qty, color_variant_id, color_name, sem_personalizacao: isSemPers });
         renderCart();
 
         qtyInput.value = 1;
