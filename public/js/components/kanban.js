@@ -172,16 +172,26 @@ export const render = () => {
                         </div>
                         
                         <div style="display:flex; justify-content:space-between; align-items:center; margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid #eee;">
-                             <div class="form-group" style="margin-bottom:0; width: 45%;">
-                                <label style="font-weight: 600; color: #555;">Forma de Pagamento</label>
-                                <select name="payment_method" id="order-payment-method" style="width: 100%; padding: 0.5rem; border: 1px solid #ccc; border-radius: 4px;">
-                                    <option value="Pix">Pix</option>
-                                    <option value="Cartão">Cartão</option>
-                                    <option value="Dinheiro">Dinheiro</option>
-                                    <option value="Boleto">Boleto</option>
-                                    <option value="CORE">CORE</option>
-                                </select>
-                                <div id="core-auto-info" style="display:none; margin-top:4px; font-size:0.75rem; color:#7c3aed; font-weight:600;"></div>
+                             <div style="display: flex; gap: 1rem; width: 55%; flex-wrap: wrap;">
+                                 <div class="form-group" style="margin-bottom:0; flex: 1; min-width: 120px;">
+                                    <label style="font-weight: 600; color: #555;">Pagamento</label>
+                                    <select name="payment_method" id="order-payment-method" style="width: 100%; padding: 0.5rem; border: 1px solid #ccc; border-radius: 4px;">
+                                        <option value="Pix">Pix</option>
+                                        <option value="Cartão">Cartão</option>
+                                        <option value="Dinheiro">Dinheiro</option>
+                                        <option value="Boleto">Boleto</option>
+                                        <option value="CORE">CORE</option>
+                                    </select>
+                                    <div id="core-auto-info" style="display:none; margin-top:4px; font-size:0.75rem; color:#7c3aed; font-weight:600;"></div>
+                                 </div>
+                                 <div class="form-group" style="margin-bottom:0; flex: 1; min-width: 100px;">
+                                    <label style="font-weight: 600; color: #555;">Desconto (%)</label>
+                                    <select name="discount" id="order-discount" style="width: 100%; padding: 0.5rem; border: 1px solid #ccc; border-radius: 4px;">
+                                        <option value="0">Nenhum</option>
+                                        <option value="10">10%</option>
+                                        <option value="15">15%</option>
+                                    </select>
+                                 </div>
                              </div>
                              <!-- Event Name Field (visible only for CORE) -->
                              <div id="event-name-group" style="display:none; flex:1; min-width:180px; margin-left:1rem;">
@@ -905,7 +915,8 @@ export const render = () => {
                 </div>
             </div>` : ''}
             <div class="form-group" style="display:flex; gap:1rem; flex-wrap:wrap; align-items:center">
-                <div><label>Valor:</label> <b>R$ ${order.total_value}</b></div>
+                <div><label>Valor Final:</label> <b style="color:#2563eb">R$ ${order.total_value}</b></div>
+                ${order.discount_value > 0 ? `<div><label>Desconto:</label> <b style="color:#ef4444">- R$ ${order.discount_value.toFixed(2)}</b></div>` : ''}
                 <div><label>Pagamento:</label> ${order.payment_method}</div>
                 ${order.has_terceirizado && order.total_estimated_time ? `<div><label>Prazo de Entrega:</label> <span style="display:inline-block; background:#eff6ff; border:1px solid #bfdbfe; border-radius:10px; padding:2px 10px; font-size:0.85em; color:#1d4ed8; font-weight:600;">📅 ${order.total_estimated_time} dia${order.total_estimated_time == 1 ? '' : 's'} úteis</span></div>` : ''}
             </div>
@@ -1337,17 +1348,40 @@ export const render = () => {
             });
         }
 
-        totalInput.value = total.toFixed(2);
         const isCostMode = isInternalMode();
-        totalAutoLabel.textContent = total > 0
-            ? (isCostMode ? `💰 Custo total: R$ ${total.toFixed(2)}` : `Sugestão: R$ ${total.toFixed(2)}`)
-            : '';
+        
+        // Aplica o desconto se selecionado
+        const discountSelect = container.querySelector('#order-discount');
+        const discountPct = discountSelect && !isCostMode ? parseFloat(discountSelect.value || 0) : 0;
+        const discountValue = total * (discountPct / 100);
+        const finalTotal = total - discountValue;
+
+        // Armazena o total base para envio e exibe o valor final
+        totalInput.dataset.baseTotal = total.toFixed(2);
+        totalInput.value = finalTotal.toFixed(2);
+
+        let autoText = '';
+        if (total > 0) {
+            if (isCostMode) {
+                autoText = `💰 Custo total: R$ ${finalTotal.toFixed(2)}`;
+            } else {
+                autoText = `Sugestão: R$ ${total.toFixed(2)}`;
+                if (discountPct > 0) {
+                    autoText += ` (- R$ ${discountValue.toFixed(2)})`;
+                }
+            }
+        }
+        totalAutoLabel.textContent = autoText;
     };
 
     // Deadline Toggle -> Recalculate
     container.querySelectorAll('input[name="deadline_option"]').forEach(radio => {
         radio.onchange = renderCart;
     });
+
+    // Discount Toggle -> Recalculate
+    const discountEl = container.querySelector('#order-discount');
+    if (discountEl) discountEl.addEventListener('change', renderCart);
 
     // === COLOR SELECTOR FOR PULSEIRAS ===
     const colorSelectContainer = container.querySelector('#color-select-container');
@@ -1639,6 +1673,9 @@ export const render = () => {
             if (eventNameInput) eventNameInput.value = '';
             const internalToggle = container.querySelector('#internal-toggle');
             if (internalToggle) internalToggle.checked = false;
+            // Reset discount
+            const discountSelect = container.querySelector('#order-discount');
+            if (discountSelect) discountSelect.value = '0';
             // Reset internal toggle UI
             const clientRow = container.querySelector('#client-row');
             if (clientRow) clientRow.style.display = '';
@@ -1737,14 +1774,27 @@ export const render = () => {
                         : ''
         };
 
-        // Apply 15% discount if client has core_discount
+        // Apply 15% discount se for cliente CORE ou calcula desconto manual
         const selectedClientData = (window._kanbanClientsRef || []).find(c => c.id == clientSelect.value);
+        
+        let finalValue = parseFloat(container.querySelector('#cart-total-input').value) || 0;
+        let originalValue = parseFloat(container.querySelector('#cart-total-input').dataset.baseTotal) || finalValue;
+
         if (selectedClientData && selectedClientData.core_discount) {
-            const originalValue = payload.total_value;
             payload.total_value = parseFloat((originalValue * 0.85).toFixed(2));
             payload.discount_value = parseFloat((originalValue - payload.total_value).toFixed(2));
         } else {
-            payload.discount_value = 0;
+            const discountElement = container.querySelector('#order-discount');
+            if (discountElement && parseFloat(discountElement.value) > 0) {
+                // Se foi configurado desconto e o usuário não digitou um valor completamente diferente do calculado...
+                // Usaremos a diferença
+                payload.discount_value = parseFloat((originalValue - finalValue).toFixed(2));
+                if (payload.discount_value < 0) payload.discount_value = 0;
+            } else {
+                payload.discount_value = parseFloat((originalValue - finalValue).toFixed(2));
+                if (payload.discount_value < 0) payload.discount_value = 0;
+            }
+            payload.total_value = finalValue;
         }
 
         console.log('Order Payload:', payload);
