@@ -8,11 +8,36 @@ export const render = () => {
     let notifiedLateOrders = new Set();
     const showToastAlert = (msg) => {
         const toast = document.createElement('div');
-        toast.style.cssText = 'position:fixed; top:20px; right:20px; background:#fef2f2; border:1px solid #fecaca; border-left:4px solid #ef4444; color:#991b1b; padding:15px; border-radius:4px; box-shadow:0 4px 12px rgba(0,0,0,0.1); z-index:9999; max-width:300px; font-weight:600; display:flex; align-items:start; gap:10px; transition:opacity 0.3s;';
-        toast.innerHTML = `<span style="font-size:1.2rem; line-height:1;">⚠️</span> <div>${msg}</div>`;
+        toast.style.cssText = 'position:fixed; top:24px; right:24px; background:linear-gradient(135deg, #ef4444 0%, #b91c1c 100%); border:1px solid #991b1b; color:#ffffff; padding:16px 20px; border-radius:12px; box-shadow:0 10px 25px -5px rgba(220, 38, 38, 0.5), 0 8px 10px -6px rgba(220, 38, 38, 0.2); z-index:9999; width:340px; max-width:calc(100vw - 48px); font-family:system-ui, -apple-system, sans-serif; display:flex; align-items:center; gap:16px; transform:translateX(120%); transition:transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.5s ease; opacity:0; cursor:pointer;';
+        toast.innerHTML = `
+            <div style="background:rgba(255,255,255,0.25); width:46px; height:46px; border-radius:50%; display:flex; align-items:center; justify-content:center; flex-shrink:0; box-shadow:inset 0 2px 4px rgba(255,255,255,0.2);">
+                <span style="font-size:1.5rem; line-height:1;">⏰</span>
+            </div>
+            <div style="flex:1;">
+                <div style="font-weight:700; font-size:1.05rem; margin-bottom:4px; letter-spacing:-0.01em;">Atenção à Produção</div>
+                <div style="font-size:0.9rem; line-height:1.4; color:#fef2f2; font-weight:500;">${msg}</div>
+            </div>
+            <div style="font-size:1.2rem; color:rgba(255,255,255,0.6); padding-left:8px; line-height:1;" title="Fechar">✕</div>
+        `;
         document.body.appendChild(toast);
-        setTimeout(() => toast.style.opacity = '0', 7700);
-        setTimeout(() => toast.remove(), 8000);
+        
+        let removeTimeout;
+        const removeToast = () => {
+            toast.style.transform = 'translateX(120%)';
+            toast.style.opacity = '0';
+            setTimeout(() => toast.remove(), 500);
+        };
+        
+        requestAnimationFrame(() => {
+            toast.style.transform = 'translateX(0)';
+            toast.style.opacity = '1';
+            removeTimeout = setTimeout(removeToast, 12000);
+        });
+
+        toast.onclick = () => {
+            clearTimeout(removeTimeout);
+            removeToast();
+        };
     };
 
     container.innerHTML = `

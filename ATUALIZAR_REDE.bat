@@ -10,14 +10,14 @@ echo 1. Adicionando modificacoes...
 git add .
 
 echo 2. Salvando alteracoes (Commit)...
-git commit -m "Adicionado hora/data e alertas de prazo ao Kanban"
+git commit -m "Atualizacao do Sistema - %date% %time%"
 
 echo 3. Enviando para a rede (Push)...
 git push origin main
 
 echo.
 echo ============================================
-echo     ATUALIZACAO CONCLUIDA COM SUCESSO!
+echo   ENVIADO COM SUCESSO! FECHANDO SOZINHO.
 echo ============================================
 echo.
-pause
+timeout /t 2 /nobreak >nul

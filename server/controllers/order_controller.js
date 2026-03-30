@@ -1,9 +1,18 @@
 const db = require('../database/db');
 
-// Helper to calculate deadline
+// Helper to calculate deadline (dias úteis)
 const calculateDeadline = (days) => {
     const date = new Date();
-    date.setDate(date.getDate() + parseInt(days));
+    let remainingDays = parseInt(days);
+    
+    while (remainingDays > 0) {
+        date.setDate(date.getDate() + 1);
+        const dayOfWeek = date.getDay();
+        // 0 = Domingo, 6 = Sábado
+        if (dayOfWeek !== 0 && dayOfWeek !== 6) {
+            remainingDays--;
+        }
+    }
     return date.toISOString();
 };
 
