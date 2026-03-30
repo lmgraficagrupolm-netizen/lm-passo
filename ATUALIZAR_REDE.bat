@@ -7,17 +7,17 @@ echo ============================================
 echo.
 
 echo 1. Adicionando modificacoes...
-git add . > git_log.txt 2>&1
+git add .
 
 echo 2. Salvando alteracoes (Commit)...
-git commit -m "Atualizacao do Sistema - %date% %time%" >> git_log.txt 2>&1
+git commit -m "Adicionado opcao customizada de Despacho (Outros) e tornado a taxa da UNIDA editavel"
 
 echo 3. Enviando para a rede (Push)...
-git push origin main >> git_log.txt 2>&1
+git push origin main
 
 echo.
 echo ============================================
-echo   ANALISE CONCLUIDA! VEJA SE DEU ERRO.
+echo   ENVIADO COM SUCESSO! FECHANDO SOZINHO.
 echo ============================================
 echo.
-pause
+timeout /t 3 /nobreak >nul

@@ -826,20 +826,29 @@ export const render = () => {
             const dispatchHtml = `
                 <div style="margin-top:0.75rem; padding:0.75rem; background:#fdfae7; border:1px solid #fde68a; border-radius:8px;">
                     <div style="font-weight:700; color:#92400e; margin-bottom:0.5rem; font-size:0.95rem;">🚚 Despacho (opcional)</div>
-                    <div style="display:flex; gap:0.6rem; margin-bottom:0.5rem;">
+                    <div style="display:flex; gap:0.6rem; margin-bottom:0.5rem; flex-wrap:wrap;">
                         <label style="display:flex; align-items:center; gap:0.4rem; cursor:pointer; padding:0.4rem 0.75rem; border-radius:6px; border:2px solid #e5e7eb; background:#fff; font-weight:600; font-size:0.9rem; transition:border-color 0.2s;" id="dispatch-label-none">
                             <input type="radio" name="dispatch_carrier" value="" checked> Nenhum
                         </label>
                         <label style="display:flex; align-items:center; gap:0.4rem; cursor:pointer; padding:0.4rem 0.75rem; border-radius:6px; border:2px solid #e5e7eb; background:#fff; font-weight:600; font-size:0.9rem; transition:border-color 0.2s;" id="dispatch-label-unida">
-                            <input type="radio" name="dispatch_carrier" value="UNIDA"> UNIDA — R$ 55,00
+                            <input type="radio" name="dispatch_carrier" value="UNIDA"> UNIDA
                         </label>
                         <label style="display:flex; align-items:center; gap:0.4rem; cursor:pointer; padding:0.4rem 0.75rem; border-radius:6px; border:2px solid #e5e7eb; background:#fff; font-weight:600; font-size:0.9rem; transition:border-color 0.2s;" id="dispatch-label-correios">
                             <input type="radio" name="dispatch_carrier" value="CORREIOS"> CORREIOS
                         </label>
+                        <label style="display:flex; align-items:center; gap:0.4rem; cursor:pointer; padding:0.4rem 0.75rem; border-radius:6px; border:2px solid #e5e7eb; background:#fff; font-weight:600; font-size:0.9rem; transition:border-color 0.2s;" id="dispatch-label-outro">
+                            <input type="radio" name="dispatch_carrier" value="OUTRO"> OUTRO
+                        </label>
                     </div>
-                    <div id="dispatch-correios-amount" style="display:none;">
-                        <label style="font-size:0.85rem; color:#555;">Taxa (R$):</label>
-                        <input type="number" id="dispatch-amount" step="0.01" min="0" placeholder="0,00" style="width:100%; padding:0.4rem 0.6rem; border:1px solid #fcd34d; border-radius:4px; font-size:0.95rem; margin-top:0.25rem;">
+                    <div id="dispatch-options-container" style="display:none; gap:10px; flex-wrap:wrap; margin-top:0.5rem; padding-top:0.5rem; border-top:1px dashed #fcd34d;">
+                        <div id="dispatch-other-name-wrapper" style="display:none; flex:1; min-width:140px; flex-direction:column;">
+                            <label style="font-size:0.85rem; color:#555;">Transportadora:</label>
+                            <input type="text" id="dispatch-other-name" placeholder="Ex: Jadlog" style="width:100%; padding:0.4rem 0.6rem; border:1px solid #fcd34d; border-radius:4px; font-size:0.95rem; margin-top:0.25rem;">
+                        </div>
+                        <div id="dispatch-amount-wrapper" style="display:none; flex:1; min-width:140px; flex-direction:column;">
+                            <label style="font-size:0.85rem; color:#555;">Taxa (R$):</label>
+                            <input type="number" id="dispatch-amount" step="0.01" min="0" placeholder="0,00" style="width:100%; padding:0.4rem 0.6rem; border:1px solid #fcd34d; border-radius:4px; font-size:0.95rem; margin-top:0.25rem;">
+                        </div>
                     </div>
                 </div>
             `;
@@ -1263,16 +1272,32 @@ export const render = () => {
         } else if (order.status === 'em_balcao') {
             // Wire dispatch radio buttons behavior
             const dispatchRadios = content.querySelectorAll('input[name="dispatch_carrier"]');
-            const correiosAmountDiv = content.querySelector('#dispatch-correios-amount');
+            const optionsContainer = content.querySelector('#dispatch-options-container');
+            const amountWrapper = content.querySelector('#dispatch-amount-wrapper');
+            const otherWrapper = content.querySelector('#dispatch-other-name-wrapper');
+            const amountInput = content.querySelector('#dispatch-amount');
+
             dispatchRadios.forEach(r => {
                 r.addEventListener('change', () => {
-                    if (correiosAmountDiv) correiosAmountDiv.style.display = r.value === 'CORREIOS' ? 'block' : 'none';
+                    if (!r.value) {
+                        optionsContainer.style.display = 'none';
+                    } else {
+                        optionsContainer.style.display = 'flex';
+                        amountWrapper.style.display = 'flex';
+                        otherWrapper.style.display = r.value === 'OUTRO' ? 'flex' : 'none';
+                        
+                        // Default value for UNIDA but allowing edit
+                        if (r.value === 'UNIDA') amountInput.value = '55.00';
+                        else amountInput.value = '';
+                    }
+
                     content.querySelectorAll('input[name="dispatch_carrier"]').forEach(rb => {
                         const lbl = rb.closest('label');
                         if (lbl) lbl.style.borderColor = (rb.checked && rb.value) ? '#f59e0b' : '#e5e7eb';
                     });
                 });
             });
+
             content.querySelector('#conclude-form').onsubmit = async (e) => {
                 e.preventDefault();
                 const formData = new FormData();
@@ -1281,8 +1306,9 @@ export const render = () => {
 
                 const selectedCarrier = content.querySelector('input[name="dispatch_carrier"]:checked');
                 if (selectedCarrier && selectedCarrier.value) {
-                    formData.append('carrier', selectedCarrier.value);
-                    const dispatchAmt = selectedCarrier.value === 'UNIDA' ? 55 : parseFloat(content.querySelector('#dispatch-amount')?.value || '0');
+                    const carrierName = selectedCarrier.value === 'OUTRO' ? (content.querySelector('#dispatch-other-name').value || 'OUTRO') : selectedCarrier.value;
+                    formData.append('carrier', carrierName);
+                    const dispatchAmt = parseFloat(amountInput.value || '0');
                     formData.append('dispatch_amount', dispatchAmt);
                 }
 
