@@ -5,6 +5,16 @@ export const render = () => {
     const isProducao = user.role === 'producao';
     const clientId = user.client_id;
 
+    let notifiedLateOrders = new Set();
+    const showToastAlert = (msg) => {
+        const toast = document.createElement('div');
+        toast.style.cssText = 'position:fixed; top:20px; right:20px; background:#fef2f2; border:1px solid #fecaca; border-left:4px solid #ef4444; color:#991b1b; padding:15px; border-radius:4px; box-shadow:0 4px 12px rgba(0,0,0,0.1); z-index:9999; max-width:300px; font-weight:600; display:flex; align-items:start; gap:10px; transition:opacity 0.3s;';
+        toast.innerHTML = `<span style="font-size:1.2rem; line-height:1;">⚠️</span> <div>${msg}</div>`;
+        document.body.appendChild(toast);
+        setTimeout(() => toast.style.opacity = '0', 7700);
+        setTimeout(() => toast.remove(), 8000);
+    };
+
     container.innerHTML = `
         <div class="view-header">
             <div class="view-title">${isClient ? '📋 Meus Pedidos' : 'Quadro de Produção'}</div>
@@ -517,6 +527,17 @@ export const render = () => {
                 columnTimes[order.status] += order.total_estimated_time;
             }
 
+            // Check deadline for alert
+            if (order.status === 'producao' && order.deadline_at) {
+                const deadlineMs = new Date(order.deadline_at).getTime();
+                const nowMs = Date.now();
+                // 2 hours = 7200000 ms
+                if (deadlineMs - nowMs <= 7200000 && !notifiedLateOrders.has(order.id)) {
+                    notifiedLateOrders.add(order.id);
+                    showToastAlert(`O pedido #${getOrderNum(order)} (${order.client_name}) deve ser enviado ao balcão em breve. O prazo expira às ${new Date(order.deadline_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} do dia ${new Date(order.deadline_at).toLocaleDateString()}.`);
+                }
+            }
+
             const col = container.querySelector(`#col-${order.status} .column-content`);
             if (col) {
                 const card = document.createElement('div');
@@ -575,7 +596,8 @@ export const render = () => {
                 }
 
                 card.innerHTML = `
-                    <div class="card-header">#${getOrderNum(order)} - ${new Date(order.created_at).toLocaleDateString()}</div>
+                    <div class="card-header" style="justify-content:space-between;"><span>#${getOrderNum(order)}</span> <span>Lançado: ${new Date(order.created_at).toLocaleDateString()} ${new Date(order.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span></div>
+                    ${order.deadline_at ? `<div style="font-size:0.8rem; color:#059669; padding:2px 0 4px 0; font-weight:600; border-bottom:1px solid #eee; margin-bottom:4px;">📅 Entrega: ${new Date(order.deadline_at).toLocaleDateString()} ${new Date(order.deadline_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>` : ''}
                     <div class="card-title">${order.client_name || 'Cliente?'} ${order.is_internal ? '<span style="background:#dbeafe; color:#1d4ed8; padding:1px 6px; border-radius:10px; font-size:0.7rem; font-weight:600; margin-left:4px;">🏢 Interno</span>' : ''}</div>
                     <div class="card-detail" style="font-size:0.85rem; color:#555; white-space:pre-wrap;">${order.product_name || 'Produto?'}</div>
                     ${order.status === 'producao' && order.total_estimated_time ? (order.has_terceirizado ? `<div style="font-size:0.8rem; color:#1d4ed8; margin-top:4px; font-weight:600;">📅 ${order.total_estimated_time} dia${order.total_estimated_time == 1 ? '' : 's'} úteis</div>` : `<div style="font-size:0.8rem; color:#7c3aed; margin-top:4px; font-weight:600;">⏱️ ${formatDuration(order.total_estimated_time)}</div>`) : ''}
@@ -649,6 +671,11 @@ export const render = () => {
                 <div class="form-group" style="display:flex; gap:1rem; flex-wrap:wrap; align-items:center">
                     <span style="padding:4px 12px; border-radius:12px; font-size:0.9rem; font-weight:600; background:#eff6ff; color:#1d4ed8;">💳 ${order.payment_method || '-'}</span>
                     <span style="font-weight:bold; color:#7c3aed; font-size:1.1rem;">R$ ${(order.total_value || 0).toFixed(2)}</span>
+                </div>
+                <div class="form-group" style="display:flex; gap:1rem; flex-wrap:wrap; align-items:center; background:#f8fafc; padding:0.75rem; border-radius:8px; border:1px solid #e2e8f0; margin-top:1rem;">
+                    <div><label style="color:#64748b; font-size:0.85rem;">Data de Lançamento:</label> <div style="font-weight:600;">${new Date(order.created_at).toLocaleDateString()}</div></div>
+                    <div><label style="color:#64748b; font-size:0.85rem;">Horário de Lançamento:</label> <div style="font-weight:600;">${new Date(order.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div></div>
+                    ${order.deadline_at ? `<div><label style="color:#64748b; font-size:0.85rem;">Data de Entrega (${order.deadline_type || 'Prazo'}):</label> <div style="font-weight:600; color:#059669;">${new Date(order.deadline_at).toLocaleDateString()} ${new Date(order.deadline_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div></div>` : ''}
                 </div>
                 ${order.status === 'producao' ? `
                     <div style="margin-top:1rem; padding:0.75rem; background:#f9fafb; border-radius:8px; border:1px solid #e5e7eb">
@@ -918,7 +945,12 @@ export const render = () => {
                 <div><label>Valor Final:</label> <b style="color:#2563eb">R$ ${order.total_value}</b></div>
                 ${order.discount_value > 0 ? `<div><label>Desconto:</label> <b style="color:#ef4444">- R$ ${order.discount_value.toFixed(2)}</b></div>` : ''}
                 <div><label>Pagamento:</label> ${order.payment_method}</div>
-                ${order.has_terceirizado && order.total_estimated_time ? `<div><label>Prazo de Entrega:</label> <span style="display:inline-block; background:#eff6ff; border:1px solid #bfdbfe; border-radius:10px; padding:2px 10px; font-size:0.85em; color:#1d4ed8; font-weight:600;">📅 ${order.total_estimated_time} dia${order.total_estimated_time == 1 ? '' : 's'} úteis</span></div>` : ''}
+                ${order.has_terceirizado && order.total_estimated_time ? `<div><label>Prazo de Entrega (Terceirizado):</label> <span style="display:inline-block; background:#eff6ff; border:1px solid #bfdbfe; border-radius:10px; padding:2px 10px; font-size:0.85em; color:#1d4ed8; font-weight:600;">📅 ${order.total_estimated_time} dia${order.total_estimated_time == 1 ? '' : 's'} úteis</span></div>` : ''}
+            </div>
+            <div class="form-group" style="display:flex; gap:1rem; flex-wrap:wrap; align-items:center; background:#f8fafc; padding:0.75rem; border-radius:8px; border:1px solid #e2e8f0;">
+                <div><label style="color:#64748b; font-size:0.85rem;">Data de Lançamento:</label> <div style="font-weight:600;">${new Date(order.created_at).toLocaleDateString()}</div></div>
+                <div><label style="color:#64748b; font-size:0.85rem;">Horário de Lançamento:</label> <div style="font-weight:600;">${new Date(order.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div></div>
+                ${order.deadline_at ? `<div><label style="color:#64748b; font-size:0.85rem;">Data de Entrega (${order.deadline_type || 'Prazo'}):</label> <div style="font-weight:600; color:#059669;">${new Date(order.deadline_at).toLocaleDateString()} ${new Date(order.deadline_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div></div>` : ''}
             </div>
             ${actions}
             <div style="margin-top: 1rem; border-top: 1px solid #eee; padding-top: 1rem;">
