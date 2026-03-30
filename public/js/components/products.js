@@ -251,7 +251,22 @@ export const render = () => {
     
     const renderKitTemplates = () => {
         const list = container.querySelector('#kit-templates-list');
-        list.innerHTML = kitTemplates.map((tpl, tIndex) => `
+        list.innerHTML = kitTemplates.map((tpl, tIndex) => {
+            let autoTotal = 0;
+            if (tpl.items) {
+                tpl.items.forEach(item => {
+                    if (item.child_product_id) {
+                        const childP = allProducts.find(p => p.id === parseInt(item.child_product_id));
+                        if (childP) {
+                            const pPrice = parseFloat(childP.price_3_days || childP.price || 0);
+                            autoTotal += pPrice * (item.quantity || 1);
+                        }
+                    }
+                });
+            }
+            tpl.base_price = autoTotal;
+            
+            return `
             <div style="border:1px solid #cbd5e1; border-radius:8px; padding:1rem; background:#f8fafc;">
                 <div style="display:flex; gap:0.5rem; margin-bottom:0.75rem;">
                     <div style="flex:2">
@@ -259,8 +274,10 @@ export const render = () => {
                         <input type="text" class="kit-tpl-name" data-index="${tIndex}" value="${tpl.name || ''}" placeholder="Ex: Básico" style="width:100%; padding:0.4rem; border:1px solid #cbd5e1; border-radius:4px;">
                     </div>
                     <div style="flex:1">
-                        <label style="font-size:0.8rem; color:#64748b; margin-bottom:0.2rem; display:block;">Preço (R$)</label>
-                        <input type="number" step="0.01" min="0" class="kit-tpl-price" data-index="${tIndex}" value="${tpl.base_price || 0}" style="width:100%; padding:0.4rem; border:1px solid #cbd5e1; border-radius:4px;">
+                        <label style="font-size:0.8rem; color:#64748b; margin-bottom:0.2rem; display:block;">Valor para 3 dias</label>
+                        <div style="width:100%; padding:0.4rem; border:1px solid #cbd5e1; border-radius:4px; background:#e2e8f0; font-weight:bold; color:#1e293b;">
+                            R$ ${autoTotal.toFixed(2).replace('.', ',')}
+                        </div>
                     </div>
                     <div style="display:flex; align-items:flex-end">
                         <button type="button" class="btn btn-sm remove-tpl-btn" data-index="${tIndex}" style="background:#fee2e2; color:#b91c1c; border:none; height:34px;">Excluir</button>
@@ -287,14 +304,14 @@ export const render = () => {
                     </div>
                 </div>
             </div>
-        `).join('');
+            `;
+        }).join('');
         
         if (kitTemplates.length === 0) {
             list.innerHTML = '<p style="text-align:center; color:#94a3b8;">Nenhum sub-título criado ainda. Clique em "+ Adicionar Sub-título" para começar.</p>';
         }
 
         list.querySelectorAll('.kit-tpl-name').forEach(inp => inp.oninput = (e) => kitTemplates[e.target.dataset.index].name = e.target.value);
-        list.querySelectorAll('.kit-tpl-price').forEach(inp => inp.oninput = (e) => kitTemplates[e.target.dataset.index].base_price = parseFloat(e.target.value)||0);
         list.querySelectorAll('.remove-tpl-btn').forEach(btn => btn.onclick = (e) => { kitTemplates.splice(e.target.dataset.index, 1); renderKitTemplates(); });
         
         list.querySelectorAll('.add-kit-item-btn').forEach(btn => btn.onclick = (e) => {
@@ -306,9 +323,11 @@ export const render = () => {
         
         list.querySelectorAll('.kit-item-select').forEach(sel => sel.onchange = (e) => {
             kitTemplates[e.target.dataset.tindex].items[e.target.dataset.iindex].child_product_id = e.target.value;
+            renderKitTemplates();
         });
         list.querySelectorAll('.kit-item-qty').forEach(inp => inp.oninput = (e) => {
             kitTemplates[e.target.dataset.tindex].items[e.target.dataset.iindex].quantity = parseInt(e.target.value)||1;
+            renderKitTemplates();
         });
         list.querySelectorAll('.remove-kit-item-btn').forEach(btn => btn.onclick = (e) => {
             kitTemplates[e.target.dataset.tindex].items.splice(e.target.dataset.iindex, 1);
@@ -365,7 +384,23 @@ export const render = () => {
     
     // Tab update based on name
     container.querySelector('#product-name').addEventListener('input', function () {
-        container.querySelector('#tab-btn-kits').style.display = isKitType(this.value) ? '' : 'none';
+        const isKit = isKitType(this.value);
+        container.querySelector('#tab-btn-kits').style.display = isKit ? '' : 'none';
+        
+        const toggleDisplay = (id, displayStyle) => {
+            const el = container.querySelector(id);
+            if (el && el.closest('.form-group > div')) el.closest('.form-group > div').style.display = displayStyle;
+        };
+        
+        container.querySelector('#product-type').closest('.form-group').style.display = isKit ? 'none' : 'flex';
+        toggleDisplay('#product-unit-cost', isKit ? 'none' : 'block');
+        toggleDisplay('#product-stock', isKit ? 'none' : 'block');
+        toggleDisplay('#product-time', isKit ? 'none' : 'block');
+        toggleDisplay('#product-price-1', isKit ? 'none' : 'block');
+        toggleDisplay('#product-price-3', isKit ? 'none' : 'block');
+        
+        const tercLabel = container.querySelector('#product-terceirizado');
+        if (tercLabel && tercLabel.parentElement) tercLabel.parentElement.style.display = isKit ? 'none' : 'flex';
     });
 
     const openModal = () => {
@@ -375,6 +410,7 @@ export const render = () => {
         container.querySelector('#product-terceirizado').checked = false;
         updateTerceirizadoUI(false);
         container.querySelector('#modal-title').innerText = 'Adicionar Produto';
+        container.querySelector('#product-name').dispatchEvent(new Event('input'));
         colorSection.style.display = 'none';
         colorRows = [];
         renderColorRows();
@@ -397,7 +433,8 @@ export const render = () => {
         container.querySelector('#product-terceirizado').checked = !!p.terceirizado;
         updateTerceirizadoUI(!!p.terceirizado);
         container.querySelector('#modal-title').innerText = 'Editar Produto';
-        container.querySelector('#tab-btn-kits').style.display = isKitType(p.name) ? '' : 'none';
+        
+        container.querySelector('#product-name').dispatchEvent(new Event('input'));
 
         // Load color variants if bracelet
         colorRows = [];
