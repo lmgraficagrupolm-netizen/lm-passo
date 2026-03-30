@@ -198,3 +198,105 @@ exports.getCostHistory = (req, res) => {
         }
     );
 };
+
+// ── Product Kits ────────────────────────────────────────────────────────────
+exports.getKits = (req, res) => {
+    const productId = req.params.id;
+    db.all("SELECT * FROM product_kit_templates WHERE product_id = ?", [productId], (err, templates) => {
+        if (err) return res.status(500).json({ error: err.message });
+        if (!templates || templates.length === 0) return res.json({ data: [] });
+        
+        const templateIds = templates.map(t => t.id);
+        const placeholders = templateIds.map(() => '?').join(',');
+        
+        db.all(`SELECT ki.*, p.name as product_name, p.price as current_product_price, p.type as product_type 
+                FROM product_kit_items ki 
+                JOIN products p ON ki.child_product_id = p.id 
+                WHERE ki.template_id IN (${placeholders})`, templateIds, (err2, items) => {
+            
+            if (err2) return res.status(500).json({ error: err2.message });
+            
+            const result = templates.map(t => {
+                return {
+                    ...t,
+                    items: items.filter(i => i.template_id === t.id)
+                };
+            });
+            
+            res.json({ data: result });
+        });
+    });
+};
+
+exports.saveKits = (req, res) => {
+    const productId = req.params.id;
+    const { templates } = req.body; 
+    
+    db.serialize(() => {
+        db.run("BEGIN TRANSACTION");
+        
+        db.all("SELECT id FROM product_kit_templates WHERE product_id = ?", [productId], (err, existing) => {
+            if (err) { db.run("ROLLBACK"); return res.status(500).json({ error: err.message }); }
+            
+            const existingIds = existing.map(e => e.id);
+            if (existingIds.length > 0) {
+                const placeholders = existingIds.map(() => '?').join(',');
+                db.run(`DELETE FROM product_kit_items WHERE template_id IN (${placeholders})`, existingIds);
+            }
+            
+            db.run("DELETE FROM product_kit_templates WHERE product_id = ?", [productId], (err) => {
+                if (err) { db.run("ROLLBACK"); return res.status(500).json({ error: err.message }); }
+                
+                if (!templates || templates.length === 0) {
+                    db.run("COMMIT");
+                    return res.json({ message: 'Kits atualizados' });
+                }
+                
+                const insertTemplate = db.prepare("INSERT INTO product_kit_templates (product_id, name, base_price) VALUES (?, ?, ?)");
+                const insertItem = db.prepare("INSERT INTO product_kit_items (template_id, child_product_id, quantity) VALUES (?, ?, ?)");
+                
+                let templatesDone = 0;
+                let errorOccurred = false;
+                
+                templates.forEach(t => {
+                    insertTemplate.run([productId, t.name || '', parseFloat(t.base_price) || 0], function(err) {
+                        if (errorOccurred) return;
+                        if (err) { errorOccurred = true; db.run("ROLLBACK"); return res.status(500).json({ error: err.message }); }
+                        
+                        const templateId = this.lastID;
+                        const items = t.items || [];
+                        let itemsDone = 0;
+                        
+                        if (items.length === 0) {
+                            templatesDone++;
+                            if (templatesDone === templates.length) {
+                                db.run("COMMIT");
+                                insertTemplate.finalize();
+                                insertItem.finalize();
+                                res.json({ message: 'Kits atualizados com sucesso' });
+                            }
+                        } else {
+                            items.forEach(item => {
+                                insertItem.run([templateId, item.child_product_id, parseInt(item.quantity) || 1], (errItem) => {
+                                    if (errorOccurred) return;
+                                    if (errItem) { errorOccurred = true; db.run("ROLLBACK"); return res.status(500).json({ error: errItem.message }); }
+                                    
+                                    itemsDone++;
+                                    if (itemsDone === items.length) {
+                                        templatesDone++;
+                                        if (templatesDone === templates.length) {
+                                            db.run("COMMIT");
+                                            insertTemplate.finalize();
+                                            insertItem.finalize();
+                                            res.json({ message: 'Kits atualizados com sucesso' });
+                                        }
+                                    }
+                                });
+                            });
+                        }
+                    });
+                });
+            });
+        });
+    });
+};

@@ -54,6 +54,7 @@ export const render = () => {
                 <div id="product-tabs" style="display:none; border-bottom:2px solid #e2e8f0; margin:0 1.5rem; display:flex; gap:0;">
                     <button type="button" class="product-tab active" data-tab="dados" style="padding:0.6rem 1.2rem; border:none; background:transparent; cursor:pointer; font-weight:600; font-size:0.9rem; color:#64748b; border-bottom:2px solid transparent; margin-bottom:-2px; transition:all 0.2s;">📋 Dados</button>
                     <button type="button" class="product-tab" data-tab="custo" style="padding:0.6rem 1.2rem; border:none; background:transparent; cursor:pointer; font-weight:600; font-size:0.9rem; color:#64748b; border-bottom:2px solid transparent; margin-bottom:-2px; transition:all 0.2s;">💰 Valor de Custo</button>
+                    <button type="button" class="product-tab" id="tab-btn-kits" data-tab="kits" style="display:none; padding:0.6rem 1.2rem; border:none; background:transparent; cursor:pointer; font-weight:600; font-size:0.9rem; color:#ea580c; border-bottom:2px solid transparent; margin-bottom:-2px; transition:all 0.2s;">📦 Montador do Kit</button>
                 </div>
                 <!-- Tab: Dados -->
                 <div id="tab-dados">
@@ -124,6 +125,18 @@ export const render = () => {
                         <div id="cost-history-list" style="max-height:250px; overflow-y:auto;">
                             <p style="color:#94a3b8; text-align:center; padding:1rem;">Nenhum custo registrado</p>
                         </div>
+                    </div>
+                </div>
+                <!-- Tab: Montador de Kits -->
+                <div id="tab-kits" style="display:none; padding:1.5rem;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem">
+                        <h4 style="margin:0; font-size:1.1rem; color:#1e293b">Sub-títulos do Kit</h4>
+                        <button type="button" id="btn-add-kit-template" class="btn btn-secondary btn-sm" style="background:#ea580c; color:#fff; border:none;">+ Adicionar Sub-título</button>
+                    </div>
+                    <div id="kit-templates-list" style="display:flex; flex-direction:column; gap:1rem; max-height:400px; overflow-y:auto; padding-right:0.5rem;">
+                    </div>
+                    <div style="margin-top:1rem; text-align:right;">
+                        <button type="button" class="btn btn-primary" id="btn-save-kits">Salvar Kits</button>
                     </div>
                 </div>
             </div>
@@ -228,9 +241,85 @@ export const render = () => {
     container.querySelector('#product-terceirizado').addEventListener('change', function () { updateTerceirizadoUI(this.checked); });
 
     const isBraceletType = (val) => (val || '').toLowerCase().includes('pulseira');
+    const isKitType = (val) => (val || '').toUpperCase().includes('KIT');
 
     // Color variants state
     let colorRows = []; // [{color, quantity}]
+    
+    // Kit variables
+    let kitTemplates = [];
+    
+    const renderKitTemplates = () => {
+        const list = container.querySelector('#kit-templates-list');
+        list.innerHTML = kitTemplates.map((tpl, tIndex) => `
+            <div style="border:1px solid #cbd5e1; border-radius:8px; padding:1rem; background:#f8fafc;">
+                <div style="display:flex; gap:0.5rem; margin-bottom:0.75rem;">
+                    <div style="flex:2">
+                        <label style="font-size:0.8rem; color:#64748b; margin-bottom:0.2rem; display:block;">Nome do Sub-título</label>
+                        <input type="text" class="kit-tpl-name" data-index="${tIndex}" value="${tpl.name || ''}" placeholder="Ex: Básico" style="width:100%; padding:0.4rem; border:1px solid #cbd5e1; border-radius:4px;">
+                    </div>
+                    <div style="flex:1">
+                        <label style="font-size:0.8rem; color:#64748b; margin-bottom:0.2rem; display:block;">Preço (R$)</label>
+                        <input type="number" step="0.01" min="0" class="kit-tpl-price" data-index="${tIndex}" value="${tpl.base_price || 0}" style="width:100%; padding:0.4rem; border:1px solid #cbd5e1; border-radius:4px;">
+                    </div>
+                    <div style="display:flex; align-items:flex-end">
+                        <button type="button" class="btn btn-sm remove-tpl-btn" data-index="${tIndex}" style="background:#fee2e2; color:#b91c1c; border:none; height:34px;">Excluir</button>
+                    </div>
+                </div>
+                
+                <div style="background:#fff; border:1px solid #e2e8f0; border-radius:6px; padding:0.75rem;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.5rem;">
+                        <span style="font-size:0.85rem; font-weight:600; color:#334155;">Produtos Inclusos</span>
+                        <button type="button" class="btn btn-secondary btn-sm add-kit-item-btn" data-index="${tIndex}" style="padding:0.2rem 0.6rem; font-size:0.8rem;">+ Item</button>
+                    </div>
+                    <div style="display:flex; flex-direction:column; gap:0.4rem;">
+                        ${(tpl.items || []).map((item, iIndex) => `
+                            <div style="display:flex; gap:0.5rem; align-items:center;">
+                                <select class="kit-item-select" data-tindex="${tIndex}" data-iindex="${iIndex}" style="flex:1; padding:0.3rem; border:1px solid #cbd5e1; border-radius:4px; font-size:0.85rem;">
+                                    <option value="">Selecione um produto...</option>
+                                    ${allProducts.filter(p => !isKitType(p.name)).map(p => `<option value="${p.id}" ${parseInt(item.child_product_id) === p.id ? 'selected' : ''}>${p.name} (R$ ${parseFloat(p.price||0).toFixed(2)})</option>`).join('')}
+                                </select>
+                                <input type="number" min="1" class="kit-item-qty" data-tindex="${tIndex}" data-iindex="${iIndex}" value="${item.quantity || 1}" style="width:70px; padding:0.3rem; border:1px solid #cbd5e1; border-radius:4px; font-size:0.85rem; text-align:center;">
+                                <button type="button" class="remove-kit-item-btn" data-tindex="${tIndex}" data-iindex="${iIndex}" style="background:transparent; color:#b91c1c; border:none; cursor:pointer;" title="Remover item">&times;</button>
+                            </div>
+                        `).join('')}
+                        ${(!tpl.items || tpl.items.length === 0) ? '<p style="font-size:0.8rem; color:#94a3b8; text-align:center; margin:0;">Nenhum produto adicionado</p>' : ''}
+                    </div>
+                </div>
+            </div>
+        `).join('');
+        
+        if (kitTemplates.length === 0) {
+            list.innerHTML = '<p style="text-align:center; color:#94a3b8;">Nenhum sub-título criado ainda. Clique em "+ Adicionar Sub-título" para começar.</p>';
+        }
+
+        list.querySelectorAll('.kit-tpl-name').forEach(inp => inp.oninput = (e) => kitTemplates[e.target.dataset.index].name = e.target.value);
+        list.querySelectorAll('.kit-tpl-price').forEach(inp => inp.oninput = (e) => kitTemplates[e.target.dataset.index].base_price = parseFloat(e.target.value)||0);
+        list.querySelectorAll('.remove-tpl-btn').forEach(btn => btn.onclick = (e) => { kitTemplates.splice(e.target.dataset.index, 1); renderKitTemplates(); });
+        
+        list.querySelectorAll('.add-kit-item-btn').forEach(btn => btn.onclick = (e) => {
+            const tIndex = e.target.dataset.index;
+            if (!kitTemplates[tIndex].items) kitTemplates[tIndex].items = [];
+            kitTemplates[tIndex].items.push({ child_product_id: '', quantity: 1 });
+            renderKitTemplates();
+        });
+        
+        list.querySelectorAll('.kit-item-select').forEach(sel => sel.onchange = (e) => {
+            kitTemplates[e.target.dataset.tindex].items[e.target.dataset.iindex].child_product_id = e.target.value;
+        });
+        list.querySelectorAll('.kit-item-qty').forEach(inp => inp.oninput = (e) => {
+            kitTemplates[e.target.dataset.tindex].items[e.target.dataset.iindex].quantity = parseInt(e.target.value)||1;
+        });
+        list.querySelectorAll('.remove-kit-item-btn').forEach(btn => btn.onclick = (e) => {
+            kitTemplates[e.target.dataset.tindex].items.splice(e.target.dataset.iindex, 1);
+            renderKitTemplates();
+        });
+    };
+
+    container.querySelector('#btn-add-kit-template').onclick = () => {
+        kitTemplates.push({ name: '', base_price: 0, items: [] });
+        renderKitTemplates();
+    };
 
     const colorSection = container.querySelector('#color-variants-section');
     const colorList = container.querySelector('#color-variants-list');
@@ -273,6 +362,11 @@ export const render = () => {
             renderColorRows();
         }
     });
+    
+    // Tab update based on name
+    container.querySelector('#product-name').addEventListener('input', function () {
+        container.querySelector('#tab-btn-kits').style.display = isKitType(this.value) ? '' : 'none';
+    });
 
     const openModal = () => {
         form.reset();
@@ -303,6 +397,7 @@ export const render = () => {
         container.querySelector('#product-terceirizado').checked = !!p.terceirizado;
         updateTerceirizadoUI(!!p.terceirizado);
         container.querySelector('#modal-title').innerText = 'Editar Produto';
+        container.querySelector('#tab-btn-kits').style.display = isKitType(p.name) ? '' : 'none';
 
         // Load color variants if bracelet
         colorRows = [];
@@ -323,6 +418,16 @@ export const render = () => {
         tabsEl.style.display = 'flex';
         switchTab('dados');
         loadCostHistory(p.id);
+        
+        if (isKitType(p.name)) {
+            fetch(`/api/products/${p.id}/kits`).then(r=>r.json()).then(res => {
+                kitTemplates = res.data || [];
+                renderKitTemplates();
+            }).catch(() => {});
+        } else {
+            kitTemplates = [];
+            renderKitTemplates();
+        }
 
         modal.classList.add('open');
     };
@@ -331,17 +436,48 @@ export const render = () => {
     const switchTab = (tabName) => {
         container.querySelectorAll('.product-tab').forEach(t => {
             const isActive = t.dataset.tab === tabName;
-            t.style.color = isActive ? '#7c3aed' : '#64748b';
-            t.style.borderBottomColor = isActive ? '#7c3aed' : 'transparent';
+            t.style.color = isActive ? (tabName === 'kits' ? '#ea580c' : '#7c3aed') : '#64748b';
+            t.style.borderBottomColor = isActive ? (tabName === 'kits' ? '#ea580c' : '#7c3aed') : 'transparent';
             t.classList.toggle('active', isActive);
         });
         container.querySelector('#tab-dados').style.display = tabName === 'dados' ? '' : 'none';
         container.querySelector('#tab-custo').style.display = tabName === 'custo' ? '' : 'none';
+        container.querySelector('#tab-kits').style.display = tabName === 'kits' ? '' : 'none';
     };
 
     container.querySelectorAll('.product-tab').forEach(tab => {
         tab.onclick = () => switchTab(tab.dataset.tab);
     });
+    
+    container.querySelector('#btn-save-kits').onclick = async () => {
+        const pId = container.querySelector('#product-id').value;
+        if (!pId) return alert('Salve o produto primeiro na aba Dados!');
+        
+        // Remove empty templates or items without product
+        const payload = kitTemplates.filter(t => t.name).map(t => ({
+            name: t.name,
+            base_price: t.base_price,
+            items: (t.items||[]).filter(i => i.child_product_id)
+        }));
+        
+        container.querySelector('#btn-save-kits').textContent = 'Salvando...';
+        container.querySelector('#btn-save-kits').disabled = true;
+        
+        try {
+            await fetch(`/api/products/${pId}/kits`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ templates: payload })
+            });
+            container.querySelector('#btn-save-kits').textContent = 'Kits Salvos!';
+            setTimeout(() => {
+                container.querySelector('#btn-save-kits').textContent = 'Salvar Kits';
+                container.querySelector('#btn-save-kits').disabled = false;
+            }, 2000);
+        } catch (e) {
+            alert('Erro ao salvar.');
+        }
+    };
 
     // Load cost history for a product
     const loadCostHistory = async (productId) => {

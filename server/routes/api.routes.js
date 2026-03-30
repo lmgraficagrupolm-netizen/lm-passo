@@ -38,6 +38,9 @@ router.put('/products/:id/colors', productController.saveColorVariants);
 router.patch('/products/colors/:id/debit', productController.debitColorVariant);
 // Product cost history
 router.get('/products/:id/costs', productController.getCostHistory);
+// Product Kits
+router.get('/products/:id/kits', productController.getKits);
+router.post('/products/:id/kits', productController.saveKits);
 
 // Orders
 const orderController = require('../controllers/order_controller');

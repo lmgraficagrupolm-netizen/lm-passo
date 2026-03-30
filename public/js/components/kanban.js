@@ -248,6 +248,39 @@ export const render = () => {
             </div>
         </div>
 
+        <div class="modal-overlay" id="kit-builder-modal">
+            <div class="modal" style="max-width: 600px;">
+                <div class="modal-header">
+                    <h3 id="kit-builder-title">Configurar Kit</h3>
+                    <button class="modal-close" data-target="kit-builder-modal">&times;</button>
+                </div>
+                <!-- Selection of Template -->
+                <div id="kit-template-selection" style="margin-bottom:1rem;">
+                    <label style="font-weight:600; color:#555;">Selecione o Modelo (Sub-título):</label>
+                    <div id="kit-template-buttons" style="display:flex; gap:0.5rem; flex-wrap:wrap; margin-top:0.5rem;">
+                        <!-- buttons injected here -->
+                    </div>
+                </div>
+                <!-- Kit Content Editor -->
+                <div id="kit-content-editor" style="display:none; border-top:1px solid #eee; padding-top:1rem;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.5rem;">
+                        <h4 style="margin:0; font-size:1rem; color:#1e293b;">Itens do Pacote</h4>
+                        <button type="button" class="btn btn-secondary btn-sm" id="btn-add-extra-kit-item">+ Produto Extra</button>
+                    </div>
+                    <div id="kit-items-list" style="display:flex; flex-direction:column; gap:0.5rem; max-height:250px; overflow-y:auto; margin-bottom:1rem;">
+                        <!-- items injected here -->
+                    </div>
+                    
+                    <div style="background:#f8fafc; border:1px solid #cbd5e1; border-radius:6px; padding:0.75rem; text-align:right;">
+                        <span style="font-size:0.85rem; color:#64748b;">Valor do Kit:</span>
+                        <div id="kit-builder-total" style="font-size:1.4rem; font-weight:bold; color:#2563eb;">R$ 0,00</div>
+                    </div>
+                    
+                    <button type="button" class="btn btn-primary" id="btn-finalize-kit" style="width:100%; margin-top:1rem;">Adicionar Kit ao Pedido</button>
+                </div>
+            </div>
+        </div>
+
         <!-- Quick Client Modal -->
         <div class="modal-overlay" id="quick-client-modal">
             <div class="modal" style="max-width: 400px;">
@@ -431,6 +464,8 @@ export const render = () => {
                 }
             }
         };
+        
+        const isKitType = (val) => (val || '').toUpperCase().includes('KIT');
 
         // (event name visibility is wired at component init, outside fetchSelectData)
 
@@ -1397,49 +1432,77 @@ export const render = () => {
 
     const renderCart = () => {
         if (!hasOrderForm) return;
-        cartTbody.innerHTML = '';
-        let total = 0;
-
+        const orderDeadline = getDeadline().toLowerCase();
+        const tbody = container.querySelector('#cart-tbody');
         if (cart.length === 0) {
-            cartTbody.innerHTML = '<tr><td colspan="4" style="text-align:center; padding:1rem; color:#999">Nenhum item adicionado</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; padding:1.5rem; color:#94a3b8">Nenhum item adicionado</td></tr>';
             createBtn.disabled = true;
-        } else {
-            createBtn.disabled = false;
-            cart.forEach((item, index) => {
-                const price = item.sem_personalizacao ? PULSEIRA_DEFAULT_PRICE : getProductPrice(item.product);
-                const subtotal = price * item.qty;
-                total += subtotal;
+            return;
+        }
+        createBtn.disabled = false;
 
-                cartTbody.innerHTML += `
-                    <tr>
-                         <td style="padding:4px">${item.product.name}${item.color_name ? `<br><small style="color:#92400e;background:#fef3c7;padding:1px 6px;border-radius:10px;font-size:0.75rem;">🎨 ${item.color_name}</small>` : ''}</td>
-                         <td style="padding:4px; text-align:center">${item.qty}</td>
-                         <td style="padding:4px; text-align:right">R$ ${subtotal.toFixed(2)}</td>
-                         <td style="padding:4px; text-align:center">
-                            <button type="button" class="btn btn-sm btn-secondary remove-item" data-index="${index}" style="padding:0 4px; background:#fee2e2; color:#b91c1c; border:none">&times;</button>
-                         </td>
+        tbody.innerHTML = cart.map((item, i) => {
+            let sub = 0;
+            let displayRow = '';
+            
+            if (item.is_kit) {
+                sub = item.unit_price * item.qty;
+                displayRow = `
+                    <tr style="border-bottom: 1px solid #f1f5f9; background:#eff6ff;">
+                        <td style="padding: 8px;">
+                            <b style="color:#1d4ed8;">📦 Kit: ${item.product.name} — ${item.kit_template.name}</b>
+                            <div style="padding-left:10px; margin-top:4px; font-size:0.75rem; color:#475569; border-left:2px solid #93c5fd;">
+                                ${(item.kit_items||[]).map(k => `${k.current_qty}x ${k.product_name}`).join('<br>')}
+                            </div>
+                        </td>
+                        <td style="padding: 8px; text-align:center; vertical-align:top;">${item.qty}</td>
+                        <td style="padding: 8px; text-align:right; vertical-align:top; font-weight:bold; color:#1d4ed8;">R$ ${sub.toFixed(2).replace('.',',')}</td>
+                        <td style="text-align:center; vertical-align:top;"><button type="button" class="btn-remove-item" data-index="${i}" style="background:none; border:none; color: #ef4444; font-size: 1.2rem; cursor: pointer;" title="Remover">&times;</button></td>
                     </tr>
                 `;
-            });
+            } else {
+                let rowP = 0;
+                if (item.sem_personalizacao) rowP = PULSEIRA_DEFAULT_PRICE;
+                else rowP = parseFloat(orderDeadline === '1d' && !item.product.terceirizado ? item.product.price_1_day : (item.product.price_3_days || item.product.price)) || 0;
+                
+                sub = rowP * item.qty;
+                const tercHtml = item.product.terceirizado ? ' <span style="background:#fef3c7; color:#92400e; padding:1px 6px; border-radius:8px; font-size:0.75em;">🏭 Terc.</span>' : '';
+                const isPulseira = isPulseiraProd(item.product);
+                const colorHtml = isPulseira ? `<br><small style="color:#92400e;background:#fef3c7;padding:1px 6px;border-radius:10px;font-size:0.75em;">${item.color_name}</small>` : '';
 
-            // Remove handlers
-            cartTbody.querySelectorAll('.remove-item').forEach(btn => {
-                btn.onclick = () => {
-                    cart.splice(parseInt(btn.dataset.index), 1);
-                    renderCart();
-                };
-            });
-        }
+                displayRow = `
+                    <tr style="border-bottom: 1px solid #f1f5f9;">
+                        <td style="padding: 8px;"><b>${item.product.name}</b>${colorHtml}${tercHtml}</td>
+                        <td style="padding: 8px; text-align:center;">${item.qty}</td>
+                        <td style="padding: 8px; text-align:right;">R$ ${sub.toFixed(2).replace('.',',')}</td>
+                        <td style="text-align:center;"><button type="button" class="btn-remove-item" data-index="${i}" style="background:none; border:none; color: #ef4444; font-size: 1.2rem; cursor: pointer;" title="Remover">&times;</button></td>
+                    </tr>
+                `;
+            }
+            
+            return displayRow;
+        }).join('');
+
+        tbody.querySelectorAll('.btn-remove-item').forEach(btn => {
+            btn.onclick = () => {
+                cart.splice(parseInt(btn.dataset.index), 1);
+                renderCart();
+            };
+        });
+
+        let total = cart.reduce((acc, item) => {
+            if (item.is_kit) return acc + (item.unit_price * item.qty);
+            if (item.sem_personalizacao) return acc + (PULSEIRA_DEFAULT_PRICE * item.qty);
+            const p = parseFloat(orderDeadline === '1d' && !item.product.terceirizado ? item.product.price_1_day : (item.product.price_3_days || item.product.price)) || 0;
+            return acc + (p * item.qty);
+        }, 0);
 
         const isCostMode = isInternalMode();
-        
-        // Aplica o desconto se selecionado
         const discountSelect = container.querySelector('#order-discount');
         const discountPct = discountSelect && !isCostMode ? parseFloat(discountSelect.value || 0) : 0;
         const discountValue = total * (discountPct / 100);
         const finalTotal = total - discountValue;
 
-        // Armazena o total base para envio e exibe o valor final
         totalInput.dataset.baseTotal = total.toFixed(2);
         totalInput.value = finalTotal.toFixed(2);
 
@@ -1538,8 +1601,8 @@ export const render = () => {
         const product = loadedProducts.find(p => p.id == pid);
         if (!product) return;
 
-        // Internal service: require unit_cost
-        if (isInternalMode() && !(parseFloat(product.unit_cost) > 0)) {
+        // Internal service: require unit_cost (except for Kits which unroll their children's costs)
+        if (!isKitType(product.name) && isInternalMode() && !(parseFloat(product.unit_cost) > 0)) {
             warning.innerText = '⚠️ Este produto não tem valor de custo cadastrado. Vá em Produtos e adicione o custo antes de usar em Serviço Interno.';
             warning.style.color = '#dc2626';
             return;
@@ -1567,6 +1630,11 @@ export const render = () => {
             }
         }
 
+        if (isKitType(product.name)) {
+            openKitBuilder(product);
+            return;
+        }
+
         cart.push({ product, qty, color_variant_id, color_name, sem_personalizacao: isSemPers });
         renderCart();
 
@@ -1575,6 +1643,145 @@ export const render = () => {
         warning.style.color = '';
     };
 
+
+    const kitModal = container.querySelector('#kit-builder-modal');
+    let currentKitContext = null;
+
+    const openKitBuilder = async (product) => {
+        container.querySelector('#kit-builder-title').textContent = `Configurar Kit: ${product.name}`;
+        const templateBtns = container.querySelector('#kit-template-buttons');
+        const editor = container.querySelector('#kit-content-editor');
+        templateBtns.innerHTML = 'Carregando opções...';
+        editor.style.display = 'none';
+        kitModal.classList.add('open');
+
+        try {
+            const res = await fetch(`/api/products/${product.id}/kits`);
+            const { data } = await res.json();
+            if (!data || data.length === 0) {
+                templateBtns.innerHTML = '<p style="color:#b91c1c;">Nenhum sub-título cadastrado neste Kit. Cadastre na aba Produtos.</p>';
+                return;
+            }
+
+            templateBtns.innerHTML = data.map((tpl, idx) => `
+                <button type="button" class="btn btn-secondary kit-tpl-btn" data-index="${idx}" style="background:#fff; border:1px solid #cbd5e1; color:#334155;">
+                    ${tpl.name} <br><small style="color:#16a34a; font-weight:bold;">R$ ${(parseFloat(tpl.base_price)||0).toFixed(2).replace('.',',')}</small>
+                </button>
+            `).join('');
+
+            templateBtns.querySelectorAll('.kit-tpl-btn').forEach(btn => {
+                btn.onclick = () => {
+                    templateBtns.querySelectorAll('.kit-tpl-btn').forEach(b => {
+                        b.style.borderColor = '#cbd5e1';
+                        b.style.background = '#fff';
+                    });
+                    btn.style.borderColor = '#2563eb';
+                    btn.style.background = '#eff6ff';
+                    const tData = data[btn.dataset.index];
+                    
+                    // Deep copy items into context
+                    currentKitContext = {
+                        product: product,
+                        template: tData,
+                        items: (tData.items || []).map(i => ({
+                            child_product_id: i.child_product_id,
+                            product_name: i.product_name,
+                            base_qty: i.quantity,
+                            current_qty: i.quantity,
+                            price: parseFloat(i.current_product_price || 0)
+                        }))
+                    };
+                    renderKitEditor();
+                    editor.style.display = 'block';
+                };
+            });
+        } catch (e) {
+            templateBtns.innerHTML = 'Erro ao carregar';
+        }
+    };
+
+    const renderKitEditor = () => {
+        const list = container.querySelector('#kit-items-list');
+        const ctx = currentKitContext;
+        if (!ctx) return;
+
+        list.innerHTML = ctx.items.map((item, idx) => `
+            <div style="display:flex; justify-content:space-between; align-items:center; background:#fff; border:1px solid #e2e8f0; padding:0.5rem; border-radius:6px;">
+                <div style="flex:1;">
+                    <span style="font-weight:600; font-size:0.9rem;">${item.product_name}</span>
+                    <div style="font-size:0.75rem; color:#64748b;">Qtd Padrão: ${item.base_qty} | Un: R$ ${item.price.toFixed(2).replace('.',',')}</div>
+                </div>
+                <div style="display:flex; align-items:center; gap:0.5rem;">
+                    <input type="number" min="0" class="kit-ctx-qty form-control" data-index="${idx}" value="${item.current_qty}" style="width:60px; text-align:center; padding:0.3rem;">
+                    <button type="button" class="kit-ctx-remove" data-index="${idx}" style="background:#fee2e2; color:#b91c1c; border:none; padding:0.3rem 0.6rem; border-radius:4px; font-weight:bold; cursor:pointer;">&times;</button>
+                </div>
+            </div>
+        `).join('');
+
+        if (ctx.items.length === 0) list.innerHTML = '<p style="text-align:center; color:#94a3b8; font-size:0.85rem;">Nenhum item neste pacote.</p>';
+
+        let extraCost = 0;
+        ctx.items.forEach(i => {
+            const diff = i.current_qty - i.base_qty;
+            extraCost += (diff * i.price);
+        });
+        
+        const finalPrice = Math.max(0, parseFloat(ctx.template.base_price) + extraCost);
+        container.querySelector('#kit-builder-total').textContent = `R$ ${finalPrice.toFixed(2).replace('.',',')}`;
+
+        list.querySelectorAll('.kit-ctx-qty').forEach(inp => {
+            inp.oninput = (e) => {
+                ctx.items[e.target.dataset.index].current_qty = parseInt(e.target.value) || 0;
+                renderKitEditor();
+            };
+        });
+        list.querySelectorAll('.kit-ctx-remove').forEach(btn => {
+            btn.onclick = (e) => {
+                ctx.items.splice(e.target.dataset.index, 1);
+                renderKitEditor();
+            };
+        });
+    };
+
+    container.querySelector('#btn-add-extra-kit-item').onclick = () => {
+        const pIdStr = prompt('Digite a ID do produto que deseja adicionar no pacote:');
+        if (!pIdStr) return;
+        const p = loadedProducts.find(x => x.id == parseInt(pIdStr));
+        if (!p) return alert('Produto não encontrado');
+        if (isKitType(p.name)) return alert('Não é possível adicionar um kit dentro de outro.');
+        
+        currentKitContext.items.push({
+            child_product_id: p.id,
+            product_name: p.name,
+            base_qty: 0,
+            current_qty: 1,
+            price: parseFloat(p.price || 0)
+        });
+        renderKitEditor();
+    };
+
+    container.querySelector('#btn-finalize-kit').onclick = () => {
+        if (!currentKitContext) return;
+        
+        let extraCost = 0;
+        currentKitContext.items.forEach(i => {
+           const diff = i.current_qty - i.base_qty;
+           extraCost += (diff * i.price);
+        });
+        const finalPrice = Math.max(0, parseFloat(currentKitContext.template.base_price) + extraCost);
+
+        cart.push({
+            is_kit: true,
+            product: currentKitContext.product,
+            kit_template: currentKitContext.template,
+            kit_items: currentKitContext.items.filter(i => i.current_qty > 0),
+            unit_price: finalPrice,
+            qty: 1
+        });
+        
+        renderCart();
+        kitModal.classList.remove('open');
+    };
 
     const finalizeModal = container.querySelector('#finalize-modal');
     const finalizeForm = container.querySelector('#finalize-form');
@@ -1838,6 +2045,50 @@ export const render = () => {
             return;
         }
 
+        // Expand kits into order items array
+        let items = [];
+        cart.forEach(i => {
+            if (i.is_kit) {
+                // Header (No Stock, No unit cost on parent itself, but displays properly on order)
+                items.push({
+                    product_id: i.product.id,
+                    name: `📦 [KIT] ${i.product.name} — ${i.kit_template.name}`,
+                    quantity: i.qty,
+                    price: i.unit_price,
+                    unit_cost: 0, 
+                    color_variant_id: null,
+                    color_name: null
+                });
+                
+                // Actual items mapping for stock deduction
+                i.kit_items.forEach(ki => {
+                    const childProd = loadedProducts.find(p => p.id == ki.child_product_id);
+                    items.push({
+                        product_id: ki.child_product_id,
+                        name: `   ↳ ${ki.product_name}`,
+                        quantity: ki.current_qty * i.qty,
+                        price: 0, 
+                        unit_cost: childProd ? (parseFloat(childProd.unit_cost) || 0) : 0,
+                        color_variant_id: null,
+                        color_name: null
+                    });
+                });
+            } else {
+                let itemPrice = 0;
+                if (i.sem_personalizacao) itemPrice = PULSEIRA_DEFAULT_PRICE;
+                else itemPrice = parseFloat(getDeadline().toLowerCase() === '1d' && !i.product.terceirizado ? i.product.price_1_day : (i.product.price_3_days || i.product.price)) || 0;
+                items.push({
+                    product_id: i.product.id,
+                    name: i.product.name,
+                    quantity: i.qty,
+                    price: itemPrice,
+                    unit_cost: parseFloat(i.product.unit_cost) || 0,
+                    color_variant_id: i.color_variant_id || null,
+                    color_name: i.color_name || null
+                });
+            }
+        });
+
         const payload = {
             client_id: clientSelect.value,
             description: body.description,
@@ -1845,12 +2096,7 @@ export const render = () => {
             total_value: parseFloat(container.querySelector('#cart-total-input').value) || 0,
             created_by: user.id || 1,
             deadline_option: getDeadline(),
-            items: cart.map(i => ({
-                product_id: i.product.id,
-                quantity: i.qty,
-                color_variant_id: i.color_variant_id || null,
-                color_name: i.color_name || null
-            })),
+            items: items,
             is_internal: container.querySelector('#internal-toggle').checked ? 1 : 0,
             event_name: (container.querySelector('#internal-toggle').checked ? 'Interno' : container.querySelector('#order-payment-method').value) === 'CORE' 
                         ? container.querySelector('#order-event-name').value 

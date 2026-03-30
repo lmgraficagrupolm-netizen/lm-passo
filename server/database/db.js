@@ -139,6 +139,25 @@ function initDb() {
             FOREIGN KEY(product_id) REFERENCES products(id)
         )`);
 
+        // Kit Templates Table
+        db.run(`CREATE TABLE IF NOT EXISTS product_kit_templates (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            product_id INTEGER,
+            name TEXT,
+            base_price REAL,
+            FOREIGN KEY(product_id) REFERENCES products(id)
+        )`);
+
+        // Kit Template Items Table
+        db.run(`CREATE TABLE IF NOT EXISTS product_kit_items (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            template_id INTEGER,
+            child_product_id INTEGER,
+            quantity INTEGER,
+            FOREIGN KEY(template_id) REFERENCES product_kit_templates(id),
+            FOREIGN KEY(child_product_id) REFERENCES products(id)
+        )`);
+
         // Comments Table
         db.run(`CREATE TABLE IF NOT EXISTS comments (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
