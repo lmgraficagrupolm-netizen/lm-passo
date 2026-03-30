@@ -294,7 +294,7 @@ export const render = () => {
                             <div style="display:flex; gap:0.5rem; align-items:center;">
                                 <select class="kit-item-select" data-tindex="${tIndex}" data-iindex="${iIndex}" style="flex:1; padding:0.3rem; border:1px solid #cbd5e1; border-radius:4px; font-size:0.85rem;">
                                     <option value="">Selecione um produto...</option>
-                                    ${allProducts.filter(p => !isKitType(p.name)).map(p => `<option value="${p.id}" ${parseInt(item.child_product_id) === p.id ? 'selected' : ''}>${p.name} (R$ ${parseFloat(p.price||0).toFixed(2)})</option>`).join('')}
+                                    ${allProducts.filter(p => !isKitType(p.name)).map(p => `<option value="${p.id}" ${parseInt(item.child_product_id) === p.id ? 'selected' : ''}>${p.name} (R$ ${parseFloat(p.price_3_days||p.price||0).toFixed(2).replace('.', ',')})</option>`).join('')}
                                 </select>
                                 <input type="number" min="1" class="kit-item-qty" data-tindex="${tIndex}" data-iindex="${iIndex}" value="${item.quantity || 1}" style="width:70px; padding:0.3rem; border:1px solid #cbd5e1; border-radius:4px; font-size:0.85rem; text-align:center;">
                                 <button type="button" class="remove-kit-item-btn" data-tindex="${tIndex}" data-iindex="${iIndex}" style="background:transparent; color:#b91c1c; border:none; cursor:pointer;" title="Remover item">&times;</button>
