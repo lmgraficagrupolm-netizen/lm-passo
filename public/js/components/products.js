@@ -64,6 +64,16 @@ export const render = () => {
                         <label>Nome do Produto</label>
                         <input type="text" name="name" id="product-name" placeholder="Ex: Adesivo Vinil, Banner Lona" required>
                     </div>
+                    
+                    <div id="kit-overview-section" style="display:none; margin-bottom:1rem; padding:1rem; background:#eff6ff; border:1px solid #bfdbfe; border-radius:8px;">
+                        <div style="display:flex; justify-content:space-between; align-items:center;">
+                            <h4 style="font-size:0.9rem; color:#1d4ed8; margin:0; margin-bottom:0.5rem;">📦 Sub-títulos configurados</h4>
+                            <button type="button" class="btn btn-sm kit-goto-btn" style="padding:0.2rem 0.5rem; font-size:0.75rem; background:#fff; border:1px solid #93c5fd; color:#2563eb;">Editar Kits</button>
+                        </div>
+                        <div id="kit-overview-list" style="display:flex; flex-direction:column; gap:0.4rem; font-size:0.85rem; color:#334155; margin-top:0.5rem;">
+                            <!-- Injetado -->
+                        </div>
+                    </div>
                     <div class="form-group">
                         <label>Tipo de Produto</label>
                         <input type="text" name="type" id="product-type" placeholder="Ex: Papelaria, Banner, Adesivo">
@@ -333,6 +343,21 @@ export const render = () => {
             kitTemplates[e.target.dataset.tindex].items.splice(e.target.dataset.iindex, 1);
             renderKitTemplates();
         });
+
+        // Update overview
+        const overview = container.querySelector('#kit-overview-list');
+        if (overview) {
+            if (kitTemplates.length === 0) {
+                overview.innerHTML = '<span style="color:#94a3b8; font-style:italic;">Nenhum kit configurado.</span>';
+            } else {
+                overview.innerHTML = kitTemplates.map(t => 
+                    `<div style="display:flex; justify-content:space-between; padding:0.3rem 0; border-bottom:1px solid #dbeafe;">
+                        <span>${t.name || '<i>Sem nome</i>'}</span>
+                        <strong style="color:#1d4ed8;">R$ ${(t.base_price||0).toFixed(2).replace('.',',')}</strong>
+                    </div>`
+                ).join('');
+            }
+        }
     };
 
     container.querySelector('#btn-add-kit-template').onclick = () => {
@@ -382,10 +407,15 @@ export const render = () => {
         }
     });
     
+    container.querySelector('.kit-goto-btn')?.addEventListener('click', () => {
+        container.querySelector('#tab-btn-kits').click();
+    });
+
     // Tab update based on name
     container.querySelector('#product-name').addEventListener('input', function () {
         const isKit = isKitType(this.value);
         container.querySelector('#tab-btn-kits').style.display = isKit ? '' : 'none';
+        container.querySelector('#kit-overview-section').style.display = isKit ? 'block' : 'none';
         
         const toggleDisplay = (id, displayStyle) => {
             const el = container.querySelector(id);
