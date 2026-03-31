@@ -60,23 +60,35 @@ export const render = () => {
     container.innerHTML = html;
 
     const loadItems = async () => {
+        const grid = container.querySelector('#catalogue-grid');
         try {
-            const grid = container.querySelector('#catalogue-grid');
             const res = await fetch('/api/catalogue');
-            const { data } = await res.json();
+            if (!res.ok) {
+                const text = await res.text();
+                grid.innerHTML = `<p style="color:red; padding:2rem;">Erro ao carregar: ${text}</p>`;
+                return;
+            }
+            
+            const payload = await res.json();
+            const data = payload.data || [];
 
             if (data.length === 0) {
                 grid.innerHTML = '<p style="color:#64748b; padding:2rem; width:100%; text-align:center;">O catálogo está vazio no momento.</p>';
                 return;
             }
 
-            grid.innerHTML = data.map(item => `
+            grid.innerHTML = data.map(item => {
+                const safeTitle = (item.title || '').replace(/"/g, '&quot;');
+                const safeDesc = (item.description || '');
+                const displayDesc = safeDesc.replace(/\\n/g, '<br>');
+
+                return `
                 <div class="catalogue-card">
                     <div class="catalogue-image-wrapper">
-                        <img src="${item.image_url}" alt="${item.title}" class="catalogue-image">
+                        <img src="${item.image_url}" alt="${safeTitle}" class="catalogue-image" onerror="this.onerror=null; this.src=''; this.alt='(Imagem Quebrada)' ">
                         ${isAdmin ? `
                             <div style="position: absolute; top: 10px; right: 10px; display: flex; gap: 0.5rem;">
-                                <button class="cat-edit-btn" data-id="${item.id}" data-title="${item.title.replace(/"/g, '&quot;')}" data-desc="${encodeURIComponent(item.description)}" title="Editar Texto" style="background: rgba(255,255,255,0.9); border: none; color: var(--primary); width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 2px 10px rgba(0,0,0,0.1); transition: all 0.2s;">
+                                <button class="cat-edit-btn" data-id="${item.id}" data-title="${safeTitle}" data-desc="${encodeURIComponent(safeDesc)}" title="Editar Texto" style="background: rgba(255,255,255,0.9); border: none; color: var(--primary); width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 2px 10px rgba(0,0,0,0.1); transition: all 0.2s;">
                                     <ion-icon name="create-outline"></ion-icon>
                                 </button>
                                 <button class="cat-delete-btn" data-id="${item.id}" title="Excluir" style="background: rgba(255,255,255,0.9); border: none; color: var(--danger); width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 2px 10px rgba(0,0,0,0.1); transition: all 0.2s;">
@@ -86,25 +98,28 @@ export const render = () => {
                         ` : ''}
                     </div>
                     <div class="catalogue-content">
-                        <h4 class="catalogue-title">${item.title}</h4>
-                        <p class="catalogue-desc">${item.description.replace(/\\n/g, '<br>')}</p>
+                        <h4 class="catalogue-title">${safeTitle || 'Sem Título'}</h4>
+                        <p class="catalogue-desc">${displayDesc || 'Nenhuma descrição adicionada.'}</p>
                     </div>
                     <div class="catalogue-actions">
-                        <button class="btn btn-secondary cat-copy-btn" data-img="${item.image_url}" data-desc="${encodeURIComponent(item.description)}">
+                        <button class="btn btn-secondary cat-copy-btn" data-img="${item.image_url}" data-desc="${encodeURIComponent(safeDesc)}">
                             <ion-icon name="copy-outline"></ion-icon> Copiar
                         </button>
-                        <button class="btn btn-primary cat-share-btn" data-img="${item.image_url}" data-desc="${encodeURIComponent(item.description)}">
+                        <button class="btn btn-primary cat-share-btn" data-img="${item.image_url}" data-desc="${encodeURIComponent(safeDesc)}">
                             <ion-icon name="logo-whatsapp"></ion-icon> Partilhar
                         </button>
                     </div>
                 </div>
-            `).join('');
+                `;
+            }).join('');
 
             // Attach listeners to items
             attachItemEvents();
 
         } catch (err) {
             console.error('Erro ao carregar catálogo:', err);
+            const grid = container.querySelector('#catalogue-grid');
+            if (grid) grid.innerHTML = `<p style="color:red; padding:2rem;">Erro interno ao carregar a interface: ${err.message}</p>`;
         }
     };
 
