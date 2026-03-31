@@ -169,6 +169,15 @@ function initDb() {
             FOREIGN KEY(user_id) REFERENCES users(id)
         )`);
 
+        // Catalogue Items Table
+        db.run(`CREATE TABLE IF NOT EXISTS catalogue_items (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            title TEXT,
+            description TEXT,
+            image_url TEXT,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        )`);
+
         const bcrypt = require('bcryptjs');
 
         // ... (existing imports, but bcrypt needs to be top)

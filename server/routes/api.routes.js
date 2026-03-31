@@ -103,6 +103,13 @@ router.put('/purchases/:id/receive', purchaseController.receivePurchase);
 router.put('/purchases/:id/cancel', purchaseController.cancelPurchase);
 router.delete('/purchases/:id', purchaseController.deletePurchase);
 
+// Catalogue
+const catalogueController = require('../controllers/catalogue_controller');
+router.get('/catalogue', catalogueController.getAllItems);
+router.post('/catalogue', upload.single('image'), catalogueController.createItem);
+router.put('/catalogue/:id', catalogueController.updateItem);
+router.delete('/catalogue/:id', catalogueController.deleteItem);
+
 // Open URL in Microsoft Edge (Windows only)
 const { exec } = require('child_process');
 router.post('/open-edge', (req, res) => {
