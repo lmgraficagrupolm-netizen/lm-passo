@@ -1,4 +1,4 @@
-﻿export const render = () => {
+export const render = () => {
     const user = JSON.parse(localStorage.getItem('user'));
     const container = document.createElement('div');
 
@@ -201,20 +201,32 @@
             const res = await fetch('/api/stock');
             const { data, summary } = await res.json();
 
+            // Filtrar KITs do estoque e recalcular resumos localmente
+            const isKit = (p) => (p.name || '').toUpperCase().includes('KIT');
+            const filteredData = data.filter(p => !isKit(p));
+
+            const novoSummary = { total: 0, ok: 0, baixo: 0, zerado: 0 };
+            filteredData.forEach(p => {
+                novoSummary.total++;
+                if (p.stock_status === 'ok') novoSummary.ok++;
+                else if (p.stock_status === 'baixo') novoSummary.baixo++;
+                else if (p.stock_status === 'zerado') novoSummary.zerado++;
+            });
+
             // Update cards
-            container.querySelector('#card-total').textContent = summary.total;
-            container.querySelector('#card-ok').textContent = summary.ok;
-            container.querySelector('#card-baixo').textContent = summary.baixo;
-            container.querySelector('#card-zerado').textContent = summary.zerado;
+            container.querySelector('#card-total').textContent = novoSummary.total;
+            container.querySelector('#card-ok').textContent = novoSummary.ok;
+            container.querySelector('#card-baixo').textContent = novoSummary.baixo;
+            container.querySelector('#card-zerado').textContent = novoSummary.zerado;
 
             // Update table
             const tbody = container.querySelector('#stock-list');
-            if (data.length === 0) {
+            if (filteredData.length === 0) {
                 tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:#64748b">Nenhum produto cadastrado</td></tr>';
                 return;
             }
 
-            tbody.innerHTML = data.map(p => {
+            tbody.innerHTML = filteredData.map(p => {
                 const statusBadge = p.stock_status === 'ok'
                     ? '<span class="stock-badge stock-badge-ok">OK</span>'
                     : p.stock_status === 'baixo'
