@@ -203,7 +203,11 @@ export const render = () => {
 
             return `
             <tr>
-                <td><b>${p.name}</b>${p.terceirizado ? ' <span style="background:#fef3c7; color:#92400e; padding:1px 6px; border-radius:8px; font-size:0.75em;">🏭 Terc.</span>' : ''}</td>
+                <td>
+                    <b>${p.name}</b>
+                    <button type="button" onclick="navigator.clipboard.writeText('LM | GRÁFICA - ${p.name.replace(/'/g, "\\'")}')" title="Copiar nome formato Financeiro" style="background:none; border:none; cursor:pointer; font-size:0.95rem; margin-left:4px; filter:grayscale(1) opacity(0.5); transition:all 0.2s;" onmouseover="this.style.filter='none'" onmouseout="this.style.filter='grayscale(1) opacity(0.5)'">📋</button>
+                    ${p.terceirizado ? ' <span style="background:#fef3c7; color:#92400e; padding:1px 6px; border-radius:8px; font-size:0.75em;">🏭 Terc.</span>' : ''}
+                </td>
                 <td>${p.type || '-'}</td>
                 <td>${price3Html}</td>
                 <td>${price1Html}</td>

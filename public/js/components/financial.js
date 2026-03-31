@@ -207,7 +207,10 @@ export const render = (user) => {
                         <td>${new Date(s.created_at).toLocaleDateString('pt-BR')}</td>
                         <td><b>${s.client_name || '-'}</b>${s.is_internal ? ' <span style="background:#dbeafe; color:#1d4ed8; padding:1px 6px; border-radius:10px; font-size:0.7rem; font-weight:600;">🏢 Interno</span>' : ''}</td>
                         <td>${s.client_phone || '-'}</td>
-                        <td style="font-size:0.85rem">${s.products_summary || '-'}</td>
+                        <td style="font-size:0.85rem">
+                            ${s.products_summary || '-'}
+                            ${s.products_summary ? `<button type="button" onclick="navigator.clipboard.writeText('LM | GRÁFICA - ${s.products_summary.replace(/'/g, "\\'")}')" title="Copiar para Financeiro" style="background:none; border:none; cursor:pointer; font-size:0.95rem; margin-left:4px; filter:grayscale(1) opacity(0.5); transition:all 0.2s;" onmouseover="this.style.filter='none'" onmouseout="this.style.filter='grayscale(1) opacity(0.5)'">📋</button>` : ''}
+                        </td>
                         <td style="font-size:0.85rem; max-width:200px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${(s.description || '').replace(/"/g, '&quot;')}">${s.description || '-'}</td>
                         <td style="font-weight:bold; color:#7c3aed">R$ ${(s.total_value || 0).toFixed(2)}</td>
                         <td style="color:${(s.discount_value || 0) > 0 ? '#dc2626' : '#94a3b8'}; font-weight:${(s.discount_value || 0) > 0 ? '600' : 'normal'}">${(s.discount_value || 0) > 0 ? `- R$ ${(s.discount_value).toFixed(2)}` : '-'}</td>
@@ -379,7 +382,10 @@ export const render = (user) => {
                 const rows = m.items.map(c => `
                         <tr>
                             <td>${new Date(c.created_at).toLocaleDateString('pt-BR')}</td>
-                            <td><b>${c.product_name || '-'}</b></td>
+                            <td>
+                                <b>${c.product_name || '-'}</b>
+                                ${c.product_name ? `<button type="button" onclick="navigator.clipboard.writeText('LM | GRÁFICA - ${c.product_name.replace(/'/g, "\\'")}')" title="Copiar para Financeiro" style="background:none; border:none; cursor:pointer; font-size:0.95rem; margin-left:4px; filter:grayscale(1) opacity(0.5); transition:all 0.2s;" onmouseover="this.style.filter='none'" onmouseout="this.style.filter='grayscale(1) opacity(0.5)'">📋</button>` : ''}
+                            </td>
                             <td>${c.product_type || '-'}</td>
                             <td style="font-size:0.85rem;">${c.description || '-'}</td>
                             <td style="text-align:center;">${c.quantity || 1}</td>
