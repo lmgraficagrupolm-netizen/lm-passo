@@ -235,7 +235,7 @@ export const render = () => {
                              </div>
                             <div style="text-align:right">
                                 <label style="display:block; font-size: 0.9rem; color: #666;">Valor a Cobrar (R$)</label>
-                                <input type="number" step="0.01" min="0" id="cart-total-input" name="total_value" value="0" style="font-size:1.5rem; font-weight:bold; color:#2563eb; width:150px; text-align:right; border:1px solid #ccc; border-radius:4px; padding:0.3rem 0.5rem;">
+                                <input type="number" step="0.01" min="0" id="cart-total-input" name="total_value" value="" placeholder="0.00" style="font-size:1.5rem; font-weight:bold; color:#2563eb; width:150px; text-align:right; border:1px solid #ccc; border-radius:4px; padding:0.3rem 0.5rem; background:#f8fafc; cursor:not-allowed;" readonly>
                                 <div style="font-size:0.75rem; color:#999; margin-top:2px;" id="cart-total-auto"></div>
                             </div>
                         </div>
@@ -1443,6 +1443,11 @@ export const render = () => {
         if (cart.length === 0) {
             tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; padding:1.5rem; color:#94a3b8">Nenhum item adicionado</td></tr>';
             createBtn.disabled = true;
+            if (totalInput) {
+                totalInput.value = '';
+                totalInput.dataset.baseTotal = '0.00';
+            }
+            if (totalAutoLabel) totalAutoLabel.textContent = '';
             return;
         }
         createBtn.disabled = false;
