@@ -56,6 +56,11 @@ export const render = (user, onLogout, onNavigate) => {
                     <ion-icon name="pricetags-outline"></ion-icon> Produtos
                 </a>
             </li>
+            <li class="nav-item">
+                <a class="nav-link" id="nav-catalogue" data-view="catalogue">
+                    <ion-icon name="book-outline"></ion-icon> Catálogo
+                </a>
+            </li>
         `;
     } else {
         menuItems = `
@@ -72,6 +77,11 @@ export const render = (user, onLogout, onNavigate) => {
             <li class="nav-item">
                 <a class="nav-link" id="nav-products" data-view="products">
                     <ion-icon name="pricetags-outline"></ion-icon> Produtos
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" id="nav-catalogue" data-view="catalogue">
+                    <ion-icon name="book-outline"></ion-icon> Catálogo
                 </a>
             </li>
         `;
