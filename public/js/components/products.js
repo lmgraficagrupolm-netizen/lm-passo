@@ -271,6 +271,15 @@ export const render = () => {
     
     const renderKitTemplates = () => {
         const list = container.querySelector('#kit-templates-list');
+        
+        // Salva a posição do scroll atual para não pular para o topo
+        const scrollNodes = [
+            container.querySelector('#product-modal .modal'),
+            list,
+            document.documentElement
+        ].filter(Boolean);
+        const scrollPositions = scrollNodes.map(n => n.scrollTop || 0);
+
         list.innerHTML = kitTemplates.map((tpl, tIndex) => {
             let autoTotal = 0;
             if (tpl.items) {
@@ -382,6 +391,13 @@ export const render = () => {
 
         // Update overview once on initial render
         updateKitOverviewUI();
+
+        // Restaura a posição do scroll
+        requestAnimationFrame(() => {
+            scrollNodes.forEach((n, i) => {
+                if (n) n.scrollTop = scrollPositions[i];
+            });
+        });
     };
 
     container.querySelector('#btn-add-kit-template').onclick = () => {
