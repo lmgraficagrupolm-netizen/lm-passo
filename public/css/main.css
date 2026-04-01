@@ -248,18 +248,21 @@ body {
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
 }
 
-.nav-link ion-icon {
-    min-width: 24px;
+.nav-link svg {
+    min-width: 22px;
+    min-height: 22px;
     font-size: 1.4rem;
     transition: transform 0.3s ease;
     flex-shrink: 0;
+    color: inherit;
 }
 
 .nav-text {
-    margin-left: 1.25rem;
+    margin-left: 1rem;
     opacity: 0;
-    transition: opacity 0.2s ease;
+    transition: opacity 0.2s ease 0.05s;
     pointer-events: none;
+    white-space: nowrap;
 }
 
 .sidebar:hover .nav-text {
@@ -267,8 +270,9 @@ body {
     pointer-events: auto;
 }
 
-.nav-link:hover ion-icon {
-    transform: scale(1.1);
+.nav-link:hover svg,
+.nav-link.active svg {
+    transform: scale(1.12);
 }
 
 .user-info {

@@ -32,56 +32,69 @@ export const render = (user, onLogout, onNavigate) => {
     // Determine Menu Items based on Role
     const canSeeFinance = ['master', 'financeiro'].includes(user.role);
 
+    // Inline SVG icons — no external dependency, always visible
+    const icons = {
+        kanban: `<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>`,
+        clients: `<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path stroke-linecap="round" stroke-linejoin="round" d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>`,
+        products: `<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M20 7l-8-4-8 4m16 0v10l-8 4m0-14L4 17m8 4V10"/></svg>`,
+        catalogue: `<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path stroke-linecap="round" stroke-linejoin="round" d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>`,
+        estoque: `<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>`,
+        compras: `<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path stroke-linecap="round" stroke-linejoin="round" d="M1 1h4l2.68 13.39a2 2 0 002 1.61h9.72a2 2 0 002-1.61L23 6H6"/></svg>`,
+        financial: `<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><line x1="12" y1="1" x2="12" y2="23"/><path stroke-linecap="round" stroke-linejoin="round" d="M17 5H9.5a3.5 3.5 0 100 7h5a3.5 3.5 0 110 7H6"/></svg>`,
+        fornecedores: `<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M20 7H4a2 2 0 00-2 2v6a2 2 0 002 2h16a2 2 0 002-2V9a2 2 0 00-2-2z"/><path stroke-linecap="round" stroke-linejoin="round" d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16"/></svg>`,
+        admin: `<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path stroke-linecap="round" stroke-linejoin="round" d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z"/></svg>`,
+        logout: `<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>`,
+        cash: `<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><line x1="12" y1="1" x2="12" y2="23"/><path stroke-linecap="round" stroke-linejoin="round" d="M17 5H9.5a3.5 3.5 0 100 7h5a3.5 3.5 0 110 7H6"/></svg>`,
+    };
+
     let menuItems = '';
 
     if (user.role === 'cliente') {
-        // Client only sees their financial view
         menuItems = `
             <li class="nav-item">
-                <a class="nav-link active" id="nav-client_financial" data-view="client_financial">
-                    <ion-icon name="cash-outline"></ion-icon> <span class="nav-text">Meu Financeiro</span>
+                <a class="nav-link active" id="nav-client_financial" data-view="client_financial" title="Meu Financeiro">
+                    ${icons.cash} <span class="nav-text">Meu Financeiro</span>
                 </a>
             </li>
         `;
     } else if (user.role === 'producao') {
-        // Producao only sees Quadro and Produtos
         menuItems = `
             <li class="nav-item">
-                <a class="nav-link active" id="nav-kanban" data-view="kanban">
-                    <ion-icon name="clipboard-outline"></ion-icon> <span class="nav-text">Quadro</span>
+                <a class="nav-link active" id="nav-kanban" data-view="kanban" title="Quadro">
+                    ${icons.kanban} <span class="nav-text">Quadro</span>
                 </a>
             </li>
             <li class="nav-item">
-                <a class="nav-link" id="nav-products" data-view="products">
-                    <ion-icon name="pricetags-outline"></ion-icon> <span class="nav-text">Produtos</span>
+                <a class="nav-link" id="nav-products" data-view="products" title="Produtos">
+                    ${icons.products} <span class="nav-text">Produtos</span>
                 </a>
             </li>
             <li class="nav-item">
-                <a class="nav-link" id="nav-catalogue" data-view="catalogue">
-                    <ion-icon name="book-outline"></ion-icon> <span class="nav-text">Catálogo</span>
+                <a class="nav-link" id="nav-catalogue" data-view="catalogue" title="Catálogo">
+                    ${icons.catalogue} <span class="nav-text">Catálogo</span>
                 </a>
             </li>
         `;
     } else {
         menuItems = `
             <li class="nav-item">
-                <a class="nav-link active" id="nav-kanban" data-view="kanban">
-                    <ion-icon name="clipboard-outline"></ion-icon> <span class="nav-text">Quadro</span>
+                <a class="nav-link active" id="nav-kanban" data-view="kanban" title="Quadro">
+                    ${icons.kanban} <span class="nav-text">Quadro</span>
                 </a>
             </li>
             <li class="nav-item">
-                <a class="nav-link" id="nav-clients" data-view="clients">
-                    <ion-icon name="people-outline"></ion-icon> <span class="nav-text">Clientes</span>
+                <a class="nav-link" id="nav-clients" data-view="clients" title="Clientes">
+                    ${icons.clients} <span class="nav-text">Clientes</span>
                 </a>
             </li>
             <li class="nav-item">
-                <a class="nav-link" id="nav-products" data-view="products">
-                    <ion-icon name="pricetags-outline"></ion-icon> <span class="nav-text">Produtos</span>
+                <a class="nav-link" id="nav-products" data-view="products" title="Produtos">
+                    ${icons.products} <span class="nav-text">Produtos</span>
                 </a>
             </li>
             <li class="nav-item">
-                <a class="nav-link" id="nav-catalogue" data-view="catalogue">
-                    <ion-icon name="book-outline"></ion-icon> <span class="nav-text">Catálogo</span>
+                <a class="nav-link" id="nav-catalogue" data-view="catalogue" title="Catálogo">
+                    ${icons.catalogue} <span class="nav-text">Catálogo</span>
                 </a>
             </li>
         `;
@@ -92,14 +105,14 @@ export const render = (user, onLogout, onNavigate) => {
     if (canSeeStock) {
         menuItems += `
         <li class="nav-item">
-            <a class="nav-link" id="nav-estoque" data-view="estoque" style="position:relative;">
-                <ion-icon name="cube-outline"></ion-icon> <span class="nav-text">Estoque</span>
-                <span id="stock-alert-badge" style="display:none; position:absolute; top:12px; right:15px; background:#ef4444; color:white; font-size:10px; font-weight:bold; padding:2px 6px; border-radius:10px; box-shadow:0 0 8px rgba(239, 68, 68, 0.8);"></span>
+            <a class="nav-link" id="nav-estoque" data-view="estoque" title="Estoque" style="position:relative;">
+                ${icons.estoque} <span class="nav-text">Estoque</span>
+                <span id="stock-alert-badge" style="display:none; position:absolute; top:10px; right:10px; background:#ef4444; color:white; font-size:10px; font-weight:bold; padding:2px 6px; border-radius:10px; box-shadow:0 0 8px rgba(239, 68, 68, 0.8);"></span>
             </a>
         </li>
         <li class="nav-item">
-            <a class="nav-link" id="nav-compras" data-view="compras">
-                <ion-icon name="cart-outline"></ion-icon> <span class="nav-text">Compras</span>
+            <a class="nav-link" id="nav-compras" data-view="compras" title="Compras">
+                ${icons.compras} <span class="nav-text">Compras</span>
             </a>
         </li>
         `;
@@ -108,8 +121,8 @@ export const render = (user, onLogout, onNavigate) => {
     if (canSeeFinance) {
         menuItems += `
         <li class="nav-item">
-            <a class="nav-link" id="nav-financial" data-view="financial">
-                <ion-icon name="cash-outline"></ion-icon> <span class="nav-text">Financeiro</span>
+            <a class="nav-link" id="nav-financial" data-view="financial" title="Financeiro">
+                ${icons.financial} <span class="nav-text">Financeiro</span>
             </a>
         </li>
         `;
@@ -118,13 +131,13 @@ export const render = (user, onLogout, onNavigate) => {
     if (user.role === 'master') {
         menuItems += `
         <li class="nav-item">
-            <a class="nav-link" id="nav-fornecedores" data-view="fornecedores">
-                <ion-icon name="receipt-outline"></ion-icon> <span class="nav-text">Fornecedores</span>
+            <a class="nav-link" id="nav-fornecedores" data-view="fornecedores" title="Fornecedores">
+                ${icons.fornecedores} <span class="nav-text">Fornecedores</span>
             </a>
         </li>
         <li class="nav-item">
-            <a class="nav-link" id="nav-admin" data-view="admin">
-                <ion-icon name="settings-outline"></ion-icon> <span class="nav-text">Admin</span>
+            <a class="nav-link" id="nav-admin" data-view="admin" title="Admin">
+                ${icons.admin} <span class="nav-text">Admin</span>
             </a>
         </li>
         `;
@@ -132,19 +145,17 @@ export const render = (user, onLogout, onNavigate) => {
 
     container.innerHTML = `
         <div class="sidebar" id="sidebar">
-            <div class="sidebar-header" style="display:flex; justify-content:space-between; align-items:center">
-                <div style="display:flex; align-items:center; gap:0.5rem; overflow:hidden;">
-                    <img src="/logo.png" alt="Logo" style="width:32px; height:32px; border-radius:6px; object-fit:contain; flex-shrink:0;">
-                    <span class="nav-text" style="white-space:nowrap;">LM | PASSO</span>
-                </div>
+            <div class="sidebar-header" style="display:flex; align-items:center; gap:0.5rem; overflow:hidden; margin-bottom:2rem; padding:0.5rem; border-bottom:1px solid rgba(255,255,255,0.1);">
+                <img src="/logo.png" alt="Logo" style="width:32px; height:32px; border-radius:6px; object-fit:contain; flex-shrink:0;">
+                <span class="nav-text" style="white-space:nowrap; font-size:1.1rem; font-weight:800; letter-spacing:-0.02em;">LM | PASSO</span>
             </div>
             <ul class="nav-links">
                 ${menuItems}
             </ul>
             <div class="user-info">
-                <div class="nav-text" style="margin-bottom: 0.5rem; font-size:0.75rem;">Ola, ${user.name} (${user.role})</div>
-                <a class="nav-link" id="logout-btn" style="padding-left: 0; color: #ef4444; display:flex; align-items:center">
-                    <ion-icon name="log-out-outline"></ion-icon> <span class="nav-text" style="margin-left:1rem;">Sair</span>
+                <div class="nav-text" style="margin-bottom:0.5rem; font-size:0.72rem; color:#94a3b8; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">Olá, ${user.name}</div>
+                <a class="nav-link" id="logout-btn" title="Sair" style="color:#ef4444;">
+                    ${icons.logout} <span class="nav-text">Sair</span>
                 </a>
             </div>
         </div>
