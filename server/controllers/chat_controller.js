@@ -41,32 +41,28 @@ exports.getHistory = (req, res) => {
 };
 
 exports.sendMessage = (req, res) => {
-    const { message } = req.body;
-    const userId = req.user.id;
-    const userName = req.user.name;
-    const userRole = req.user.role;
+    const { message, user_id, user_name, user_role } = req.body;
 
-    if (!message || !message.trim()) {
+    if (!message || !message.trim() || !user_id) {
         return res.status(400).json({ error: 'Mensagem inválida' });
     }
 
     db.run(
         `INSERT INTO team_chat (user_id, user_name, user_role, message) VALUES (?, ?, ?, ?)`,
-        [userId, userName, userRole, message.trim()],
+        [user_id, user_name, user_role, message.trim()],
         function(err) {
             if (err) return res.status(500).json({ error: err.message });
 
             const newMsg = {
                 id: this.lastID,
                 type: 'message',
-                user_id: userId,
-                user_name: userName,
-                user_role: userRole,
+                user_id: user_id,
+                user_name: user_name,
+                user_role: user_role,
                 message: message.trim(),
                 created_at: new Date().toISOString()
             };
 
-            // Notifica todo mundo em tempo real (incluindo o próprio remetente para confirmar)
             broadcast(newMsg);
             
             res.json({ success: true });
@@ -75,16 +71,13 @@ exports.sendMessage = (req, res) => {
 };
 
 exports.typing = (req, res) => {
-    const { isTyping } = req.body;
-    const userName = req.user.name;
-    const userRole = req.user.role;
-    const userId = req.user.id;
+    const { isTyping, user_id, user_name, user_role } = req.body;
 
     broadcast({
         type: 'typing',
-        user_id: userId,
-        user_name: userName,
-        user_role: userRole,
+        user_id,
+        user_name,
+        user_role,
         isTyping
     });
 
