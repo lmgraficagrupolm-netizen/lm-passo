@@ -178,6 +178,17 @@ function initDb() {
             created_at DATETIME DEFAULT CURRENT_TIMESTAMP
         )`);
 
+        // Team Chat
+        db.run(`CREATE TABLE IF NOT EXISTS team_chat (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER,
+            user_name TEXT,
+            user_role TEXT,
+            message TEXT,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY(user_id) REFERENCES users(id)
+        )`);
+
         const bcrypt = require('bcryptjs');
 
         // ... (existing imports, but bcrypt needs to be top)
