@@ -83,18 +83,66 @@ export const render = () => {
                 const safeDesc = (item.description || '');
                 const displayDesc = safeDesc.replace(/\\n/g, '<br>');
 
-                const renderMediaItem = (url, title) => {
-                    const lUrl = (url || '').toLowerCase();
+                // ─── URL Sanitizer ───────────────────────────────────────────
+                // Ensures every image path becomes a clean /uploads/filename URL
+                // regardless of how it was originally stored in the DB.
+                const sanitizeUrl = (raw) => {
+                    if (!raw) return '';
+                    raw = raw.trim();
+                    // Already a full HTTP URL — leave as-is
+                    if (raw.startsWith('http://') || raw.startsWith('https://')) return raw;
+                    // Extract just the filename (handles: "filename.jpg", "/uploads/filename.jpg", "uploads/filename.jpg")
+                    const filename = raw.split('/').pop();
+                    return `/uploads/${filename}`;
+                };
+
+                const renderMediaItem = (rawUrl, title) => {
+                    const url = sanitizeUrl(rawUrl);
+                    const lUrl = url.toLowerCase().split('?')[0]; // ignore query strings
                     if (lUrl.endsWith('.pdf')) {
-                        return `<div style="height: 180px; width: 100%; display:flex; flex-direction:column; align-items:center; justify-content:center; background:#f1f5f9; border-radius:8px; border:2px dashed #cbd5e1; color:#dc2626;"><svg viewBox="0 0 24 24" width="48" height="48" fill="currentColor"><path d="M7 2h10l5 5v13a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2zm0 2v16h13V8h-4V4H7zm4 11h2v-4h-2v4zm0-6h3c1.1 0 2 .9 2 2v2c0 1.1-.9 2-2 2h-3V9z"/></svg><span style="margin-top:0.5rem; font-weight:600; font-size:0.9rem">Arquivo PDF</span><span style="font-size:0.75rem; color:#64748b">Clique para Abrir</span></div>`;
-                    } else if (lUrl.endsWith('.cdr') || lUrl.endsWith('.eps')) {
-                        return `<div style="height: 180px; width: 100%; display:flex; flex-direction:column; align-items:center; justify-content:center; background:#f8fafc; border-radius:8px; border:2px dashed #cbd5e1; color:#16a34a;"><svg viewBox="0 0 24 24" width="48" height="48" fill="currentColor"><path d="M4 4h16v16H4V4zm2 2v12h12V6H6zm3 3h6v2H9V9zm0 4h6v2H9v-2z"/></svg><span style="margin-top:0.5rem; font-weight:600; font-size:0.9rem">Arquivo Vetor (Corel/EPS)</span><span style="font-size:0.75rem; color:#64748b">Clique para Baixar</span></div>`;
+                        return `<a href="${url}" target="_blank" style="text-decoration:none;display:block;">
+                            <div style="height:180px;width:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#fef2f2;border-radius:8px;border:2px dashed #fca5a5;color:#dc2626;cursor:pointer;">
+                                <svg viewBox="0 0 24 24" width="48" height="48" fill="currentColor"><path d="M7 2h10l5 5v13a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2zm0 2v16h13V8h-4V4H7zm4 11h2v-4h-2v4zm0-6h3c1.1 0 2 .9 2 2v2c0 1.1-.9 2-2 2h-3V9z"/></svg>
+                                <span style="margin-top:0.5rem;font-weight:600;font-size:0.9rem">Arquivo PDF</span>
+                                <span style="font-size:0.75rem;color:#9f1239">Clique para Abrir</span>
+                            </div>
+                        </a>`;
+                    } else if (lUrl.endsWith('.cdr') || lUrl.endsWith('.eps') || lUrl.endsWith('.ai')) {
+                        return `<a href="${url}" target="_blank" style="text-decoration:none;display:block;">
+                            <div style="height:180px;width:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#f0fdf4;border-radius:8px;border:2px dashed #86efac;color:#16a34a;cursor:pointer;">
+                                <svg viewBox="0 0 24 24" width="48" height="48" fill="currentColor"><path d="M4 4h16v16H4V4zm2 2v12h12V6H6zm3 3h6v2H9V9zm0 4h6v2H9v-2z"/></svg>
+                                <span style="margin-top:0.5rem;font-weight:600;font-size:0.9rem">Arquivo Vetor (.${lUrl.split('.').pop().toUpperCase()})</span>
+                                <span style="font-size:0.75rem;color:#166534">Clique para Baixar</span>
+                            </div>
+                        </a>`;
                     }
-                    return `<img src="${url}" alt="${title}" class="catalogue-image" style="min-height: 180px; width: 100%; object-fit: cover; border-radius: 8px;" onerror="this.onerror=null; this.src='data:image/svg+xml;utf8,<svg xmlns=\\'http://www.w3.org/2000/svg\\' width=\\'300\\' height=\\'100\\'><text x=\\'50%\\' y=\\'50%\\' font-size=\\'12\\' text-anchor=\\'middle\\' fill=\\'red\\' dy=\\'0.3em\\'>Erro: ${url}</text></svg>'; this.alt='Erro' ">`;
+                    // Image formats: jpg, jpeg, png, gif, webp, bmp, jfif, avif, tiff, svg
+                    const imgExts = ['jpg','jpeg','png','gif','webp','bmp','jfif','avif','tiff','svg'];
+                    const ext = lUrl.split('.').pop();
+                    if (!imgExts.includes(ext)) {
+                        // Unknown format — show a generic download link
+                        return `<a href="${url}" target="_blank" style="text-decoration:none;display:block;">
+                            <div style="height:180px;width:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#f8fafc;border-radius:8px;border:2px dashed #cbd5e1;color:#64748b;">
+                                <svg viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                                <span style="margin-top:0.5rem;font-weight:600;font-size:0.9rem">Arquivo .${ext.toUpperCase()}</span>
+                                <span style="font-size:0.75rem">Clique para Baixar</span>
+                            </div>
+                        </a>`;
+                    }
+                    const filename = url.split('/').pop();
+                    return `<img 
+                        src="${url}" 
+                        alt="${title}" 
+                        class="catalogue-image" 
+                        style="min-height:180px;width:100%;object-fit:cover;border-radius:8px;"
+                        onerror="this.onerror=null; this.style.display='none'; this.insertAdjacentHTML('afterend', '<div style=\\'height:180px;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#fef2f2;border-radius:8px;border:2px dashed #fca5a5;color:#dc2626;font-size:0.8rem;padding:1rem;text-align:center;\\'><svg viewBox=\\'0 0 24 24\\' width=\\'36\\' height=\\'36\\' fill=\\'currentColor\\'><path d=\\'M12 9v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z\\'/></svg><b style=\\'margin-top:0.5rem;\\'>Erro ao carregar:</b><span style=\\'word-break:break-all;margin-top:0.25rem;\\'>${filename}</span></div>');"
+                    >`;
                 };
 
                 let imagesHtml = '';
-                const images = item.images && item.images.length > 0 ? item.images : [item.image_url];
+                // Build and sanitize the images array
+                const rawImages = item.images && item.images.length > 0 ? item.images : (item.image_url ? [item.image_url] : []);
+                const images = rawImages.map(sanitizeUrl).filter(u => u.length > 0);
                 
                 if (images.length > 1) {
                     imagesHtml = `

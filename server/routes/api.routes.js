@@ -113,11 +113,36 @@ router.delete('/catalogue/:id', catalogueController.deleteItem);
 router.get('/debug-cat', (req, res) => {
     const fs = require('fs');
     const db = require('../database/db');
-    db.all('SELECT id, image_url FROM catalogue_items LIMIT 5', (err, rows) => {
-        const folder = path.join(process.cwd(), 'public/uploads');
-        const exists = fs.existsSync(folder);
-        const files = exists ? fs.readdirSync(folder).slice(0, 5) : [];
-        res.json({ err: err?.message, rows, folder, exists, files, cwd: process.cwd(), dirname: __dirname });
+    const uploadDir = path.join(process.cwd(), 'public', 'uploads');
+
+    db.all('SELECT id, title, image_url FROM catalogue_items', (err, rows) => {
+        const diskFiles = fs.existsSync(uploadDir) ? fs.readdirSync(uploadDir) : [];
+        const diskSet = new Set(diskFiles);
+
+        const report = rows.map(row => {
+            let images = [];
+            try {
+                images = JSON.parse(row.image_url);
+                if (!Array.isArray(images)) images = [row.image_url];
+            } catch(e) {
+                images = row.image_url ? [row.image_url] : [];
+            }
+            const result = images.map(imgUrl => {
+                const filename = (imgUrl || '').split('/').pop();
+                return { url: imgUrl, filename, exists: diskSet.has(filename) };
+            });
+            const allOk = result.every(r => r.exists);
+            return { id: row.id, title: row.title, files: result, allOk };
+        });
+
+        const broken = report.filter(r => !r.allOk);
+        res.json({
+            summary: { total: rows.length, broken: broken.length, ok: rows.length - broken.length },
+            broken,
+            uploadDir,
+            diskFileCount: diskFiles.length,
+            error: err?.message || null
+        });
     });
 });
 
