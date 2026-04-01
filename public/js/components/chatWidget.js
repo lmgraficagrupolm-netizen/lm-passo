@@ -169,6 +169,7 @@ export const initChatWidget = (user, parentContainer) => {
     let unreadCount = 0;
     let isOpen = false;
     let typingTimeout;
+    let evtSource = null;
     
     // Funções UI
     const scrollToBottom = () => {
@@ -178,17 +179,17 @@ export const initChatWidget = (user, parentContainer) => {
     const addMessage = (msgObj) => {
         const isMine = msgObj.user_id === user.id;
         const div = document.createElement('div');
-        div.className = \`chat-bubble \${isMine ? 'chat-bubble-mine' : 'chat-bubble-other'}\`;
+        div.className = `chat-bubble ${isMine ? 'chat-bubble-mine' : 'chat-bubble-other'}`;
         
         let authorHtml = '';
         if (!isMine) {
-            authorHtml = \`<span class="chat-author">\${msgObj.user_name} (\${msgObj.user_role})</span>\`;
+            authorHtml = `<span class="chat-author">${msgObj.user_name} (${msgObj.user_role})</span>`;
         }
         
-        div.innerHTML = \`
-            \${authorHtml}
-            \${msgObj.message.replace(/\\n/g, '<br>')}
-        \`;
+        div.innerHTML = `
+            ${authorHtml}
+            ${msgObj.message.replace(/\n/g, '<br>')}
+        `;
         body.appendChild(div);
         scrollToBottom();
     };
@@ -196,10 +197,10 @@ export const initChatWidget = (user, parentContainer) => {
     const showToast = (name, role, msg) => {
         const toast = document.createElement('div');
         toast.className = 'chat-toast';
-        toast.innerHTML = \`
-            <ion-icon name="chatbubble-ellipses" style="color:var(--primary); font-size:1.2rem"></ion-icon>
-            <div><strong>\${name} (\${role}):</strong> \${msg.substring(0, 40)}\${msg.length > 40 ? '...' : ''}</div>
-        \`;
+        toast.innerHTML = `
+            <ion-icon name="chatbubble-ellipses" style="color:var(--primary); font-size:1.2rem; margin-right: 8px;"></ion-icon>
+            <div><strong>${name} (${role}):</strong> ${msg.substring(0, 40)}${msg.length > 40 ? '...' : ''}</div>
+        `;
         document.body.appendChild(toast);
         setTimeout(() => toast.remove(), 4000);
     };
@@ -223,7 +224,7 @@ export const initChatWidget = (user, parentContainer) => {
     closeBtn.onclick = toggleChat;
 
     // Carregar Histórico
-    fetch('/api/chat/history', { headers: { 'Authorization': \`Bearer \${localStorage.getItem('token')}\` } })
+    fetch('/api/chat/history', { headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` } })
         .then(r => r.json())
         .then(data => {
             if (data.messages && data.messages.length > 0) {
@@ -241,15 +242,15 @@ export const initChatWidget = (user, parentContainer) => {
         // Clear typing status instantly
         fetch('/api/chat/typing', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'Authorization': \`Bearer \${localStorage.getItem('token')}\` },
-            body: JSON.stringify({ isTyping: false })
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ isTyping: false, user_id: user.id, user_name: user.name, user_role: user.role })
         });
 
         try {
             await fetch('/api/chat/message', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'Authorization': \`Bearer \${localStorage.getItem('token')}\` },
-                body: JSON.stringify({ message: text })
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ message: text, user_id: user.id, user_name: user.name, user_role: user.role })
             });
         } catch(err) { console.error('Error sending message:', err); }
     };
@@ -259,26 +260,44 @@ export const initChatWidget = (user, parentContainer) => {
         clearTimeout(typingTimeout);
         fetch('/api/chat/typing', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'Authorization': \`Bearer \${localStorage.getItem('token')}\` },
-            body: JSON.stringify({ isTyping: true })
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ isTyping: true, user_id: user.id, user_name: user.name, user_role: user.role })
         }).catch(()=>{});
 
         typingTimeout = setTimeout(() => {
             fetch('/api/chat/typing', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'Authorization': \`Bearer \${localStorage.getItem('token')}\` },
-                body: JSON.stringify({ isTyping: false })
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ isTyping: false, user_id: user.id, user_name: user.name, user_role: user.role })
             }).catch(()=>{});
         }, 1500);
     });
 
     // SSE Connection Setup
-    const token = localStorage.getItem('token');
-    if (!token) return;
+    evtSource = new EventSource('/api/chat/stream');
 
-    // We can pass token in URL for EventSource (if auth middleware supports URL tokens)
-    // Wait, auth middleware looks for req.headers.authorization OR req.query.token.
-    // Let's verify auth.middleware.js. If it doesn't support req.query.token, SSE fails because EventSource does not support custom headers natively.
-    // However, I can fetch polyfill or just implement standard polling if needed...
-    // Actually, EventSource does not send Authorization header natively.
+    evtSource.onmessage = (event) => {
+        const data = JSON.parse(event.data);
+        if (data.type === 'message') {
+            addMessage(data);
+            if (!isOpen && data.user_id !== user.id) {
+                unreadCount++;
+                badge.style.display = 'flex';
+                badge.textContent = unreadCount > 9 ? '9+' : unreadCount;
+                showToast(data.user_name, data.user_role, data.message);
+            }
+        } else if (data.type === 'typing') {
+            if (data.user_id === user.id) return;
+            
+            if (data.isTyping) {
+                typingIndicator.innerHTML = `<span>${data.user_name} (${data.user_role}) está digitando</span><span class="dot">.</span><span class="dot">.</span><span class="dot">.</span>`;
+            } else {
+                typingIndicator.innerHTML = '';
+            }
+        }
+    };
+    
+    evtSource.onerror = (e) => {
+        console.warn('SSE connection error or closed');
+    };
 };
