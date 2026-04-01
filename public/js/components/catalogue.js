@@ -123,6 +123,9 @@ export const render = () => {
                         <p class="catalogue-desc">${displayDesc || 'Nenhuma descrição adicionada.'}</p>
                     </div>
                     <div class="catalogue-actions">
+                        <button class="btn btn-secondary cat-link-btn" data-id="${item.id}" title="Copiar Link" style="flex: 0.5; padding: 0.6rem;">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" style="vertical-align:text-bottom;"><path stroke-linecap="round" stroke-linejoin="round" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" /></svg> Link
+                        </button>
                         <button class="btn btn-secondary cat-copy-btn" data-img="${item.image_url}" data-desc="${encodeURIComponent(safeDesc)}">
                             <ion-icon name="copy-outline"></ion-icon> Copiar
                         </button>
@@ -213,6 +216,25 @@ export const render = () => {
                 throw new Error('Clipboard API avançada ausente no navegador.');
             }
         };
+
+        // Copy Link
+        container.querySelectorAll('.cat-link-btn').forEach(btn => {
+            btn.onclick = async (e) => {
+                const id = e.currentTarget.dataset.id;
+                const link = window.location.origin + '/c/' + id;
+                const originalHTML = btn.innerHTML;
+                
+                try {
+                    await navigator.clipboard.writeText(link);
+                    btn.innerHTML = '<ion-icon name="checkmark-outline"></ion-icon> Link Copiado!';
+                    if (window.showToastAlert) window.showToastAlert('Link exclusivo copiado! O cliente verá sua arte ao abrir.', 'green');
+                } catch (err) {
+                    console.error('Failed to copy link:', err);
+                }
+                
+                setTimeout(() => { btn.innerHTML = originalHTML; }, 3000);
+            };
+        });
 
         // Copy
         container.querySelectorAll('.cat-copy-btn').forEach(btn => {
