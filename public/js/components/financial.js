@@ -5,90 +5,7 @@ export const render = (user) => {
             <div class="view-title">Financeiro</div>
         </div>
 
-        <!-- Summary Cards -->
-        <div class="stock-cards" id="fin-cards" style="margin-bottom:1rem">
-            <div class="stock-card">
-                <div class="stock-card-icon" style="background:#7c3aed20; color:#7c3aed">
-                    <ion-icon name="receipt-outline"></ion-icon>
-                </div>
-                <div class="stock-card-info">
-                    <div class="stock-card-value" id="fin-total-orders">-</div>
-                    <div class="stock-card-label">Total Transações</div>
-                </div>
-            </div>
-            <div class="stock-card">
-                <div class="stock-card-icon" style="background:#10b98120; color:#10b981">
-                    <ion-icon name="cash-outline"></ion-icon>
-                </div>
-                <div class="stock-card-info">
-                    <div class="stock-card-value" id="fin-total-value">R$ 0</div>
-                    <div class="stock-card-label">Valor Total</div>
-                </div>
-            </div>
-            <div class="stock-card">
-                <div class="stock-card-icon" style="background:#8b5cf620; color:#8b5cf6">
-                    <ion-icon name="checkmark-done-outline"></ion-icon>
-                </div>
-                <div class="stock-card-info">
-                    <div class="stock-card-value" id="fin-launched">-</div>
-                    <div class="stock-card-label">Lançados ao Core</div>
-                </div>
-            </div>
-            <div class="stock-card">
-                <div class="stock-card-icon" style="background:#f59e0b20; color:#f59e0b">
-                    <ion-icon name="time-outline"></ion-icon>
-                </div>
-                <div class="stock-card-info">
-                    <div class="stock-card-value" id="fin-pending">-</div>
-                    <div class="stock-card-label">Pendentes</div>
-                </div>
-            </div>
-            <div class="stock-card">
-                <div class="stock-card-icon" style="background:#f9731620; color:#f97316">
-                    <ion-icon name="pricetag-outline"></ion-icon>
-                </div>
-                <div class="stock-card-info">
-                    <div class="stock-card-value" id="fin-total-discounts" style="color:#dc2626">R$ 0,00</div>
-                    <div class="stock-card-label">Total Descontos</div>
-                </div>
-            </div>
-            <div class="stock-card">
-                <div class="stock-card-icon" style="background:#dc262620; color:#dc2626">
-                    <ion-icon name="trending-down-outline"></ion-icon>
-                </div>
-                <div class="stock-card-info">
-                    <div class="stock-card-value" id="fin-material-costs" style="color:#dc2626">R$ 0</div>
-                    <div class="stock-card-label">Custos Materiais</div>
-                </div>
-            </div>
-            <div class="stock-card">
-                <div class="stock-card-icon" style="background:#05966920; color:#059669">
-                    <ion-icon name="analytics-outline"></ion-icon>
-                </div>
-                <div class="stock-card-info">
-                    <div class="stock-card-value" id="fin-resultado" style="color:#059669">R$ 0</div>
-                    <div class="stock-card-label">Resultado</div>
-                </div>
-            </div>
-            <div class="stock-card" style="border:2px solid #f59e0b; background:linear-gradient(135deg,#fffbeb,#fef3c7);">
-                <div class="stock-card-icon" style="background:#f59e0b30; color:#d97706">
-                    <ion-icon name="hourglass-outline"></ion-icon>
-                </div>
-                <div class="stock-card-info">
-                    <div class="stock-card-value" id="fin-a-receber" style="color:#d97706">R$ 0</div>
-                    <div class="stock-card-label">&#128274; A Receber (Em Prod.)</div>
-                </div>
-            </div>
-            <div class="stock-card">
-                <div class="stock-card-icon" style="background:#7c3aed20; color:#7c3aed">
-                    <ion-icon name="airplane-outline"></ion-icon>
-                </div>
-                <div class="stock-card-info">
-                    <div class="stock-card-value" id="fin-dispatch-costs" style="color:#dc2626">R$ 0</div>
-                    <div class="stock-card-label">Custos de Despacho</div>
-                </div>
-            </div>
-        </div>
+
 
         <!-- Filters -->
         <div style="display:flex; gap:0.5rem; flex-wrap:wrap; margin-bottom:1rem; padding:0.75rem; background:white; border-radius:8px; border:1px solid var(--border);">
@@ -184,7 +101,10 @@ export const render = (user) => {
             m.salesDiscount += (s.discount_value || 0);
             totalGeralFiltered += (s.total_value || 0);
             totalDescontos += (s.discount_value || 0);
-            if (s.launched_to_core) launched++;
+            if (s.launched_to_core) {
+                launched++;
+                m.launchedCount = (m.launchedCount || 0) + 1;
+            }
         });
 
         allReserved.forEach(r => {
@@ -205,27 +125,7 @@ export const render = (user) => {
             m.dispatchTotal += (d.amount || 0);
         });
 
-        // Summary cards
-        container.querySelector('#fin-total-orders').textContent = sales.length;
-        container.querySelector('#fin-total-value').textContent = `R$ ${totalGeralFiltered.toFixed(2)}`;
-        container.querySelector('#fin-launched').textContent = launched;
-        container.querySelector('#fin-pending').textContent = sales.length - launched;
-        
-        const discountCardEl = container.querySelector('#fin-total-discounts');
-        if (discountCardEl) discountCardEl.textContent = totalDescontos > 0 ? `- R$ ${totalDescontos.toFixed(2)}` : 'R$ 0,00';
-        
-        container.querySelector('#fin-material-costs').textContent = `R$ ${(globals.totalMaterial || 0).toFixed(2)}`;
-        
-        const resultado = totalGeralFiltered - (globals.totalMaterial || 0);
-        const resEl = container.querySelector('#fin-resultado');
-        resEl.textContent = `R$ ${resultado.toFixed(2)}`;
-        resEl.style.color = resultado >= 0 ? '#059669' : '#dc2626';
 
-        const aReceberEl = container.querySelector('#fin-a-receber');
-        if (aReceberEl) aReceberEl.textContent = `R$ ${(globals.totalReserved || 0).toFixed(2)}`;
-
-        const dispEl = container.querySelector('#fin-dispatch-costs');
-        if (dispEl) dispEl.textContent = `R$ ${(globals.totalDispatch || 0).toFixed(2)}`;
 
         const sortedKeys = Object.keys(months).sort((a, b) => b.localeCompare(a));
         const monthlyContainer = container.querySelector('#fin-monthly-container');
@@ -237,6 +137,50 @@ export const render = (user) => {
                 const m = months[key];
                 const now = new Date();
                 const isCurrentMonth = m.year === now.getFullYear() && m.month === now.getMonth();
+
+                const mLaunchedCount = m.launchedCount || 0;
+                const mPendingCount = m.sales.length - mLaunchedCount;
+                const mResultado = m.salesTotal - m.materialsTotal - m.dispatchTotal;
+
+                const monthCards = `
+                <div class="stock-cards" style="margin-bottom:1.5rem; display:flex; gap:1rem; flex-wrap:wrap;">
+                    <div class="stock-card" style="flex:1; min-width:200px;">
+                        <div class="stock-card-icon" style="background:#7c3aed20; color:#7c3aed"><ion-icon name="receipt-outline"></ion-icon></div>
+                        <div class="stock-card-info">
+                            <div class="stock-card-value">${m.sales.length}</div>
+                            <div class="stock-card-label">Total Transações</div>
+                        </div>
+                    </div>
+                    <div class="stock-card" style="flex:1; min-width:200px;">
+                        <div class="stock-card-icon" style="background:#8b5cf620; color:#8b5cf6"><ion-icon name="checkmark-done-outline"></ion-icon></div>
+                        <div class="stock-card-info">
+                            <div class="stock-card-value">${mLaunchedCount}</div>
+                            <div class="stock-card-label">Lançados ao Core</div>
+                        </div>
+                    </div>
+                    <div class="stock-card" style="flex:1; min-width:200px;">
+                        <div class="stock-card-icon" style="background:#f59e0b20; color:#f59e0b"><ion-icon name="time-outline"></ion-icon></div>
+                        <div class="stock-card-info">
+                            <div class="stock-card-value">${mPendingCount}</div>
+                            <div class="stock-card-label">Pendentes</div>
+                        </div>
+                    </div>
+                    <div class="stock-card" style="flex:1; min-width:200px; border:2px solid #f59e0b; background:linear-gradient(135deg,#fffbeb,#fef3c7);">
+                        <div class="stock-card-icon" style="background:#f59e0b30; color:#d97706"><ion-icon name="hourglass-outline"></ion-icon></div>
+                        <div class="stock-card-info">
+                            <div class="stock-card-value" style="color:#d97706">R$ ${m.reservedTotal.toFixed(2)}</div>
+                            <div class="stock-card-label">&#128274; A Receber (Prod)</div>
+                        </div>
+                    </div>
+                    <div class="stock-card" style="flex:1; min-width:200px;">
+                        <div class="stock-card-icon" style="background:#05966920; color:#059669"><ion-icon name="analytics-outline"></ion-icon></div>
+                        <div class="stock-card-info">
+                            <div class="stock-card-value" style="color:${mResultado >= 0 ? '#059669' : '#dc2626'}">R$ ${mResultado.toFixed(2)}</div>
+                            <div class="stock-card-label">Resultado do Mês</div>
+                        </div>
+                    </div>
+                </div>
+                `;
 
                 // 1. Sales Rows
                 const salesRows = m.sales.map(s => {
@@ -430,6 +374,7 @@ export const render = (user) => {
 
                     </div>
                     <div style="padding:0.5rem; display:${isCurrentMonth ? 'block' : 'none'};">
+                        ${monthCards}
                         ${salesTable}
                         ${discountTable}
                         ${reservedTable}
