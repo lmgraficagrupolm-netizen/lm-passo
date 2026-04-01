@@ -107,7 +107,7 @@ router.delete('/purchases/:id', purchaseController.deletePurchase);
 const catalogueController = require('../controllers/catalogue_controller');
 router.get('/catalogue', catalogueController.getAllItems);
 router.post('/catalogue', upload.array('images', 10), catalogueController.createItem);
-router.put('/catalogue/:id', catalogueController.updateItem);
+router.put('/catalogue/:id', upload.array('images', 10), catalogueController.updateItem);
 router.delete('/catalogue/:id', catalogueController.deleteItem);
 
 // Open URL in Microsoft Edge (Windows only)
