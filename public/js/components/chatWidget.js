@@ -144,14 +144,20 @@ export const initChatWidget = (user, parentContainer) => {
                     <span style="display:block">Chat da Equipe</span>
                     <span style="font-size:0.7rem; font-weight:normal; opacity:0.8">Online</span>
                 </div>
-                <button class="chat-close-btn" id="team-chat-close"><ion-icon name="close-outline"></ion-icon></button>
+                <button class="chat-close-btn" id="team-chat-close">
+                    <svg viewBox="0 0 512 512" width="24" height="24" stroke="currentColor" stroke-width="32" stroke-linecap="round" stroke-linejoin="round"><path d="M368 368L144 144M368 144L144 368"/></svg>
+                </button>
             </div>
             <div class="chat-body" id="team-chat-body"></div>
             <div class="chat-footer">
                 <div class="typing-indicator" id="team-chat-typing"></div>
                 <form class="chat-input-row" id="team-chat-form">
                     <input type="text" class="chat-input" id="team-chat-input" placeholder="Nova mensagem..." autocomplete="off">
-                    <button type="submit" class="chat-send-btn"><ion-icon name="send"></ion-icon></button>
+                    <button type="submit" class="chat-send-btn">
+                        <svg viewBox="0 0 512 512" width="24" height="24" fill="currentColor">
+                            <path d="M470.3 271.15L43.16 447.31a7.83 7.83 0 01-11.16-7V327a8 8 0 016.51-7.86l247.72-47c17.36-3.29 17.36-28.15 0-31.44l-247.72-47a8 8 0 01-6.5-7.85V72.59c0-5.74 5.88-10.26 11.16-8L470.3 241.76a16 16 0 010 29.39z"/>
+                        </svg>
+                    </button>
                 </form>
             </div>
         </div>
@@ -200,7 +206,10 @@ export const initChatWidget = (user, parentContainer) => {
         const toast = document.createElement('div');
         toast.className = 'chat-toast';
         toast.innerHTML = `
-            <ion-icon name="chatbubble-ellipses" style="color:var(--primary); font-size:1.2rem; margin-right: 8px;"></ion-icon>
+            <svg viewBox="0 0 512 512" width="20" height="20" fill="var(--primary)" style="margin-right: 8px;">
+                <path d="M160 304h192M160 208h192"/>
+                <path d="M432 112H80a48.05 48.05 0 00-48 48v240a48.05 48.05 0 0048 48h220l1 2 91 66c30 22 57 1 57-36v-78h33a47.92 47.92 0 0048-48V160a48.05 48.05 0 00-48-48zM352 336H160a16 16 0 010-32h192a16 16 0 010 32zm0-96H160a16 16 0 010-32h192a16 16 0 010 32z"/>
+            </svg>
             <div><strong>${name} (${role}):</strong> ${msg.substring(0, 40)}${msg.length > 40 ? '...' : ''}</div>
         `;
         document.body.appendChild(toast);
