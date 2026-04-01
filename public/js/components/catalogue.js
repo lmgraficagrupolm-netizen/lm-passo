@@ -14,8 +14,9 @@ export const render = () => {
                 </p>
             </div>
             ${isAdmin ? `
-                <button class="btn btn-primary" id="add-catalogue-btn" style="width:auto;">
-                    <ion-icon name="add-outline"></ion-icon> Adicionar Novo Item
+                <button class="btn btn-primary" id="add-catalogue-btn" style="width:auto; display:flex; align-items:center; gap:8px;">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" /></svg>
+                    Adicionar Novo Item
                 </button>
             ` : ''}
         </div>
@@ -137,11 +138,13 @@ export const render = () => {
                         <button class="btn btn-secondary cat-link-btn" data-id="${item.id}" title="Copiar Link" style="flex: 0.5; padding: 0.6rem;">
                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" style="vertical-align:text-bottom;"><path stroke-linecap="round" stroke-linejoin="round" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" /></svg> Link
                         </button>
-                        <button class="btn btn-secondary cat-copy-btn" data-img="${item.image_url}" data-desc="${encodeURIComponent(safeDesc)}">
-                            <ion-icon name="copy-outline"></ion-icon> Copiar
+                        <button class="btn btn-secondary cat-copy-btn" data-img="${item.image_url}" data-desc="${encodeURIComponent(safeDesc)}" style="display:flex; align-items:center; gap:6px; justify-content:center;">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2" /></svg> 
+                            Copiar
                         </button>
-                        <button class="btn btn-primary cat-share-btn" data-img="${item.image_url}" data-desc="${encodeURIComponent(safeDesc)}">
-                            <ion-icon name="logo-whatsapp"></ion-icon> Partilhar
+                        <button class="btn btn-primary cat-share-btn" data-img="${item.image_url}" data-desc="${encodeURIComponent(safeDesc)}" style="display:flex; align-items:center; gap:6px; justify-content:center;">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 448 512"><path d="M380.9 97.1c-4.9-5.1-13-5.1-17.9 0L247 213.1c-5.1 5.1-5.1 13.3 0 18.4l20.1 20.1c5.1 5.1 13.3 5.1 18.4 0L382.4 155c5.1-5.1 5.1-13.3 0-18.4l-1.5-1.5zM224 416c-8.8 0-16-7.2-16-16V316.5l-63.5-63.5-86.4 86.4C44.7 352.8 32 371.4 32 391.1v24.9c0 35.3 28.7 64 64 64h256.4c19.7 0 38.3-12.7 51.7-26.1l111.4-111.4c15.1-15.1 15.1-39.7 0-54.8l-123.5-123.5c-5.1-5.1-13.3-5.1-18.4 0L348.5 176c-5.1 5.1-5.1 13.3 0 18.4l63.5 63.5H320c-8.8 0-16 7.2-16 16v96c0 8.8 7.2 16 16 16h96c8.8 0 16-7.2 16-16V304h-10.3l-20.1-20.1c-5.1-5.1-13.3-5.1-18.4 0l-123.5 123.5c-5.1 5.1-5.1 13.3 0 18.4l1.5 1.5c4.9 5.1 13 5.1 17.9 0l115.9-115.9c5.1-5.1 5.1-13.3 0-18.4l-20.1-20.1c-5.1-5.1-13.3-5.1-18.4 0L224 416z"/></svg> 
+                            Compartilhar
                         </button>
                     </div>
                 </div>
