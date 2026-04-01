@@ -48,27 +48,31 @@ export const render = (user) => {
         const minVal = parseFloat(container.querySelector('#filter-min').value) || 0;
         const maxVal = parseFloat(container.querySelector('#filter-max').value) || Infinity;
 
-        const filteredSales = allData.filter(s => {
-            if (search) {
-                const haystack = removeAccents(`${s.client_name || ''} ${s.products_summary || ''} ${s.description || ''} ${s.payment_method || ''}`.toLowerCase());
-                if (!haystack.includes(search)) return false;
-            }
+        const applyToAll = (item, getterVal) => {
             if (monthFilter) {
-                const d = new Date(s.created_at);
+                const d = new Date(item.created_at);
                 const key = `${d.getFullYear()}-${String(d.getMonth()).padStart(2, '0')}`;
                 if (key !== monthFilter) return false;
             }
-            const val = s.total_value || 0;
+            if (search) {
+                const haystack = removeAccents(`${item.client_name || ''} ${item.products_summary || ''} ${item.description || ''} ${item.carrier || ''}`.toLowerCase());
+                if (!haystack.includes(search)) return false;
+            }
+            const val = getterVal(item) || 0;
             if (val < minVal || val > maxVal) return false;
-
             return true;
-        });
+        };
+
+        const filteredSales = allData.filter(s => applyToAll(s, s => s.total_value));
+        const filteredReserved = allReserved.filter(r => applyToAll(r, r => r.total_value));
+        const filteredMaterials = allMaterialCosts.filter(m => applyToAll(m, m => m.cost_amount));
+        const filteredDispatch = allDispatchCosts.filter(d => applyToAll(d, d => d.amount));
 
         // Aplicamos a renderização à visão unificada
-        renderUnifiedData(filteredSales);
+        renderUnifiedData(filteredSales, filteredReserved, filteredMaterials, filteredDispatch);
     };
 
-    const renderUnifiedData = (sales) => {
+    const renderUnifiedData = (sales, reserved, materials, dispatch) => {
         let launched = 0;
         let totalDescontos = 0;
         let totalGeralFiltered = 0;
@@ -107,19 +111,19 @@ export const render = (user) => {
             }
         });
 
-        allReserved.forEach(r => {
+        reserved.forEach(r => {
             const m = getOrCreateMonth(r.created_at);
             m.reserved.push(r);
             m.reservedTotal += (r.total_value || 0);
         });
 
-        allMaterialCosts.forEach(c => {
+        materials.forEach(c => {
             const m = getOrCreateMonth(c.created_at);
             m.materials.push(c);
             m.materialsTotal += (c.cost_amount || 0);
         });
 
-        allDispatchCosts.forEach(d => {
+        dispatch.forEach(d => {
             const m = getOrCreateMonth(d.created_at);
             m.dispatch.push(d);
             m.dispatchTotal += (d.amount || 0);
