@@ -96,12 +96,12 @@ export const initChatWidget = (user, parentContainer) => {
         }
         .chat-input:focus { border-color: var(--primary); }
         .chat-send-btn {
-            background: var(--primary); color: white; border: none;
-            border-radius: 50%; width: 40px; height: 40px;
+            background: transparent; color: var(--primary); border: none;
+            padding: 0 10px; font-size: 24px;
             display: flex; align-items: center; justify-content: center;
-            cursor: pointer; box-shadow: 0 4px 10px rgba(124,58,237,0.3); transition: transform 0.2s;
+            cursor: pointer; transition: transform 0.2s, color 0.2s;
         }
-        .chat-send-btn:hover { transform: scale(1.1); }
+        .chat-send-btn:hover { transform: scale(1.1); color: var(--primary-hover); }
         .typing-indicator {
             font-size: 0.75rem; color: var(--text-secondary);
             height: 15px; font-style: italic; overflow: hidden;

@@ -17,7 +17,7 @@ const broadcast = (data) => {
 exports.stream = (req, res) => {
     // Configura os headers para manter a conexão aberta
     res.setHeader('Content-Type', 'text/event-stream');
-    res.setHeader('Cache-Control', 'no-cache');
+    res.setHeader('Cache-Control', 'no-cache, no-transform'); // no-transform disables Express compression
     res.setHeader('Connection', 'keep-alive');
     res.flushHeaders();
 
