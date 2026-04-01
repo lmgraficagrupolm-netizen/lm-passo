@@ -106,7 +106,7 @@ router.delete('/purchases/:id', purchaseController.deletePurchase);
 // Catalogue
 const catalogueController = require('../controllers/catalogue_controller');
 router.get('/catalogue', catalogueController.getAllItems);
-router.post('/catalogue', upload.single('image'), catalogueController.createItem);
+router.post('/catalogue', upload.array('images', 10), catalogueController.createItem);
 router.put('/catalogue/:id', catalogueController.updateItem);
 router.delete('/catalogue/:id', catalogueController.deleteItem);
 

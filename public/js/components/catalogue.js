@@ -37,7 +37,7 @@ export const render = () => {
                     
                     <div class="form-group" id="file-group">
                         <label>Upload de Arte / Foto <small>(Deixe em branco para manter a original ao editar)</small></label>
-                        <input type="file" id="cat-file" accept="image/*" style="padding: 0.5rem">
+                        <input type="file" id="cat-file" accept="image/*" multiple="multiple" style="padding: 0.5rem">
                     </div>
                     <div class="form-group">
                         <label>Título / Nome Interno</label>
@@ -82,12 +82,31 @@ export const render = () => {
                 const safeDesc = (item.description || '');
                 const displayDesc = safeDesc.replace(/\\n/g, '<br>');
 
+                let imagesHtml = '';
+                const images = item.images && item.images.length > 0 ? item.images : [item.image_url];
+                if (images.length > 1) {
+                    imagesHtml = `
+                        <div style="display: flex; overflow-x: auto; scroll-snap-type: x mandatory; gap: 0.5rem; padding-bottom: 0.5rem; scrollbar-width: thin;">
+                            ${images.map(img => `
+                                <a href="${img}" target="_blank" style="text-decoration:none; flex: 0 0 85%; scroll-snap-align: center;">
+                                    <img src="${img}" alt="${safeTitle}" class="catalogue-image" style="min-height: 180px; width: 100%; object-fit: cover; border-radius: 8px;" onerror="this.onerror=null; this.src='data:image/svg+xml;utf8,<svg xmlns=\\'http://www.w3.org/2000/svg\\' width=\\'100\\' height=\\'100\\'><text x=\\'50%\\' y=\\'50%\\' font-size=\\'12\\' text-anchor=\\'middle\\' fill=\\'red\\' dy=\\'0.3em\\'>Erro de Mídia</text></svg>'; this.alt='Erro' ">
+                                </a>
+                            `).join('')}
+                        </div>
+                    `;
+                } else {
+                    const singleImgUrl = images[0] || '';
+                    imagesHtml = `
+                        <a href="${singleImgUrl}" target="_blank" style="text-decoration:none;">
+                            <img src="${singleImgUrl}" alt="${safeTitle}" class="catalogue-image" style="min-height: 180px; text-align: center; color: var(--danger);" onerror="this.onerror=null; this.src='data:image/svg+xml;utf8,<svg xmlns=\\'http://www.w3.org/2000/svg\\' width=\\'100\\' height=\\'100\\'><text x=\\'50%\\' y=\\'50%\\' font-size=\\'12\\' text-anchor=\\'middle\\' fill=\\'red\\' dy=\\'0.3em\\'>Erro de Formato Mídia</text></svg>'; this.alt='Clique p/ Baixar Mídia' ">
+                        </a>
+                    `;
+                }
+
                 return `
                 <div class="catalogue-card">
                     <div class="catalogue-image-wrapper">
-                        <a href="${item.image_url}" target="_blank" style="text-decoration:none;">
-                            <img src="${item.image_url}" alt="${safeTitle}" class="catalogue-image" style="min-height: 180px; text-align: center; color: var(--danger);" onerror="this.onerror=null; this.src='data:image/svg+xml;utf8,<svg xmlns=\\'http://www.w3.org/2000/svg\\' width=\\'100\\' height=\\'100\\'><text x=\\'50%\\' y=\\'50%\\' font-size=\\'12\\' text-anchor=\\'middle\\' fill=\\'red\\' dy=\\'0.3em\\'>Erro de Formato Mídia</text></svg>'; this.alt='Clique p/ Baixar Mídia' ">
-                        </a>
+                        ${imagesHtml}
                         ${isAdmin ? `
                             <div style="position: absolute; top: 10px; right: 10px; display: flex; gap: 0.5rem;">
                                 <button class="cat-edit-btn" data-id="${item.id}" data-title="${safeTitle}" data-desc="${encodeURIComponent(safeDesc)}" title="Editar Texto" style="background: rgba(255,255,255,0.9); border: none; color: var(--primary); width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 2px 10px rgba(0,0,0,0.1); transition: all 0.2s;">
@@ -307,7 +326,9 @@ export const render = () => {
                         return;
                     }
                     const formData = new FormData();
-                    formData.append('image', fileInput.files[0]);
+                    for (let i = 0; i < fileInput.files.length; i++) {
+                        formData.append('images', fileInput.files[i]);
+                    }
                     formData.append('title', title);
                     formData.append('description', desc);
 
