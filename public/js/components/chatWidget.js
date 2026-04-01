@@ -19,6 +19,8 @@ export const initChatWidget = (user, parentContainer) => {
             transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             padding: 0;
             filter: drop-shadow(0 10px 15px rgba(0,0,0,0.2));
+            color: #7c3aed;
+            font-size: 60px;
         }
         .chat-widget-btn:hover { transform: scale(1.1); }
         .chat-badge {
@@ -92,12 +94,12 @@ export const initChatWidget = (user, parentContainer) => {
         }
         .chat-input:focus { border-color: var(--primary); }
         .chat-send-btn {
-            background: transparent; color: var(--primary); border: none;
+            background: transparent; color: #7c3aed; border: none;
             padding: 0 10px; font-size: 24px;
             display: flex; align-items: center; justify-content: center;
             cursor: pointer; transition: transform 0.2s, color 0.2s;
         }
-        .chat-send-btn:hover { transform: scale(1.1); color: var(--primary-hover); }
+        .chat-send-btn:hover { transform: scale(1.1); color: #6d28d9; }
         .typing-indicator {
             font-size: 0.75rem; color: var(--text-secondary);
             height: 15px; font-style: italic; overflow: hidden;
@@ -128,7 +130,7 @@ export const initChatWidget = (user, parentContainer) => {
     const wrapper = document.createElement('div');
     wrapper.innerHTML = `
         <button class="chat-widget-btn" id="team-chat-btn">
-            <img src="/logo.png" alt="LM Passo Chat" style="width: 55px; height: 55px; border-radius: 12px; object-fit: contain;">
+            <ion-icon name="chatbox-ellipses"></ion-icon>
             <div class="chat-badge" id="chat-badge">0</div>
         </button>
 
