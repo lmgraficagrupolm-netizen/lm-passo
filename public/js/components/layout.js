@@ -39,7 +39,7 @@ export const render = (user, onLogout, onNavigate) => {
         menuItems = `
             <li class="nav-item">
                 <a class="nav-link active" id="nav-client_financial" data-view="client_financial">
-                    <ion-icon name="cash-outline"></ion-icon> Meu Financeiro
+                    <ion-icon name="cash-outline"></ion-icon> <span class="nav-text">Meu Financeiro</span>
                 </a>
             </li>
         `;
@@ -48,17 +48,17 @@ export const render = (user, onLogout, onNavigate) => {
         menuItems = `
             <li class="nav-item">
                 <a class="nav-link active" id="nav-kanban" data-view="kanban">
-                    <ion-icon name="clipboard-outline"></ion-icon> Quadro
+                    <ion-icon name="clipboard-outline"></ion-icon> <span class="nav-text">Quadro</span>
                 </a>
             </li>
             <li class="nav-item">
                 <a class="nav-link" id="nav-products" data-view="products">
-                    <ion-icon name="pricetags-outline"></ion-icon> Produtos
+                    <ion-icon name="pricetags-outline"></ion-icon> <span class="nav-text">Produtos</span>
                 </a>
             </li>
             <li class="nav-item">
                 <a class="nav-link" id="nav-catalogue" data-view="catalogue">
-                    <ion-icon name="book-outline"></ion-icon> Catálogo
+                    <ion-icon name="book-outline"></ion-icon> <span class="nav-text">Catálogo</span>
                 </a>
             </li>
         `;
@@ -66,22 +66,22 @@ export const render = (user, onLogout, onNavigate) => {
         menuItems = `
             <li class="nav-item">
                 <a class="nav-link active" id="nav-kanban" data-view="kanban">
-                    <ion-icon name="clipboard-outline"></ion-icon> Quadro
+                    <ion-icon name="clipboard-outline"></ion-icon> <span class="nav-text">Quadro</span>
                 </a>
             </li>
             <li class="nav-item">
                 <a class="nav-link" id="nav-clients" data-view="clients">
-                    <ion-icon name="people-outline"></ion-icon> Clientes
+                    <ion-icon name="people-outline"></ion-icon> <span class="nav-text">Clientes</span>
                 </a>
             </li>
             <li class="nav-item">
                 <a class="nav-link" id="nav-products" data-view="products">
-                    <ion-icon name="pricetags-outline"></ion-icon> Produtos
+                    <ion-icon name="pricetags-outline"></ion-icon> <span class="nav-text">Produtos</span>
                 </a>
             </li>
             <li class="nav-item">
                 <a class="nav-link" id="nav-catalogue" data-view="catalogue">
-                    <ion-icon name="book-outline"></ion-icon> Catálogo
+                    <ion-icon name="book-outline"></ion-icon> <span class="nav-text">Catálogo</span>
                 </a>
             </li>
         `;
@@ -93,13 +93,13 @@ export const render = (user, onLogout, onNavigate) => {
         menuItems += `
         <li class="nav-item">
             <a class="nav-link" id="nav-estoque" data-view="estoque" style="position:relative;">
-                <ion-icon name="cube-outline"></ion-icon> Estoque
+                <ion-icon name="cube-outline"></ion-icon> <span class="nav-text">Estoque</span>
                 <span id="stock-alert-badge" style="display:none; position:absolute; top:12px; right:15px; background:#ef4444; color:white; font-size:10px; font-weight:bold; padding:2px 6px; border-radius:10px; box-shadow:0 0 8px rgba(239, 68, 68, 0.8);"></span>
             </a>
         </li>
         <li class="nav-item">
             <a class="nav-link" id="nav-compras" data-view="compras">
-                <ion-icon name="cart-outline"></ion-icon> Compras
+                <ion-icon name="cart-outline"></ion-icon> <span class="nav-text">Compras</span>
             </a>
         </li>
         `;
@@ -109,7 +109,7 @@ export const render = (user, onLogout, onNavigate) => {
         menuItems += `
         <li class="nav-item">
             <a class="nav-link" id="nav-financial" data-view="financial">
-                <ion-icon name="cash-outline"></ion-icon> Financeiro
+                <ion-icon name="cash-outline"></ion-icon> <span class="nav-text">Financeiro</span>
             </a>
         </li>
         `;
@@ -119,12 +119,12 @@ export const render = (user, onLogout, onNavigate) => {
         menuItems += `
         <li class="nav-item">
             <a class="nav-link" id="nav-fornecedores" data-view="fornecedores">
-                <ion-icon name="receipt-outline"></ion-icon> Fornecedores
+                <ion-icon name="receipt-outline"></ion-icon> <span class="nav-text">Fornecedores</span>
             </a>
         </li>
         <li class="nav-item">
             <a class="nav-link" id="nav-admin" data-view="admin">
-                <ion-icon name="settings-outline"></ion-icon> Admin
+                <ion-icon name="settings-outline"></ion-icon> <span class="nav-text">Admin</span>
             </a>
         </li>
         `;
@@ -133,19 +133,18 @@ export const render = (user, onLogout, onNavigate) => {
     container.innerHTML = `
         <div class="sidebar" id="sidebar">
             <div class="sidebar-header" style="display:flex; justify-content:space-between; align-items:center">
-                <div style="display:flex; align-items:center; gap:0.5rem">
-                    <img src="/logo.png" alt="Logo" style="width:32px; height:32px; border-radius:6px; object-fit:contain;">
-                    <span>LM | PASSO</span>
+                <div style="display:flex; align-items:center; gap:0.5rem; overflow:hidden;">
+                    <img src="/logo.png" alt="Logo" style="width:32px; height:32px; border-radius:6px; object-fit:contain; flex-shrink:0;">
+                    <span class="nav-text" style="white-space:nowrap;">LM | PASSO</span>
                 </div>
-                <button id="toggle-sidebar" style="background:none; border:none; color:white; cursor:pointer"><ion-icon name="menu-outline"></ion-icon></button>
             </div>
             <ul class="nav-links">
                 ${menuItems}
             </ul>
             <div class="user-info">
-                <div style="margin-bottom: 0.5rem">Ola, ${user.name} (${user.role})</div>
-                <a class="nav-link" id="logout-btn" style="padding-left: 0; color: #ef4444;">
-                    <ion-icon name="log-out-outline"></ion-icon> Sair
+                <div class="nav-text" style="margin-bottom: 0.5rem; font-size:0.75rem;">Ola, ${user.name} (${user.role})</div>
+                <a class="nav-link" id="logout-btn" style="padding-left: 0; color: #ef4444; display:flex; align-items:center">
+                    <ion-icon name="log-out-outline"></ion-icon> <span class="nav-text" style="margin-left:1rem;">Sair</span>
                 </a>
             </div>
         </div>
@@ -163,17 +162,7 @@ export const render = (user, onLogout, onNavigate) => {
 
     container.querySelector('#logout-btn').addEventListener('click', onLogout);
 
-    // Sidebar Toggle
-    container.querySelector('#toggle-sidebar').addEventListener('click', () => {
-        const sidebar = container.querySelector('#sidebar');
-        if (sidebar.style.width === '60px') {
-            sidebar.style.width = '250px';
-            sidebar.querySelectorAll('.nav-link span, .sidebar-header span, .user-info div').forEach(el => el.style.display = 'block');
-        } else {
-            sidebar.style.width = '60px';
-            sidebar.querySelectorAll('.nav-link span, .sidebar-header span, .user-info div').forEach(el => el.style.display = 'none');
-        }
-    });
+    // Sidebar Toggle Logic removed (now handled by CSS hover)
 
     // Check low stock and alert visually
     if (canSeeStock) {
