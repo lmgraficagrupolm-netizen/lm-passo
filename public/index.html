@@ -33,7 +33,36 @@
                 }
             });
 
-            window.addEventListener('load', () => {
+            window.addEventListener('load', async () => {
+                // ─── NUKE OLD BROKEN CACHES ─────────────────────────────────────
+                // If a previously-corrupted SW is intercepting /uploads and blocking
+                // all images, we need to unregister ALL old SWs and delete all caches
+                // before re-registering the clean version.
+                try {
+                    const regs = await navigator.serviceWorker.getRegistrations();
+                    for (const reg of regs) {
+                        // Only unregister if it's an older version (not our current sw.js)
+                        const swUrl = reg.active?.scriptURL || reg.installing?.scriptURL || '';
+                        if (swUrl.includes('/sw.js')) {
+                            // Same file — just update it, don't unregister
+                            continue;
+                        }
+                        await reg.unregister();
+                        console.log('[SW] Antigo SW desregistrado:', swUrl);
+                    }
+                    // Delete any old caches that might block images
+                    const keys = await caches.keys();
+                    for (const key of keys) {
+                        if (key !== 'lm-passo-v31') {
+                            await caches.delete(key);
+                            console.log('[SW] Cache antigo deletado:', key);
+                        }
+                    }
+                } catch(e) {
+                    console.warn('[SW] Limpeza preventiva falhou (ignorando):', e);
+                }
+                // ─────────────────────────────────────────────────────────────────
+
                 navigator.serviceWorker.register('/sw.js').then(reg => {
                     console.log('[SW] Registrado:', reg.scope);
 
