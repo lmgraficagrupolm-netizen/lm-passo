@@ -286,6 +286,30 @@ export const render = (user) => {
                     </div>
                 ` : '';
 
+                // Discounts Rows
+                const discountItems = m.sales.filter(s => (s.discount_value || 0) > 0);
+                const discountRows = discountItems.map(s => `
+                    <tr>
+                        <td>${new Date(s.created_at).toLocaleDateString('pt-BR')}</td>
+                        <td><b>${s.client_name || '-'}</b></td>
+                        <td style="font-size:0.85rem">${s.products_summary || '-'}</td>
+                        <td>${s.payment_method || '-'}</td>
+                        <td style="font-weight:bold; color:#dc2626;">- R$ ${(s.discount_value || 0).toFixed(2)}</td>
+                    </tr>`).join('');
+
+                const discountTable = discountItems.length > 0 ? `
+                    <div style="margin-top:1.5rem; border:1px solid #fed7aa; border-radius:8px; overflow:hidden;">
+                        <div style="background:#fff7ed; padding:0.6rem 1rem; font-weight:600; color:#c2410c; display:flex; justify-content:space-between; align-items:center;">
+                            <span>✂️ Descontos Concedidos</span>
+                            <span style="color:#ea580c; font-size:1.05rem;">- R$ ${m.salesDiscount.toFixed(2)}</span>
+                        </div>
+                        <table class="data-table" style="margin:0; border-radius:0;">
+                            <thead><tr><th>Data</th><th>Cliente</th><th>Produtos</th><th>Pagamento</th><th>Valor Desconto</th></tr></thead>
+                            <tbody>${discountRows}</tbody>
+                        </table>
+                    </div>
+                ` : '';
+
                 // 2. Reserved Rows
                 const statusLabel = status => status === 'aguardando_aceite' ? '⏳ Aguardando' : '🔨 Produção';
                 const reservedRows = m.reserved.map(s => `
@@ -403,10 +427,11 @@ export const render = (user) => {
                     </div>
                     <div style="padding:0.5rem; display:${isCurrentMonth ? 'block' : 'none'};">
                         ${salesTable}
+                        ${discountTable}
                         ${reservedTable}
                         ${dispTable}
                         ${matTable}
-                        ${(!salesTable && !reservedTable && !dispTable && !matTable) ? '<p style="color:#94a3b8; text-align:center; padding:2rem;">Nenhum detalhe disponível</p>' : ''}
+                        ${(!salesTable && !discountTable && !reservedTable && !dispTable && !matTable) ? '<p style="color:#94a3b8; text-align:center; padding:2rem;">Nenhum detalhe disponível</p>' : ''}
                     </div>
                 </div>
                 `;
