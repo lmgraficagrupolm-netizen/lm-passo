@@ -9,20 +9,16 @@ export const initChatWidget = (user, parentContainer) => {
             position: fixed;
             bottom: 30px;
             right: 30px;
-            width: 60px;
-            height: 60px;
-            background: linear-gradient(135deg, var(--primary), var(--primary-hover));
-            color: white;
-            border-radius: 50%;
+            background: transparent;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 28px;
-            box-shadow: 0 10px 25px rgba(124, 58, 237, 0.4);
             cursor: pointer;
             z-index: 9999;
             border: none;
             transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            padding: 0;
+            filter: drop-shadow(0 10px 15px rgba(0,0,0,0.2));
         }
         .chat-widget-btn:hover { transform: scale(1.1); }
         .chat-badge {
@@ -132,7 +128,7 @@ export const initChatWidget = (user, parentContainer) => {
     const wrapper = document.createElement('div');
     wrapper.innerHTML = `
         <button class="chat-widget-btn" id="team-chat-btn">
-            <img src="/logo.png" alt="LM Passo Chat" style="width: 36px; height: 36px; border-radius: 50%; object-fit: cover; border: 2px solid rgba(255,255,255,0.8);">
+            <img src="/logo.png" alt="LM Passo Chat" style="width: 55px; height: 55px; border-radius: 12px; object-fit: contain;">
             <div class="chat-badge" id="chat-badge">0</div>
         </button>
 
