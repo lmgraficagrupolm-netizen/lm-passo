@@ -412,6 +412,10 @@ export const render = (user) => {
                                 <span style="font-size:1.05rem; font-weight:700; color:#fca5a5;">R$ ${m.materialsTotal.toFixed(2)}</span>
                             </div>
                             <div style="display:flex; flex-direction:column; align-items:flex-end;">
+                                <span style="font-size:0.75rem; text-transform:uppercase; letter-spacing:0.5px; opacity:0.8;">Descontos</span>
+                                <span style="font-size:1.05rem; font-weight:700; color:#fdba74;">- R$ ${m.salesDiscount.toFixed(2)}</span>
+                            </div>
+                            <div style="display:flex; flex-direction:column; align-items:flex-end;">
                                 <span style="font-size:0.75rem; text-transform:uppercase; letter-spacing:0.5px; opacity:0.8;">Fechamento Base</span>
                                 <span style="font-size:1.05rem; font-weight:700; color:#4ade80;">R$ ${m.salesTotal.toFixed(2)}</span>
                             </div>
