@@ -61,12 +61,12 @@ app.use((req, res, next) => {
 // Serve internal assets — prefer disk (allows live updates), fall back to embedded snapshot
 const diskPublic = path.join(process.cwd(), 'public');
 if (fs.existsSync(diskPublic)) {
-    app.use(express.static(diskPublic));           // ← uses real files from disk
+    app.use(express.static(diskPublic, { acceptRanges: false }));  // ← uses real files from disk
 } else {
-    app.use(express.static(path.join(__dirname, 'public'))); // ← fallback: embedded
+    app.use(express.static(path.join(__dirname, 'public'), { acceptRanges: false })); // ← fallback: embedded
 }
-// Serve external uploads (user files) always from disk
-app.use('/uploads', express.static(path.join(process.cwd(), 'public/uploads')));
+// Serve external uploads (user files) always from disk - bypass ranges to prevent old SW crashes
+app.use('/uploads', express.static(path.join(process.cwd(), 'public/uploads'), { acceptRanges: false }));
 
 // Health check (Railway / Render)
 app.get('/api/health', (req, res) => res.json({ status: 'ok' }));
