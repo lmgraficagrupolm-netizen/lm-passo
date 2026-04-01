@@ -1,4 +1,4 @@
-const CACHE_NAME = 'lm-passo-v25';
+const CACHE_NAME = 'lm-passo-v30';
 const STATIC_ASSETS = [
     '/',
     '/index.html',

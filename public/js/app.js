@@ -79,7 +79,7 @@ const loadView = (view, container) => {
         default: modulePath = './components/kanban.js';
     }
 
-    import(modulePath + '?v=27').then(module => {
+    import(modulePath + '?v=40-' + Date.now()).then(module => {
         container.innerHTML = '';
         // Pass user to financial view for role-based controls
         const viewArg = (view === 'financial') ? state.user : undefined;
