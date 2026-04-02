@@ -152,6 +152,18 @@ export const render = (user, onLogout, onNavigate) => {
             <ul class="nav-links">
                 ${menuItems}
             </ul>
+            ${canSeeFinance ? `
+            <div class="demand-widget" id="demand-widget">
+                <div class="demand-widget-title">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+                    Demanda de Produtos
+                </div>
+                <div class="demand-tabs">
+                    <button class="demand-tab active" data-tab="monthly">Mensal</button>
+                    <button class="demand-tab" data-tab="quarterly">Trimestral</button>
+                </div>
+                <div id="demand-content"><div class="demand-loading"></div></div>
+            </div>` : ''}
             <div class="user-info">
                 <div class="nav-text" style="margin-bottom:0.5rem; font-size:0.72rem; color:#94a3b8; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">Olá, ${user.name}</div>
                 <a class="nav-link" id="logout-btn" title="Sair" style="color:#ef4444;">
@@ -200,6 +212,88 @@ export const render = (user, onLogout, onNavigate) => {
                 console.error('Stock alert check failed:', err);
             }
         }, 800);
+    }
+
+    // Demand Widget — lazy load on first sidebar hover (master/financeiro only)
+    if (canSeeFinance) {
+        let demandData = null;
+        let demandLoaded = false;
+        let activeTab = 'monthly';
+
+        const renderDemand = (data, tab) => {
+            const el = container.querySelector('#demand-content');
+            if (!el) return;
+            const section = data[tab];
+            if (!section) { el.innerHTML = '<div class="demand-empty">Sem dados</div>'; return; }
+
+            const maxTop = section.top.length > 0 ? section.top[0].total_qty : 1;
+            const maxBot = section.bottom.length > 0 ? section.bottom[0].total_qty : 1;
+
+            const buildItems = (items, type) => {
+                if (!items || items.length === 0) return `<div class="demand-empty">Nenhum item</div>`;
+                const maxQty = items[0].total_qty || 1;
+                return items.map(item => {
+                    const pct = Math.round((item.total_qty / maxQty) * 100);
+                    return `
+                    <div class="demand-item">
+                        <span class="demand-item-name" title="${item.product_name}">${item.product_name}</span>
+                        <div class="demand-bar-wrap">
+                            <div class="demand-bar-fill ${type}-fill" style="width:0%" data-pct="${pct}"></div>
+                        </div>
+                        <span class="demand-qty ${type}-qty">${item.total_qty}</span>
+                    </div>`;
+                }).join('');
+            };
+
+            el.innerHTML = `
+                <div class="demand-section-label top">▲ Mais Solicitados</div>
+                ${buildItems(section.top, 'top')}
+                ${section.bottom.length > 0 ? `<div class="demand-section-label bottom">▼ Menos Solicitados</div>${buildItems(section.bottom, 'bottom')}` : ''}
+            `;
+
+            // Animate bars after paint
+            requestAnimationFrame(() => {
+                el.querySelectorAll('.demand-bar-fill').forEach(bar => {
+                    bar.style.width = bar.dataset.pct + '%';
+                });
+            });
+        };
+
+        const loadDemand = async () => {
+            if (demandLoaded) { renderDemand(demandData, activeTab); return; }
+            try {
+                const res = await fetch('/api/reports/product-demand');
+                demandData = await res.json();
+                demandLoaded = true;
+                renderDemand(demandData, activeTab);
+            } catch (e) {
+                const el = container.querySelector('#demand-content');
+                if (el) el.innerHTML = '<div class="demand-empty">Erro ao carregar</div>';
+            }
+        };
+
+        // Tab click
+        container.querySelectorAll('.demand-tab').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                container.querySelectorAll('.demand-tab').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                activeTab = btn.dataset.tab;
+                if (demandLoaded) renderDemand(demandData, activeTab);
+            });
+        });
+
+        // Load on first hover with debounce
+        let hoverTimer = null;
+        const sidebar = container.querySelector('#sidebar');
+        if (sidebar) {
+            sidebar.addEventListener('mouseenter', () => {
+                hoverTimer = setTimeout(loadDemand, 400);
+            });
+            sidebar.addEventListener('mouseleave', () => {
+                clearTimeout(hoverTimer);
+            });
+        }
     }
 
     // Initialize Global Team Chat
