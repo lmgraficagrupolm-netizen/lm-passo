@@ -449,6 +449,19 @@ exports.updateDispatchCost = (req, res) => {
     );
 };
 
+// Toggle launched_to_core on a dispatch cost entry
+exports.launchDispatchToCore = (req, res) => {
+    const { launched } = req.body;
+    db.run(
+        "UPDATE dispatch_costs SET launched_to_core = ? WHERE id = ?",
+        [launched ? 1 : 0, req.params.id],
+        function (err) {
+            if (err) return res.status(500).json({ error: err.message });
+            res.json({ message: 'Atualizado' });
+        }
+    );
+};
+
 
 
 exports.rejectOrder = (req, res) => {

@@ -80,6 +80,7 @@ router.delete('/material-costs/:id', orderController.deleteMaterialCost);
 // Delete / update dispatch cost entry (admin only)
 router.delete('/dispatch-costs/:id', orderController.deleteDispatchCost);
 router.put('/dispatch-costs/:id', orderController.updateDispatchCost);
+router.put('/dispatch-costs/:id/launch-core', orderController.launchDispatchToCore);
 
 // Stock
 const stockController = require('../controllers/stock_controller');
