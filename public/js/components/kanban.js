@@ -1112,36 +1112,6 @@ export const render = () => {
             setTimeout(() => content.querySelector('.btn-save-path').textContent = '💾', 1500);
         };
 
-        // Launch to Core toggle
-        const launchCoreBtn = content.querySelector('.btn-launch-core-modal');
-        if (launchCoreBtn) {
-            launchCoreBtn.onclick = async () => {
-                const currentlyLaunched = !!order.launched_to_core;
-                const newState = !currentlyLaunched;
-                launchCoreBtn.disabled = true;
-                launchCoreBtn.textContent = '...';
-                const res = await fetch(`/api/orders/${order.id}/launch-core`, {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ launched: newState })
-                });
-                if (res.ok) {
-                    order.launched_to_core = newState ? 1 : 0;
-                    if (newState) {
-                        launchCoreBtn.textContent = '✅ Lançado';
-                        launchCoreBtn.style.cssText = 'height:fit-content; background:#d1fae5; color:#065f46; border:1px solid #6ee7b7; padding:4px 10px; border-radius:20px; font-size:0.8rem; font-weight:600;';
-                    } else {
-                        launchCoreBtn.textContent = '⬜ Lançar';
-                        launchCoreBtn.style.cssText = 'height:fit-content; background:#ede9fe; color:#5b21b6; border:1px solid #c4b5fd; padding:4px 10px; border-radius:20px; font-size:0.8rem; font-weight:600;';
-                    }
-                } else {
-                    launchCoreBtn.textContent = currentlyLaunched ? '✅ Lançado' : '⬜ Lançar';
-                    alert('Erro ao atualizar status de lançamento.');
-                }
-                launchCoreBtn.disabled = false;
-            };
-        }
-
         // Open folder in Explorer
         content.querySelector('.btn-open-folder').onclick = async () => {
             const filePath = content.querySelector('#order-file-path').value.trim();

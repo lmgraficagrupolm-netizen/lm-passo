@@ -353,6 +353,9 @@ function initDb() {
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY(order_id) REFERENCES orders(id)
     )`);
+
+    // Migration: add launched_to_core to dispatch_costs
+    db.run("ALTER TABLE dispatch_costs ADD COLUMN launched_to_core INTEGER DEFAULT 0", (err) => { /* ignore if exists */ });
 }
 
 module.exports = db;
