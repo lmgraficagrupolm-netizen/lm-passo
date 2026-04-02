@@ -407,6 +407,7 @@ exports.concludeOrder = (req, res) => {
 exports.getDispatchCosts = (req, res) => {
     const sql = `
         SELECT dc.id, dc.order_id, dc.carrier, dc.amount, dc.created_at,
+               dc.launched_to_core,
                c.name as client_name
         FROM dispatch_costs dc
         LEFT JOIN orders o ON dc.order_id = o.id
