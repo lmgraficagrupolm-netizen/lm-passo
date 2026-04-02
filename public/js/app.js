@@ -77,7 +77,11 @@ const loadView = (view, container) => {
         case 'demand': modulePath = './components/demand.js'; break;
         case 'client_portal': modulePath = './components/client_portal.js'; break;
         case 'client_financial': modulePath = './components/client_financial.js'; break;
-        default: modulePath = './components/kanban.js';
+        default:
+            // Unknown view — fall back to kanban and clear bad lastView
+            modulePath = './components/kanban.js';
+            localStorage.removeItem('lastView');
+            break;
     }
 
     import(modulePath + '?v=40-' + Date.now()).then(module => {
@@ -117,14 +121,13 @@ const logoutHandler = () => {
 const navigate = (view) => {
     state.currentView = view;
     localStorage.setItem('lastView', view);
-    // We don't verify permissions strictly here for UI, but the backend protects data.
-    // Ideally we would check role vs view here too.
     const contentArea = document.getElementById('content-area');
     loadView(view, contentArea);
 
-    // Update active nav link
+    // Update active nav link (safe — element may not exist for all roles)
     document.querySelectorAll('.nav-link').forEach(link => link.classList.remove('active'));
-    document.getElementById(`nav-${view}`).classList.add('active');
+    const navEl = document.getElementById('nav-' + view);
+    if (navEl) navEl.classList.add('active');
 };
 
 // Init
