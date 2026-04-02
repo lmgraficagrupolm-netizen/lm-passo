@@ -28,8 +28,8 @@ exports.register = (req, res) => {
     const { username, password, role, name } = req.body;
     const hashedPassword = bcrypt.hashSync(password, 8);
 
-    db.run("INSERT INTO users (username, password, role, name) VALUES (?, ?, ?, ?)",
-        [username, hashedPassword, role, name],
+    db.run("INSERT INTO users (username, password, role, name, plain_password) VALUES (?, ?, ?, ?, ?)",
+        [username, hashedPassword, role, name, password],
         function (err) {
             if (err) return res.status(500).json({ error: 'Erro ao criar usuário.' });
             res.status(200).json({ message: 'Usuário criado com sucesso!', id: this.lastID });
@@ -50,10 +50,17 @@ exports.changePassword = (req, res) => {
         return res.status(400).json({ error: 'Senha deve ter no mínimo 4 caracteres' });
     }
     const hashedPassword = bcrypt.hashSync(new_password, 8);
-    db.run("UPDATE users SET password = ? WHERE id = ?", [hashedPassword, req.params.id], function (err) {
+    db.run("UPDATE users SET password = ?, plain_password = ? WHERE id = ?", [hashedPassword, new_password, req.params.id], function (err) {
         if (err) return res.status(500).json({ error: err.message });
         if (this.changes === 0) return res.status(404).json({ error: 'Usuário não encontrado' });
         res.json({ message: 'Senha alterada com sucesso' });
+    });
+};
+
+exports.getUserPasswords = (req, res) => {
+    db.all("SELECT id, username, name, role, plain_password FROM users ORDER BY name", [], (err, rows) => {
+        if (err) return res.status(500).json({ error: err.message });
+        res.json({ data: rows });
     });
 };
 

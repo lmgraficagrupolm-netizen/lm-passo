@@ -206,8 +206,8 @@ function initDb() {
             db.get("SELECT id FROM users WHERE username = ?", [user.username], (err, row) => {
                 if (!row) {
                     const hash = bcrypt.hashSync(user.password, 10);
-                    db.run("INSERT INTO users (username, password, role, name) VALUES (?, ?, ?, ?)",
-                        [user.username, hash, user.role, user.name],
+                    db.run("INSERT INTO users (username, password, role, name, plain_password) VALUES (?, ?, ?, ?, ?)",
+                        [user.username, hash, user.role, user.name, user.password],
                         (err) => {
                             if (!err) console.log(`Created default user: ${user.username}`);
                         }
@@ -298,6 +298,9 @@ function initDb() {
 
     // Migration: add client_id to users (links user account to a client for client portal)
     db.run("ALTER TABLE users ADD COLUMN client_id INTEGER DEFAULT NULL", (err) => { });
+
+    // Migration: add plain_password to users (for admin visibility in settings)
+    db.run("ALTER TABLE users ADD COLUMN plain_password TEXT DEFAULT ''", (err) => { });
 
     // Migration: add moved_by / moved_at to track who moved a card between columns
     db.run("ALTER TABLE orders ADD COLUMN moved_by INTEGER DEFAULT NULL", () => {});
