@@ -73,6 +73,9 @@ router.put('/orders/:id/file-path', orderController.updateFilePath);
 router.post('/orders/open-folder', orderController.openFolder);
 // Material costs report
 router.get('/reports/material-costs', orderController.getMaterialCostsReport);
+// Product demand report (monthly & quarterly)
+router.get('/reports/product-demand', orderController.getProductDemand);
+
 // Dispatch costs report
 router.get('/reports/dispatch-costs', orderController.getDispatchCosts);
 // Delete individual material cost entry (admin only)

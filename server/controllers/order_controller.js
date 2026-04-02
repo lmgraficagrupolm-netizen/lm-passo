@@ -827,6 +827,60 @@ exports.getMaterialCostsReport = (req, res) => {
     });
 };
 
+// Product Demand Report — top/bottom products by quantity ordered (monthly & quarterly)
+exports.getProductDemand = (req, res) => {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = now.getMonth(); // 0-indexed
+
+    // Current month range
+    const monthStart = new Date(year, month, 1).toISOString().slice(0, 10);
+    const monthEnd   = new Date(year, month + 1, 0, 23, 59, 59).toISOString().slice(0, 10);
+
+    // Quarterly: last 3 full months + current month (rolling 3 months)
+    const quarterStart = new Date(year, month - 2, 1).toISOString().slice(0, 10);
+
+    const buildQuery = (dateFrom, dateTo) => `
+        SELECT
+            COALESCE(oi.product_snapshot_name, p.name, 'Produto Desconhecido') as product_name,
+            SUM(oi.quantity) as total_qty
+        FROM order_items oi
+        JOIN orders o ON oi.order_id = o.id
+        LEFT JOIN products p ON oi.product_id = p.id
+        WHERE o.status IN ('em_balcao', 'finalizado', 'arquivado')
+          AND o.is_internal = 0
+          AND DATE(o.created_at) >= '${dateFrom}'
+          AND DATE(o.created_at) <= '${dateTo}'
+        GROUP BY COALESCE(oi.product_snapshot_name, p.name)
+        ORDER BY total_qty DESC
+    `;
+
+    db.all(buildQuery(monthStart, monthEnd), [], (err, monthlyRows) => {
+        if (err) return res.status(500).json({ error: err.message });
+
+        db.all(buildQuery(quarterStart, monthEnd), [], (err2, quarterlyRows) => {
+            if (err2) return res.status(500).json({ error: err2.message });
+
+            const process = (rows) => {
+                if (!rows || rows.length === 0) return { top: [], bottom: [] };
+                const top    = rows.slice(0, 5);
+                const bottom = rows.slice(-5).reverse();
+                // Avoid showing same item in both lists when total <= 5
+                const topNames = new Set(top.map(r => r.product_name));
+                return {
+                    top,
+                    bottom: bottom.filter(r => !topNames.has(r.product_name))
+                };
+            };
+
+            res.json({
+                monthly:   { period: `${monthStart} — ${monthEnd}`, ...process(monthlyRows) },
+                quarterly: { period: `${quarterStart} — ${monthEnd}`, ...process(quarterlyRows) }
+            });
+        });
+    });
+};
+
 // Delete a single material cost movement (admin only)
 exports.deleteMaterialCost = (req, res) => {
     const costId = req.params.id;
