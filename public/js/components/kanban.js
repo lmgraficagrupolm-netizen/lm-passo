@@ -1019,23 +1019,16 @@ export const render = () => {
         }
 
         content.innerHTML = `
-            <div style="display:flex; justify-content:space-between; align-items:start; flex-wrap:wrap; gap:0.5rem;">
-                <div style="flex:1; min-width:200px;">
+            <div style="display:flex; justify-content:space-between; align-items:start">
+                <div>
                      <div class="form-group"><label>Cliente:</label> <div>${order.client_name}${order.client_phone ? ` <span style="color:#64748b; font-size:0.9em;">— 📞 ${order.client_phone}</span>` : ''}</div></div>
+
                      <div class="form-group">
-                        <label>Produtos:</label>
+                        <label>Produtos:</label> 
                         <div style="white-space: pre-line; background: #f0fdf4; padding: 0.5rem; border: 1px solid #bbf7d0; border-radius: 4px;">${order.product_name}</div>
                      </div>
                 </div>
-                <div style="display:flex; gap:0.5rem; flex-wrap:wrap; align-items:flex-start; flex-shrink:0;">
-                    ${['em_balcao', 'finalizado', 'arquivado'].includes(order.status) ? (() => {
-                        const isLaunched = !!order.launched_to_core;
-                        const launchBtnStyle = isLaunched
-                            ? 'background:#d1fae5; color:#065f46; border:1px solid #6ee7b7;'
-                            : 'background:#ede9fe; color:#5b21b6; border:1px solid #c4b5fd;';
-                        const launchBtnText = isLaunched ? '✅ Lançado' : '⬜ Lançar';
-                        return `<button class="btn btn-sm btn-launch-core-modal" title="Lançar ao Core" style="height:fit-content; ${launchBtnStyle} padding:4px 10px; border-radius:20px; font-size:0.8rem; font-weight:600;">${launchBtnText}</button>`;
-                    })() : ''}
+                <div style="display:flex; gap:0.5rem">
                     <button class="btn btn-sm btn-secondary btn-reprint" title="Reimprimir Notinha" style="height:fit-content; background:#f8fafc; color:#475569; border:1px solid #cbd5e1;">
                         🖨️ Notinha
                     </button>
