@@ -1025,10 +1025,15 @@ export const render = () => {
 
                      <div class="form-group">
                         <label>Produtos:</label> 
-                        <div style="white-space: pre-line; background: #f0fdf4; padding: 0.5rem; border: 1px solid #bbf7d0; border-radius: 4px;">${order.product_name}</div>
-                     </div>
-                </div>
-                <div style="display:flex; gap:0.5rem">
+                    <div style="display:flex; gap:0.5rem; flex-wrap:wrap; align-items:flex-start;">
+                    ${['em_balcao', 'finalizado', 'arquivado'].includes(order.status) ? (() => {
+                        const isLaunched = !!order.launched_to_core;
+                        const launchBtnStyle = isLaunched
+                            ? 'background:#d1fae5; color:#065f46; border:1px solid #6ee7b7;'
+                            : 'background:#ede9fe; color:#5b21b6; border:1px solid #c4b5fd;';
+                        const launchBtnText = isLaunched ? '✅ Lançado' : '⬜ Lançar';
+                        return `<button class="btn btn-sm btn-launch-core-modal" title="Lançar ao Core" style="height:fit-content; ${launchBtnStyle} padding:4px 10px; border-radius:20px; font-size:0.8rem; font-weight:600;">${launchBtnText}</button>`;
+                    })() : ''}
                     <button class="btn btn-sm btn-secondary btn-reprint" title="Reimprimir Notinha" style="height:fit-content; background:#f8fafc; color:#475569; border:1px solid #cbd5e1;">
                         🖨️ Notinha
                     </button>
@@ -1038,6 +1043,8 @@ export const render = () => {
                     <button class="btn btn-sm btn-secondary btn-whatsapp" title="Copiar para WhatsApp" style="height:fit-content">
                         📱 Copiar
                     </button>
+                </div>
+                     </div>
                 </div>
             </div>
             <div class="form-group"><label>Descrição:</label> <div style="background:#f8fafc; padding:0.5rem; border-radius:4px; white-space:pre-wrap;">${order.description}</div></div>
