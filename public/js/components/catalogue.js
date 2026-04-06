@@ -137,7 +137,7 @@ export const render = () => {
                         alt="${title}" 
                         class="catalogue-image" 
                         style="min-height:180px;width:100%;object-fit:cover;border-radius:8px;background:#f1f5f9;"
-                        onerror="this.style.cssText='min-height:180px;width:100%;display:flex;align-items:center;justify-content:center;background:#fef2f2;border-radius:8px;border:2px dashed #fca5a5;'; this.alt='❌ Imagem indisponível'; console.warn('Imagem não carregou:', this.src);"
+                        onerror="this.outerHTML='<div style=\\'height:180px;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#fef2f2;border-radius:8px;border:2px dashed #fca5a5;color:#dc2626;padding:1rem;text-align:center;font-size:0.82rem;\\'><svg viewBox=\\'0 0 24 24\\' width=\\'32\\' height=\\'32\\' fill=\\'none\\' stroke=\\'currentColor\\' stroke-width=\\'2\\'><circle cx=\\'12\\' cy=\\'12\\' r=\\'10\\'/><line x1=\\'12\\' y1=\\'8\\' x2=\\'12\\' y2=\\'12\\'/><line x1=\\'12\\' y1=\\'16\\' x2=\\'12.01\\' y2=\\'16\\'/></svg><b style=\\'margin-top:0.5rem;\\'>Imagem não encontrada</b><span style=\\'font-size:0.72rem;margin-top:0.25rem;word-break:break-all;opacity:0.7;\\'>${url}</span></div>'"
                     >`;
                 };
 
