@@ -49,6 +49,63 @@ function insertRows(table, rows) {
     });
 }
 
+// GET /api/export-data?secret=<MIGRATE_SECRET>
+// Returns all table data as JSON for backup / migration purposes.
+router.get('/export-data', (req, res) => {
+    const { secret } = req.query;
+
+    if (!secret || secret !== process.env.MIGRATE_SECRET) {
+        return res.status(401).json({ error: 'Não autorizado' });
+    }
+
+    // All tables present in the schema (export order mirrors import order where possible)
+    const ALL_TABLES = [
+        'users',
+        'clients',
+        'suppliers',
+        'products',
+        'product_color_variants',
+        'product_kit_templates',
+        'product_kit_items',
+        'orders',
+        'order_items',
+        'comments',
+        'stock_movements',
+        'purchase_requests',
+        'material_cost_movements',
+        'dispatch_costs',
+        'catalogue_items',
+        'team_chat',
+    ];
+
+    const result = {};
+    let pending = ALL_TABLES.length;
+
+    if (pending === 0) {
+        return res.json({ success: true, data: result });
+    }
+
+    let hasError = false;
+
+    ALL_TABLES.forEach(table => {
+        db.all(`SELECT * FROM ${table}`, [], (err, rows) => {
+            if (hasError) return;
+
+            if (err) {
+                // Table may not exist yet — store empty array and continue
+                result[table] = [];
+            } else {
+                result[table] = rows;
+            }
+
+            pending--;
+            if (pending === 0) {
+                return res.json({ success: true, data: result });
+            }
+        });
+    });
+});
+
 router.post('/import-data', async (req, res) => {
     const { secret, data } = req.body;
 
