@@ -34,6 +34,15 @@ export const render = () => {
                 <button id="btn-backup-db" style="background:white; color:#1e40af; border:none; padding:0.55rem 1.1rem; border-radius:7px; font-weight:700; cursor:pointer; font-size:0.9rem; white-space:nowrap;">⬇️ Baixar Backup</button>
             </div>
 
+            <!-- Restart Server Card -->
+            <div style="background:linear-gradient(135deg,#7f1d1d,#991b1b); color:white; border-radius:10px; padding:1.25rem 1.5rem; margin-bottom:1.5rem; display:flex; justify-content:space-between; align-items:center;">
+                <div>
+                    <div style="font-size:1.05rem; font-weight:700; margin-bottom:0.25rem;">🔄 Reiniciar Servidor</div>
+                    <div style="font-size:0.85rem; opacity:0.85;">Encerra e reinicia o Node.js. Útil após atualizar arquivos. Leva ~3 segundos.</div>
+                </div>
+                <button id="btn-restart-server" style="background:white; color:#991b1b; border:none; padding:0.55rem 1.1rem; border-radius:7px; font-weight:700; cursor:pointer; font-size:0.9rem; white-space:nowrap;">🔄 Reiniciar</button>
+            </div>
+
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
                 <h3 style="margin:0; color:#334155">👥 Usuários do Sistema</h3>
                 <button class="btn btn-primary" id="btn-new-user" style="width:auto;">+ Novo Usuário</button>
@@ -378,6 +387,60 @@ export const render = () => {
             document.body.appendChild(a);
             a.click();
             document.body.removeChild(a);
+        };
+    }
+
+    // Restart Server Handler
+    const btnRestart = container.querySelector('#btn-restart-server');
+    if (btnRestart) {
+        btnRestart.onclick = async () => {
+            if (!confirm('⚠️ Tem certeza que deseja reiniciar o servidor?\n\nO sistema ficará offline por ~3 segundos e recarregará automaticamente.')) return;
+
+            const token = localStorage.getItem('token');
+            if (!token) { alert('Sessão expirada.'); return; }
+
+            btnRestart.disabled = true;
+
+            // Countdown visual
+            let count = 3;
+            btnRestart.textContent = `⏳ ${count}s...`;
+            const interval = setInterval(() => {
+                count--;
+                if (count > 0) {
+                    btnRestart.textContent = `⏳ ${count}s...`;
+                } else {
+                    clearInterval(interval);
+                    btnRestart.textContent = '🔄 Reiniciando...';
+                }
+            }, 1000);
+
+            try {
+                await fetch('/api/admin/restart', {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+            } catch (_) {
+                // Fetch error is expected — server is shutting down
+            }
+
+            clearInterval(interval);
+            btnRestart.textContent = '⏳ Aguardando servidor...';
+
+            // Poll until server is back online, then reload the page
+            const pollReady = () => {
+                fetch('/api/health')
+                    .then(r => {
+                        if (r.ok) {
+                            btnRestart.textContent = '✅ Online! Recarregando...';
+                            setTimeout(() => window.location.reload(), 800);
+                        } else {
+                            setTimeout(pollReady, 800);
+                        }
+                    })
+                    .catch(() => setTimeout(pollReady, 800));
+            };
+            // Give server 1.5s to go down before polling
+            setTimeout(pollReady, 1500);
         };
     }
 

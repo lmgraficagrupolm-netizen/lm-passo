@@ -197,6 +197,23 @@ router.get('/backup/db', (req, res) => {
     res.sendFile(dbPath);
 });
 
+// ── Restart Server ─────────────────────────────────────────────────────────────
+// Exit code 0 signals the .bat to restart the process automatically.
+// Only masters can trigger this.
+router.post('/admin/restart', (req, res) => {
+    const token = req.headers.authorization?.replace('Bearer ', '') || req.query.token || '';
+    if (!token) return res.status(401).json({ error: 'Não autorizado' });
+    try {
+        const decoded = jwt.verify(token, BACKUP_SECRET);
+        if (decoded.role !== 'master') return res.status(403).json({ error: 'Apenas master pode reiniciar o servidor' });
+    } catch {
+        return res.status(401).json({ error: 'Token inválido' });
+    }
+    // Send response before exiting
+    res.json({ message: 'Servidor reiniciando...' });
+    setTimeout(() => process.exit(0), 300);
+});
+
 module.exports = router;
 
 
