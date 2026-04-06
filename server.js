@@ -45,10 +45,6 @@ try {
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Register MIME types that Express doesn't know by default
-// .jfif is a JPEG variant common on Windows — without this, browsers may reject it
-express.static.mime.define({ 'image/jpeg': ['jfif', 'jpe'] }, true);
-
 // Middleware
 app.use(compression()); // gzip all responses
 app.use(cors());
@@ -70,8 +66,13 @@ if (fs.existsSync(diskPublic)) {
     app.use(express.static(path.join(__dirname, 'public'), { acceptRanges: false })); // ← fallback: embedded
 }
 // Serve uploads with explicit headers — bypass compression and set correct cache headers
-// This prevents content-type issues and SW cache conflicts
+// Also forces correct Content-Type for lesser-known image formats like .jfif
 app.use('/uploads', (req, res, next) => {
+    const ext = path.extname(req.path).toLowerCase();
+    // .jfif is a JPEG variant — must be served as image/jpeg or some browsers refuse it
+    if (ext === '.jfif' || ext === '.jpe') {
+        res.setHeader('Content-Type', 'image/jpeg');
+    }
     res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
     res.setHeader('Pragma', 'no-cache');
     res.setHeader('Expires', '0');
