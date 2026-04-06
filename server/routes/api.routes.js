@@ -114,6 +114,69 @@ router.post('/catalogue', upload.array('images', 10), catalogueController.create
 router.put('/catalogue/:id', upload.array('images', 10), catalogueController.updateItem);
 router.delete('/catalogue/:id', catalogueController.deleteItem);
 
+// Import catalogue items from images already on disk (recovery tool)
+router.post('/catalogue/import-from-disk', (req, res) => {
+    const uploadDir = path.join(process.cwd(), 'public', 'uploads');
+    const db = require('../database/db');
+
+    const imageExts = ['.jpg', '.jpeg', '.jfif', '.jpe', '.png', '.gif', '.webp', '.bmp', '.avif'];
+    let allFiles;
+    try {
+        allFiles = fs.readdirSync(uploadDir).filter(f => imageExts.includes(path.extname(f).toLowerCase()));
+    } catch(e) {
+        return res.status(500).json({ error: 'Pasta uploads não encontrada: ' + e.message });
+    }
+
+    if (allFiles.length === 0) {
+        return res.json({ message: 'Nenhum arquivo de imagem encontrado na pasta uploads.', imported: 0 });
+    }
+
+    // Get existing image_urls to avoid duplicates
+    db.all('SELECT image_url FROM catalogue_items', [], (err, rows) => {
+        if (err) return res.status(500).json({ error: err.message });
+
+        const existingFiles = new Set();
+        rows.forEach(row => {
+            try {
+                const imgs = JSON.parse(row.image_url);
+                (Array.isArray(imgs) ? imgs : [row.image_url]).forEach(url => {
+                    const filename = (url || '').split('/').pop().split('?')[0];
+                    existingFiles.add(filename);
+                });
+            } catch(e) {
+                const filename = (row.image_url || '').split('/').pop().split('?')[0];
+                existingFiles.add(filename);
+            }
+        });
+
+        const newFiles = allFiles.filter(f => !existingFiles.has(f));
+
+        if (newFiles.length === 0) {
+            return res.json({ message: 'Todas as imagens já estão registradas no catálogo.', imported: 0 });
+        }
+
+        let inserted = 0;
+        let done = 0;
+
+        newFiles.forEach(filename => {
+            const imageUrlJson = JSON.stringify([`/uploads/${filename}`]);
+            const title = filename.replace(/\.[^.]+$/, '').replace(/^\d+-\d+-?/, '').replace(/-/g, ' ').trim() || filename;
+            db.run(
+                'INSERT INTO catalogue_items (title, description, image_url) VALUES (?, ?, ?)',
+                [title || 'Sem título', '', imageUrlJson],
+                function(insertErr) {
+                    if (!insertErr) inserted++;
+                    done++;
+                    if (done === newFiles.length) {
+                        res.json({ message: `${inserted} imagem(ns) importada(s) com sucesso!`, imported: inserted, skipped: newFiles.length - inserted });
+                    }
+                }
+            );
+        });
+    });
+});
+
+
 router.get('/debug-cat', (req, res) => {
     const fs = require('fs');
     const db = require('../database/db');
