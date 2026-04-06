@@ -116,19 +116,37 @@ router.delete('/catalogue/:id', catalogueController.deleteItem);
 
 // Import catalogue items from images already on disk (recovery tool)
 router.post('/catalogue/import-from-disk', (req, res) => {
+    const fsLocal = require('fs');
     const uploadDir = path.join(process.cwd(), 'public', 'uploads');
     const db = require('../database/db');
 
-    const imageExts = ['.jpg', '.jpeg', '.jfif', '.jpe', '.png', '.gif', '.webp', '.bmp', '.avif'];
-    let allFiles;
-    try {
-        allFiles = fs.readdirSync(uploadDir).filter(f => imageExts.includes(path.extname(f).toLowerCase()));
-    } catch(e) {
-        return res.status(500).json({ error: 'Pasta uploads não encontrada: ' + e.message });
+    const imageExts = ['.jpg', '.jpeg', '.jfif', '.jpe', '.png', '.gif', '.webp', '.bmp', '.avif', '.tiff', '.tif', '.svg'];
+
+    if (!fsLocal.existsSync(uploadDir)) {
+        return res.status(500).json({ error: `Pasta não encontrada: ${uploadDir}`, cwd: process.cwd() });
     }
 
+    const allRawFiles = fsLocal.readdirSync(uploadDir);
+    const allFiles = allRawFiles.filter(f => imageExts.includes(path.extname(f).toLowerCase()));
+
     if (allFiles.length === 0) {
-        return res.json({ message: 'Nenhum arquivo de imagem encontrado na pasta uploads.', imported: 0 });
+        // Return diagnostic info
+        const extMap = {};
+        allRawFiles.forEach(f => {
+            const ext = path.extname(f).toLowerCase() || '(sem extensão)';
+            extMap[ext] = (extMap[ext] || 0) + 1;
+        });
+        return res.json({
+            message: 'Nenhum arquivo de imagem encontrado na pasta uploads.',
+            imported: 0,
+            diagnostico: {
+                cwd: process.cwd(),
+                uploadDir,
+                totalArquivos: allRawFiles.length,
+                extensoesEncontradas: extMap,
+                primeiroArquivo: allRawFiles[0] || null
+            }
+        });
     }
 
     // Get existing image_urls to avoid duplicates
