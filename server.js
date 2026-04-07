@@ -394,4 +394,33 @@ app.listen(PORT, '0.0.0.0', () => {
     }
     console.log(`Server running on http://localhost:${PORT}`);
     console.log(`Acesso em rede:  http://${localIp}:${PORT}`);
+
+    // ── Keep-alive: mantém Railway sempre acordado ──────────────────────────────
+    // Só ativa quando rodando no Railway (não localmente)
+    if (process.env.RAILWAY_ENVIRONMENT || process.env.RAILWAY_PUBLIC_DOMAIN) {
+        const https = require('https');
+        const SELF_URL = process.env.RAILWAY_PUBLIC_DOMAIN
+            ? `https://${process.env.RAILWAY_PUBLIC_DOMAIN}`
+            : 'https://lm-passo-production.up.railway.app';
+
+        const selfPing = () => {
+            const req = https.request(`${SELF_URL}/api/health`, { timeout: 10000 }, (res) => {
+                console.log(`[Keep-alive] Ping OK - ${new Date().toISOString()} (status: ${res.statusCode})`);
+                res.resume();
+            });
+            req.on('error', (e) => console.log(`[Keep-alive] Ping erro: ${e.message}`));
+            req.on('timeout', () => { req.destroy(); });
+            req.end();
+        };
+
+        // Aguarda 30s após o boot para fazer o primeiro ping
+        setTimeout(() => {
+            selfPing();
+            setInterval(selfPing, 4 * 60 * 1000); // a cada 4 minutos
+        }, 30000);
+
+        console.log(`[Keep-alive] Ativo — ping a cada 4min em: ${SELF_URL}`);
+    }
+    // ───────────────────────────────────────────────────────────────────────────
 });
+
