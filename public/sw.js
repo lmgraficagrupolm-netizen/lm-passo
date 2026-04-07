@@ -1,4 +1,24 @@
-const CACHE_NAME = 'lm-passo-v31';
+const CACHE_NAME = 'lm-passo-v33';
+
+// Se estiver rodando num IP de rede (não localhost), se auto-destrói
+// para não bloquear recursos de módulos JS dinâmicos
+const swHost = self.location.hostname;
+const isNetworkAccess = swHost !== 'localhost' && swHost !== '127.0.0.1';
+if (isNetworkAccess) {
+    self.addEventListener('install', () => self.skipWaiting());
+    self.addEventListener('activate', (event) => {
+        event.waitUntil(
+            caches.keys().then(keys => Promise.all(keys.map(k => caches.delete(k))))
+                .then(() => self.registration.unregister())
+                .then(() => self.clients.matchAll())
+                .then(clients => clients.forEach(c => c.navigate(c.url)))
+        );
+    });
+    // Não registra mais nenhum listener — deixa tudo passar direto
+    // (o return abaixo impede o restante do código de executar)
+    // eslint-disable-next-line no-unused-expressions
+    void 0;
+} else {
 const STATIC_ASSETS = [
     '/',
     '/index.html',
@@ -13,6 +33,8 @@ const STATIC_ASSETS = [
     '/libs/ionicons/ionicons.esm.js',
     '/libs/ionicons/ionicons.js',
     '/libs/ionicons/p-d15ec307.js',
+    '/libs/ionicons/p-1c0b2c47.entry.js',
+    '/libs/ionicons/p-40ae2aa7.js',
     '/libs/ionicons/svg/clipboard-outline.svg',
     '/libs/ionicons/svg/people-outline.svg',
     '/libs/ionicons/svg/pricetags-outline.svg',
@@ -136,3 +158,4 @@ self.addEventListener('fetch', (event) => {
         })
     );
 });
+} // fim do else (isNetworkAccess)

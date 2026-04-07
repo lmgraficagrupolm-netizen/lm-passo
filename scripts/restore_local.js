@@ -26,7 +26,7 @@ function insertRows(table, rows, columns, done) {
         return done();
     }
     const placeholders = columns.map(() => '?').join(', ');
-    const sql = `INSERT OR IGNORE INTO ${table} (${columns.join(', ')}) VALUES (${placeholders})`;
+    const sql = `INSERT OR REPLACE INTO ${table} (${columns.join(', ')}) VALUES (${placeholders})`;
     let count = 0;
     let completed = 0;
     rows.forEach(row => {

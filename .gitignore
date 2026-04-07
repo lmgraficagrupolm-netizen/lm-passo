@@ -4,3 +4,4 @@ error_log.txt
 *.exe
 public/uploads/
 .env
+firebase-credentials.json

@@ -16,84 +16,32 @@
 <body>
     <div id="app">Carregando aplicação... (Se esta mensagem não sumir, o Javascript não carregou)</div>
 
+    <!-- Remove QUALQUER Service Worker existente antes de carregar o app -->
+    <script>
+        (async function limparSW() {
+            if (!('serviceWorker' in navigator)) return;
+            try {
+                // 1. Remove todos os SW registrados
+                const regs = await navigator.serviceWorker.getRegistrations();
+                for (const reg of regs) {
+                    await reg.unregister();
+                }
+                // 2. Apaga todos os caches (inclusive os que podem estar bloqueando JS)
+                if ('caches' in window) {
+                    const keys = await caches.keys();
+                    for (const key of keys) {
+                        await caches.delete(key);
+                    }
+                }
+            } catch(e) {
+                // Ignorar erros silenciosamente
+            }
+        })();
+    </script>
+
     <!-- Application Logic -->
     <script type="module" src="js/app.js"></script>
 
-    <!-- Service Worker Registration + Auto-Update -->
-    <script>
-        if ('serviceWorker' in navigator) {
-            let refreshing = false;
-
-            // When a new SW takes control, reload the page once
-            navigator.serviceWorker.addEventListener('controllerchange', () => {
-                if (!refreshing) {
-                    refreshing = true;
-                    console.log('[SW] Nova versão ativa — recarregando...');
-                    window.location.reload();
-                }
-            });
-
-            window.addEventListener('load', async () => {
-                // ─── NUKE OLD BROKEN CACHES ─────────────────────────────────────
-                // If a previously-corrupted SW is intercepting /uploads and blocking
-                // all images, we need to unregister ALL old SWs and delete all caches
-                // before re-registering the clean version.
-                try {
-                    const regs = await navigator.serviceWorker.getRegistrations();
-                    for (const reg of regs) {
-                        // Only unregister if it's an older version (not our current sw.js)
-                        const swUrl = reg.active?.scriptURL || reg.installing?.scriptURL || '';
-                        if (swUrl.includes('/sw.js')) {
-                            // Same file — just update it, don't unregister
-                            continue;
-                        }
-                        await reg.unregister();
-                        console.log('[SW] Antigo SW desregistrado:', swUrl);
-                    }
-                    // Delete any old caches that might block images
-                    const keys = await caches.keys();
-                    for (const key of keys) {
-                        if (key !== 'lm-passo-v31') {
-                            await caches.delete(key);
-                            console.log('[SW] Cache antigo deletado:', key);
-                        }
-                    }
-                } catch(e) {
-                    console.warn('[SW] Limpeza preventiva falhou (ignorando):', e);
-                }
-                // ─────────────────────────────────────────────────────────────────
-
-                navigator.serviceWorker.register('/sw.js').then(reg => {
-                    console.log('[SW] Registrado:', reg.scope);
-
-                    // Check for update immediately on load
-                    reg.update();
-
-                    // If a new SW is already waiting, skip waiting right away
-                    if (reg.waiting) {
-                        reg.waiting.postMessage({ type: 'SKIP_WAITING' });
-                    }
-
-                    // When a new SW installs and starts waiting, tell it to activate
-                    reg.addEventListener('updatefound', () => {
-                        const newWorker = reg.installing;
-                        if (!newWorker) return;
-
-                        newWorker.addEventListener('statechange', () => {
-                            if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                                console.log('[SW] Nova versão instalada — ativando...');
-                                newWorker.postMessage({ type: 'SKIP_WAITING' });
-                            }
-                        });
-                    });
-
-                    // Check for updates every 60 seconds while the app is open
-                    setInterval(() => reg.update(), 60 * 1000);
-
-                }).catch(err => console.log('[SW] Erro:', err));
-            });
-        }
-    </script>
 </body>
 
 </html>

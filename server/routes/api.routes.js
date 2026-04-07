@@ -315,6 +315,28 @@ router.post('/admin/restart', (req, res) => {
     setTimeout(() => process.exit(0), 300);
 });
 
+// ── Export Data (para migração Railway → Firebase) ────────────────────────────
+const EXPORT_SECRET = 'lmpasso-migrate-2026';
+router.get('/export-data', (req, res) => {
+    if (req.query.secret !== EXPORT_SECRET) {
+        return res.status(403).json({ error: 'Acesso negado.' });
+    }
+    const db = require('../database/db');
+    const tables = ['clients','products','orders','order_items','catalogue_items','suppliers','dispatch_costs','users'];
+    const result = {};
+    let done = 0;
+    tables.forEach(table => {
+        db.all(`SELECT * FROM ${table}`, [], (err, rows) => {
+            result[table] = err ? [] : rows;
+            done++;
+            if (done === tables.length) {
+                res.json({ success: true, data: result });
+            }
+        });
+    });
+});
+
 module.exports = router;
+
 
 
