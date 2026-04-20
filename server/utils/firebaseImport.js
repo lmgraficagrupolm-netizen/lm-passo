@@ -23,8 +23,20 @@ async function restoreFromFirebase() {
                 }
             }
 
-            if (!fs.existsSync(CRED_PATH)) {
-                console.log('⚠️ firebase-credentials.json não encontrado. Ignorando auto-restauração.');
+            let serviceAccount = null;
+
+            if (process.env.FIREBASE_CREDENTIALS) {
+                try {
+                    serviceAccount = JSON.parse(process.env.FIREBASE_CREDENTIALS);
+                } catch (e) {
+                    console.error('❌ Erro ao ler FIREBASE_CREDENTIALS da variável de ambiente. O JSON é inválido.');
+                }
+            } else if (fs.existsSync(CRED_PATH)) {
+                serviceAccount = require(CRED_PATH);
+            }
+
+            if (!serviceAccount) {
+                console.log('⚠️ firebase-credentials.json (ou variável FIREBASE_CREDENTIALS) não encontrado. Ignorando auto-restauração.');
                 return resolve(false);
             }
 
@@ -33,7 +45,6 @@ async function restoreFromFirebase() {
             console.log('======================================================\n');
 
             if (!admin.apps.length) {
-                const serviceAccount = require(CRED_PATH);
                 admin.initializeApp({ credential: admin.credential.cert(serviceAccount) });
             }
             const firestoreDb = admin.firestore();
