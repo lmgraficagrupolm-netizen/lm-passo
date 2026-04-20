@@ -27,21 +27,23 @@ set "IP=%IP: =%"
 
 cls
 echo.
-echo  ╔══════════════════════════════════════════╗
-echo  ║       LM PASSO - SERVIDOR ATIVO          ║
-echo  ╠══════════════════════════════════════════╣
-echo  ║                                          ║
-echo  ║  Neste PC:   http://localhost:3000       ║
-echo  ║  Na Rede:    http://%IP%:3000       ║
-echo  ║                                          ║
-echo  ║  Compartilhe o endereco "Na Rede"        ║
-echo  ║  com outros dispositivos do Wi-Fi        ║
-echo  ║                                          ║
-echo  ╚══════════════════════════════════════════╝
+echo  ╔═════════════════════════════════════════════════════╗
+echo  ║             LM PASSO - SERVIDOR ATIVO               ║
+echo  ╠═════════════════════════════════════════════════════╣
+echo  ║                                                     ║
+echo  ║  1. Neste PC: http://localhost:3000                 ║
+echo  ║  2. Na Rede:  http://%IP%:3000                 ║
+echo  ║  3. Internet: https://supercivilly-unterminating-winnifred.ngrok-free.dev ║
+echo  ║                                                     ║
+echo  ║  Compartilhe o endereco "2. Na Rede" d/ casa        ║
+echo  ║  Compartilhe a "3. Internet" para acesso externo    ║
+echo  ╚═════════════════════════════════════════════════════╝
 echo.
+echo  [NGROK] O tunel de internet esta sendo aberto junto...
 echo  Nao feche esta janela!
 echo.
 
+start "" /min "%~dp0ABRIR_TUNEL_INTERNET.bat"
 start /B cmd /c "timeout /t 2 /nobreak >nul && start http://localhost:3000"
 
 :LOOP

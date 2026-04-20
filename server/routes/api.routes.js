@@ -49,6 +49,7 @@ router.post('/orders', orderController.createOrder);
 router.post('/orders/:id/attachments', upload.array('files', 10), orderController.uploadAttachments);
 router.get('/orders/:id/items', orderController.getOrderItems);
 router.put('/orders/:id/accept', orderController.acceptOrder);
+router.put('/orders/:id/pay', orderController.markAsPaid);
 router.put('/orders/:id/checklist', orderController.updateChecklist);
 router.put('/orders/:id/reject', orderController.rejectOrder);
 router.put('/orders/:id/finalize', orderController.finalizeOrder);
@@ -235,7 +236,11 @@ const chatController = require('../controllers/chat_controller');
 router.get('/chat/stream', chatController.stream);
 router.get('/chat/history', chatController.getHistory);
 router.post('/chat/message', chatController.sendMessage);
+router.post('/chat/upload', upload.single('image'), chatController.uploadImage);
+router.put('/chat/message/:id', chatController.editMessage);
+router.delete('/chat/message/:id', chatController.deleteMessage);
 router.post('/chat/typing', chatController.typing);
+
 
 // Open URL in Microsoft Edge (Windows only)
 const { exec } = require('child_process');
@@ -335,6 +340,25 @@ router.get('/export-data', (req, res) => {
         });
     });
 });
+
+// Reminders (Lembretes & pedidos internos)
+const reminderController = require('../controllers/reminder_controller');
+router.get('/reminders', reminderController.getAll);
+router.get('/reminders/pending-count', reminderController.getPendingCount);
+router.post('/reminders', reminderController.create);
+router.put('/reminders/reorder', reminderController.updateOrder);
+router.put('/reminders/:id', reminderController.update);
+router.put('/reminders/:id/toggle', reminderController.toggle);
+router.delete('/reminders/:id', reminderController.remove);
+
+// Menu Orders (Cardápios para lançar no CORE)
+const menuOrdersController = require('../controllers/menu_orders_controller');
+router.get('/menu-orders', menuOrdersController.getAll);
+router.post('/menu-orders', menuOrdersController.create);
+router.put('/menu-orders/reorder', menuOrdersController.updateOrder);
+router.put('/menu-orders/:id', menuOrdersController.update);
+router.put('/menu-orders/:id/launch-core', menuOrdersController.launchToCore);
+router.delete('/menu-orders/:id', menuOrdersController.remove);
 
 module.exports = router;
 

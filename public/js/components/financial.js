@@ -1,8 +1,12 @@
 export const render = (user) => {
     const container = document.createElement('div');
     container.innerHTML = `
-        <div class="view-header">
-            <div class="view-title">Financeiro</div>
+        <!-- Header -->
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 2rem;">
+            <div style="display:flex; flex-direction:column; gap:0.2rem;">
+                <h2 style="font-size: 1.8rem; font-weight: 900; background: linear-gradient(135deg, var(--primary), #4c1d95); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin:0; letter-spacing: -0.03em;">Financeiro Geral</h2>
+                <p style="color: #64748b; margin: 0; font-size: 0.95rem; font-weight:500; white-space: nowrap;">Controle de pagamentos, faturamento e relatórios financeiros.</p>
+            </div>
         </div>
 
 
@@ -10,6 +14,11 @@ export const render = (user) => {
         <!-- Filters -->
         <div style="display:flex; gap:0.5rem; flex-wrap:wrap; margin-bottom:1rem; padding:0.75rem; background:white; border-radius:8px; border:1px solid var(--border);">
             <input type="text" id="filter-search" placeholder="🔍 Buscar produto, cliente..." style="flex:2; min-width:180px; padding:0.5rem 0.75rem; border:1px solid var(--border); border-radius:6px; font-size:0.9rem;">
+            <select id="filter-core" style="flex:1; min-width:150px; padding:0.5rem; border:1px solid var(--border); border-radius:6px; font-size:0.9rem;">
+                <option value="">Status Core: Todos</option>
+                <option value="1">✅ Lançados</option>
+                <option value="0">⬜ Pendentes</option>
+            </select>
             <select id="filter-month" style="flex:1; min-width:130px; padding:0.5rem; border:1px solid var(--border); border-radius:6px; font-size:0.9rem;">
                 <option value="">Todos os meses</option>
             </select>
@@ -44,13 +53,14 @@ export const render = (user) => {
 
     const applyFilters = () => {
         const search = removeAccents(container.querySelector('#filter-search').value.toLowerCase().trim());
+        const coreFilter = container.querySelector('#filter-core').value;
         const monthFilter = container.querySelector('#filter-month').value;
         const minVal = parseFloat(container.querySelector('#filter-min').value) || 0;
         const maxVal = parseFloat(container.querySelector('#filter-max').value) || Infinity;
 
-        const applyToAll = (item, getterVal) => {
+        const applyToAll = (item, getterVal, isCoreTracked = false) => {
             if (monthFilter) {
-                const d = new Date(item.created_at);
+                const d = window.parseDBDate(item.created_at);
                 const key = `${d.getFullYear()}-${String(d.getMonth()).padStart(2, '0')}`;
                 if (key !== monthFilter) return false;
             }
@@ -60,13 +70,20 @@ export const render = (user) => {
             }
             const val = getterVal(item) || 0;
             if (val < minVal || val > maxVal) return false;
+
+            if (coreFilter !== '') {
+                if (!isCoreTracked) return false; // Hide items that don't have core status
+                const isLaunched = item.launched_to_core ? '1' : '0';
+                if (isLaunched !== coreFilter) return false;
+            }
+
             return true;
         };
 
-        const filteredSales = allData.filter(s => applyToAll(s, s => s.total_value));
-        const filteredReserved = allReserved.filter(r => applyToAll(r, r => r.total_value));
-        const filteredMaterials = allMaterialCosts.filter(m => applyToAll(m, m => m.cost_amount));
-        const filteredDispatch = allDispatchCosts.filter(d => applyToAll(d, d => d.amount));
+        const filteredSales = allData.filter(s => applyToAll(s, s => s.total_value, true));
+        const filteredReserved = allReserved.filter(r => applyToAll(r, r => r.total_value, false));
+        const filteredMaterials = allMaterialCosts.filter(m => applyToAll(m, m => m.cost_amount, false));
+        const filteredDispatch = allDispatchCosts.filter(d => applyToAll(d, d => d.amount, true));
 
         // Aplicamos a renderização à visão unificada
         renderUnifiedData(filteredSales, filteredReserved, filteredMaterials, filteredDispatch);
@@ -80,7 +97,7 @@ export const render = (user) => {
         const months = {};
 
         const getOrCreateMonth = (dateStr) => {
-            let d = new Date(dateStr);
+            let d = window.parseDBDate(dateStr);
             if (isNaN(d.valueOf())) d = new Date();
             const key = `${d.getFullYear()}-${String(d.getMonth()).padStart(2, '0')}`;
             if (!months[key]) {
@@ -91,6 +108,7 @@ export const render = (user) => {
                     month: d.getMonth(),
                     sales: [], salesTotal: 0, salesDiscount: 0,
                     reserved: [], reservedTotal: 0,
+                    aReceberTotal: 0,
                     materials: [], materialsTotal: 0,
                     dispatch: [], dispatchTotal: 0
                 };
@@ -103,6 +121,9 @@ export const render = (user) => {
             m.sales.push(s);
             m.salesTotal += (s.total_value || 0);
             m.salesDiscount += (s.discount_value || 0);
+            if (s.payment_method === 'A Receber') {
+                m.aReceberTotal += (s.total_value || 0);
+            }
             totalGeralFiltered += (s.total_value || 0);
             totalDescontos += (s.discount_value || 0);
             if (s.launched_to_core) {
@@ -170,11 +191,12 @@ export const render = (user) => {
                             <div class="stock-card-label">Pendentes</div>
                         </div>
                     </div>
-                    <div class="stock-card" style="flex:1; min-width:200px; border:2px solid #f59e0b; background:linear-gradient(135deg,#fffbeb,#fef3c7);">
-                        <div class="stock-card-icon" style="background:#f59e0b30; color:#d97706"><ion-icon name="hourglass-outline"></ion-icon></div>
+
+                    <div class="stock-card" style="flex:1; min-width:200px; border:2px solid #ef4444; background:linear-gradient(135deg,#fef2f2,#fee2e2);">
+                        <div class="stock-card-icon" style="background:#ef444430; color:#b91c1c"><ion-icon name="wallet-outline"></ion-icon></div>
                         <div class="stock-card-info">
-                            <div class="stock-card-value" style="color:#d97706">R$ ${m.reservedTotal.toFixed(2)}</div>
-                            <div class="stock-card-label">&#128274; A Receber (Prod)</div>
+                            <div class="stock-card-value" style="color:#b91c1c">R$ ${m.aReceberTotal.toFixed(2)}</div>
+                            <div class="stock-card-label">&#9888; Caixa: A Receber</div>
                         </div>
                     </div>
                     <div class="stock-card" style="flex:1; min-width:200px;">
@@ -197,17 +219,20 @@ export const render = (user) => {
 
                     return `
                     <tr style="${isLaunched ? '' : 'background:#fffbeb;'}">
-                        <td>${new Date(s.created_at).toLocaleDateString('pt-BR')}</td>
+                        <td>${window.parseDBDate(s.created_at).toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' })}</td>
                         <td><b>${s.client_name || '-'}</b>${s.is_internal ? ' <span style="background:#dbeafe; color:#1d4ed8; padding:1px 6px; border-radius:10px; font-size:0.7rem; font-weight:600;">🏢 Interno</span>' : ''}</td>
                         <td>${s.client_phone || '-'}</td>
                         <td style="font-size:0.85rem">
                             ${s.products_summary || '-'}
-                            ${s.products_summary ? `<button type="button" onclick="navigator.clipboard.writeText('LM | GRÁFICA - ${s.products_summary.replace(/'/g, "\\'")}')" title="Copiar para Financeiro" style="background:none; border:none; cursor:pointer; font-size:0.95rem; margin-left:4px; filter:grayscale(1) opacity(0.5); transition:all 0.2s;" onmouseover="this.style.filter='none'" onmouseout="this.style.filter='grayscale(1) opacity(0.5)'">📋</button>` : ''}
+                            ${s.products_summary ? `<button type="button" onclick="window.copyTextToClipboard('LM | GRÁFICA - ${s.products_summary.replace(/'/g, "\\'")}')" title="Copiar para Financeiro" style="background:none; border:none; cursor:pointer; font-size:0.95rem; margin-left:4px; filter:grayscale(1) opacity(0.5); transition:all 0.2s;" onmouseover="this.style.filter='none'" onmouseout="this.style.filter='grayscale(1) opacity(0.5)'">📋</button>` : ''}
                         </td>
                         <td style="font-size:0.85rem; max-width:200px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${(s.description || '').replace(/"/g, '&quot;')}">${s.description || '-'}</td>
                         <td style="font-weight:bold; color:#7c3aed">R$ ${(s.total_value || 0).toFixed(2)}</td>
                         <td style="color:${(s.discount_value || 0) > 0 ? '#dc2626' : '#94a3b8'}; font-weight:${(s.discount_value || 0) > 0 ? '600' : 'normal'}">${(s.discount_value || 0) > 0 ? `- R$ ${(s.discount_value).toFixed(2)}` : '-'}</td>
-                        <td>${s.payment_method || '-'}</td>
+                        <td style="${s.payment_method === 'A Receber' ? 'color:#b91c1c; font-weight:bold;' : ''}">
+                            ${s.payment_method || '-'}
+                            ${s.payment_method === 'A Receber' ? `<br><button class="btn btn-sm btn-mark-paid" data-id="${s.id}" style="margin-top:4px; padding:2px 8px; font-size:0.75rem; background:#22c55e; color:white; border:none; border-radius:4px; cursor:pointer;" title="Registrar Pagamento">💰 PAGO</button>` : ''}
+                        </td>
                         <td>
                             <button class="btn btn-sm launch-btn" data-id="${s.id}" data-launched="${isLaunched ? '1' : '0'}" style="${badgeStyle} padding:4px 10px; border-radius:20px; font-size:0.8rem; font-weight:600;">
                                 ${badgeText}
@@ -239,7 +264,7 @@ export const render = (user) => {
                 const discountItems = m.sales.filter(s => (s.discount_value || 0) > 0);
                 const discountRows = discountItems.map(s => `
                     <tr>
-                        <td>${new Date(s.created_at).toLocaleDateString('pt-BR')}</td>
+                        <td>${window.parseDBDate(s.created_at).toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' })}</td>
                         <td><b>${s.client_name || '-'}</b></td>
                         <td style="font-size:0.85rem">${s.products_summary || '-'}</td>
                         <td>${s.payment_method || '-'}</td>
@@ -263,7 +288,7 @@ export const render = (user) => {
                 const statusLabel = status => status === 'aguardando_aceite' ? '⏳ Aguardando' : '🔨 Produção';
                 const reservedRows = m.reserved.map(s => `
                     <tr>
-                        <td>${new Date(s.created_at).toLocaleDateString('pt-BR')}</td>
+                        <td>${window.parseDBDate(s.created_at).toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' })}</td>
                         <td><b>${s.client_name || '-'}</b></td>
                         <td style="font-size:0.85rem">${s.products_summary || '-'}</td>
                         <td style="font-weight:bold; color:#d97706">R$ ${(s.total_value || 0).toFixed(2)}</td>
@@ -287,10 +312,10 @@ export const render = (user) => {
                 // 3. Materials Rows
                 const matRows = m.materials.map(c => `
                         <tr>
-                            <td>${new Date(c.created_at).toLocaleDateString('pt-BR')}</td>
+                            <td>${window.parseDBDate(c.created_at).toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' })}</td>
                             <td>
                                 <b>${c.product_name || '-'}</b>
-                                ${c.product_name ? `<button type="button" onclick="navigator.clipboard.writeText('LM | GRÁFICA - ${c.product_name.replace(/'/g, "\\'")}')" title="Copiar para Financeiro" style="background:none; border:none; cursor:pointer; font-size:0.95rem; margin-left:4px; filter:grayscale(1) opacity(0.5); transition:all 0.2s;" onmouseover="this.style.filter='none'" onmouseout="this.style.filter='grayscale(1) opacity(0.5)'">📋</button>` : ''}
+                                ${c.product_name ? `<button type="button" onclick="window.copyTextToClipboard('LM | GRÁFICA - ${c.product_name.replace(/'/g, "\\'")}')" title="Copiar para Financeiro" style="background:none; border:none; cursor:pointer; font-size:0.95rem; margin-left:4px; filter:grayscale(1) opacity(0.5); transition:all 0.2s;" onmouseover="this.style.filter='none'" onmouseout="this.style.filter='grayscale(1) opacity(0.5)'">📋</button>` : ''}
                             </td>
                             <td>${c.product_type || '-'}</td>
                             <td style="font-size:0.85rem;">${c.description || '-'}</td>
@@ -321,7 +346,7 @@ export const render = (user) => {
                     const dBadgeText = isDLaunched ? '✅ Lançado' : '⬜ Lançar';
                     return `
                         <tr style="${isDLaunched ? '' : 'background:#fffbeb;'}">
-                            <td>${new Date(d.created_at).toLocaleDateString('pt-BR')}</td>
+                            <td>${window.parseDBDate(d.created_at).toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' })}</td>
                             <td><b>${d.carrier || '-'}</b></td>
                             <td>${d.client_name || '-'}</td>
                             <td>Pedido #${d.order_id || '-'}</td>
@@ -360,10 +385,11 @@ export const render = (user) => {
                         </div>
 
                         <div style="display:flex; gap:1.5rem; flex-wrap:wrap;">
-                            <div style="display:flex; flex-direction:column; align-items:flex-end;">
-                                <span style="font-size:0.75rem; text-transform:uppercase; letter-spacing:0.5px; opacity:0.8;">A Receber</span>
-                                <span style="font-size:1.05rem; font-weight:700; color:#fcd34d;">R$ ${m.reservedTotal.toFixed(2)}</span>
-                            </div>
+                            ${m.aReceberTotal > 0 ? `
+                            <div style="display:flex; flex-direction:column; align-items:flex-end; border:1px solid #ef4444; border-radius:4px; padding:2px 8px; background:rgba(239, 68, 68, 0.1);">
+                                <span style="font-size:0.75rem; text-transform:uppercase; letter-spacing:0.5px; color:#fca5a5; font-weight:bold;">⚠️ A Receber</span>
+                                <span style="font-size:1.05rem; font-weight:800; color:#ef4444;">R$ ${m.aReceberTotal.toFixed(2)}</span>
+                            </div>` : ''}
                             <div style="display:flex; flex-direction:column; align-items:flex-end;">
                                 <span style="font-size:0.75rem; text-transform:uppercase; letter-spacing:0.5px; opacity:0.8;">Despacho</span>
                                 <span style="font-size:1.05rem; font-weight:700; color:#fca5a5;">R$ ${m.dispatchTotal.toFixed(2)}</span>
@@ -419,6 +445,29 @@ export const render = (user) => {
                     body: JSON.stringify({ launched: newState })
                 });
                 loadFinancial();
+            };
+        });
+
+        // Bind mark paid buttons
+        container.querySelectorAll('.btn-mark-paid').forEach(btn => {
+            btn.onclick = async () => {
+                const orderId = btn.dataset.id;
+                const userInput = prompt('Qual foi a via de pagamento final?\n(Digite: Pix, Cartão, Dinheiro ou Boleto)');
+                if (!userInput) return;
+                
+                const valid = ['Pix', 'Cartão', 'Dinheiro', 'Boleto'];
+                const methodToSave = valid.find(v => v.toLowerCase() === userInput.toLowerCase().trim()) || userInput.trim();
+
+                const res = await fetch(`/api/orders/${orderId}/pay`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ payment_method: methodToSave })
+                });
+                if (res.ok) {
+                    loadFinancial();
+                } else {
+                    alert('Erro ao registrar pagamento.');
+                }
             };
         });
 
@@ -564,7 +613,7 @@ export const render = (user) => {
             // Populate month filter dropdown using ONLY allData dates (Sales)
             const monthSet = new Set();
             allData.forEach(s => {
-                const d = new Date(s.created_at);
+                const d = window.parseDBDate(s.created_at);
                 const key = `${d.getFullYear()}-${String(d.getMonth()).padStart(2, '0')}`;
                 monthSet.add(key);
             });
@@ -584,11 +633,13 @@ export const render = (user) => {
 
     // Filter event listeners
     container.querySelector('#filter-search').onkeydown = (e) => { if (e.key === 'Enter') applyFilters(); };
+    container.querySelector('#filter-core').onchange = applyFilters;
     container.querySelector('#filter-month').onchange = applyFilters;
     container.querySelector('#filter-min').onchange = applyFilters;
     container.querySelector('#filter-max').onchange = applyFilters;
     container.querySelector('#btn-clear-filter').onclick = () => {
         container.querySelector('#filter-search').value = '';
+        container.querySelector('#filter-core').value = '';
         container.querySelector('#filter-month').value = '';
         container.querySelector('#filter-min').value = '';
         container.querySelector('#filter-max').value = '';

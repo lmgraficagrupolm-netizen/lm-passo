@@ -19,8 +19,12 @@ export const render = () => {
         ROLES.map(r => `<option value="${r.value}" ${selected === r.value ? 'selected' : ''}>${r.label}</option>`).join('');
 
     container.innerHTML = `
-        <div class="view-header">
-            <div class="view-title">⚙️ Configurações (Admin)</div>
+        <!-- Header -->
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 2rem;">
+            <div style="display:flex; flex-direction:column; gap:0.2rem;">
+                <h2 style="font-size: 1.8rem; font-weight: 900; background: linear-gradient(135deg, var(--primary), #4c1d95); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin:0; letter-spacing: -0.03em;">⚙️ Configurações (Admin)</h2>
+                <p style="color: #64748b; margin: 0; font-size: 0.95rem; font-weight:500; white-space: nowrap;">Gerencie perfis, usuários e as permissões do sistema.</p>
+            </div>
         </div>
 
         <div style="max-width:700px">
@@ -60,6 +64,7 @@ export const render = () => {
             <table class="data-table">
                 <thead>
                     <tr>
+                        <th>Avatar</th>
                         <th>Usuário</th>
                         <th>Nome</th>
                         <th>Perfil</th>
@@ -184,6 +189,15 @@ export const render = () => {
                 const hasPw = pw.length > 0;
                 return `
                 <tr>
+                    <td style="text-align:center">
+                        <div style="display:flex; flex-direction:column; align-items:center; gap:0.3rem;">
+                            ${u.avatar ? `<img src="${u.avatar}" style="width:40px; height:40px; border-radius:50%; object-fit:cover; border:1px solid #cbd5e1;">` : `<div style="width:40px; height:40px; border-radius:50%; background:#e2e8f0; display:flex; align-items:center; justify-content:center; color:#64748b; font-weight:bold; border:1px solid #cbd5e1;">${u.username[0].toUpperCase()}</div>`}
+                            <label class="btn-sm" style="cursor:pointer; font-size:0.7rem; padding:2px 6px; background:#f1f5f9; border:1px solid #cbd5e1; border-radius:4px; color:#475569;" title="Trocar imagem">
+                                Mudar foto
+                                <input type="file" class="avatar-upload" data-id="${u.id}" accept="image/*" style="display:none;">
+                            </label>
+                        </div>
+                    </td>
                     <td><b>${u.username}</b></td>
                     <td>${u.name}</td>
                     <td>${roleLabel(u.role)}</td>
@@ -236,6 +250,37 @@ export const render = () => {
                 </tr>
                 `;
             }).join('');
+            
+            // Avatar uploads
+            tbody.querySelectorAll('.avatar-upload').forEach(input => {
+                input.onchange = async (e) => {
+                    const file = e.target.files[0];
+                    if (!file) return;
+                    
+                    const fd = new FormData();
+                    fd.append('avatar', file);
+                    
+                    try {
+                        const label = input.parentElement;
+                        const originalText = label.innerHTML;
+                        label.textContent = 'Enviando...';
+                        
+                        const res = await fetch(`/api/auth/users/${input.dataset.id}/avatar`, {
+                            method: 'POST',
+                            body: fd
+                        });
+                        const json = await res.json();
+                        if (res.ok) {
+                            loadUsers();
+                        } else {
+                            alert('Erro: ' + (json.error || 'Falha ao mudar avatar'));
+                            label.innerHTML = originalText;
+                        }
+                    } catch (err) {
+                        alert('Erro de conexão: ' + err.message);
+                    }
+                };
+            });
 
             // Eye toggle buttons
             tbody.querySelectorAll('.btn-eye').forEach(btn => {

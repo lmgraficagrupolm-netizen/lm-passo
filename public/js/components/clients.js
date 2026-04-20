@@ -1,10 +1,31 @@
 export const render = () => {
     const container = document.createElement('div');
     container.innerHTML = `
-        <div class="view-header">
-            <div class="view-title">Clientes</div>
-            <button class="btn btn-primary" style="width: auto;" id="btn-new-client">Novo Cliente</button>
+        <!-- Header -->
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 1.5rem;">
+            <div style="display:flex; flex-direction:column; gap:0.2rem;">
+                <h2 style="font-size: 1.8rem; font-weight: 900; background: linear-gradient(135deg, var(--primary), #4c1d95); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin:0; letter-spacing: -0.03em;">Clientes</h2>
+                <p style="color: #64748b; margin: 0; font-size: 0.95rem; font-weight:500; white-space: nowrap;">Gerenciamento do banco de dados e acessos financeiros.</p>
+            </div>
+            <button class="btn btn-primary" style="width: auto; padding: 0.8rem 1.5rem; border-radius: 12px; font-weight:800; text-transform:uppercase; letter-spacing:0.05em; display:flex; align-items:center; gap:0.5rem; box-shadow:0 4px 15px rgba(139, 92, 246, 0.3); transition:all 0.2s;" id="btn-new-client" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='none'">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
+                NOVO CLIENTE
+            </button>
         </div>
+
+        <!-- Filters -->
+        <div style="display:flex; gap:1rem; align-items:center; margin-bottom: 2rem; background:rgba(255,255,255,0.6); padding:1rem; border-radius:12px; border:1px solid rgba(139, 92, 246, 0.2);">
+            <div style="flex:1; position:relative;">
+                <input type="text" id="client-search" placeholder="Buscar por nome, telefone ou CPF/CNPJ..." style="width:100%; padding:0.75rem 1rem 0.75rem 2.8rem; border-radius:8px; border:1px solid #cbd5e1; font-size:0.95rem; outline:none; transition:border-color 0.2s;">
+                <span style="position:absolute; left:12px; top:50%; transform:translateY(-50%); font-size:1.2rem; opacity:0.6;">🔍</span>
+            </div>
+            <div style="display:flex; align-items:center; gap:0.6rem; background:#f1f5f9; padding:0.6rem 1rem; border-radius:8px; cursor:pointer;" onclick="const cb = document.getElementById('client-core-filter'); cb.checked = !cb.checked; cb.dispatchEvent(new Event('change'));">
+                <input type="checkbox" id="client-core-filter" style="width:18px; height:18px; cursor:pointer; pointer-events:none;">
+                <label style="margin:0; cursor:pointer; font-weight:700; color:#475569; user-select:none; font-size:0.9rem;">Apenas CORE</label>
+            </div>
+        </div>
+
+        <!-- Table -->
         <table class="data-table">
             <thead>
                 <tr>
@@ -13,11 +34,11 @@ export const render = () => {
                     <th>Origem</th>
                     <th>Desconto</th>
                     <th>Acesso</th>
-                    <th>Ações</th>
+                    <th style="text-align:right;">Ações</th>
                 </tr>
             </thead>
             <tbody id="clients-list">
-                <tr><td colspan="6">Carregando...</td></tr>
+                <tr><td colspan="6" style="padding: 4rem; text-align: center; color: #94a3b8; font-weight: 500; font-size:1.1rem;">Carregando banco de clientes...</td></tr>
             </tbody>
         </table>
 
@@ -135,35 +156,82 @@ export const render = () => {
     `;
 
     let currentEditClient = null;
+    let clientsData = [];
+
+    const renderClientsList = () => {
+        const searchInput = container.querySelector('#client-search');
+        const coreFilter = container.querySelector('#client-core-filter');
+        
+        const term = searchInput ? searchInput.value.toLowerCase() : '';
+        const isCoreOnly = coreFilter ? coreFilter.checked : false;
+
+        const filtered = clientsData.filter(c => {
+            const matchSearch = c.name.toLowerCase().includes(term) || 
+                               (c.phone && c.phone.toLowerCase().includes(term)) ||
+                               (c.cpf && c.cpf.toLowerCase().includes(term));
+            const matchCore = isCoreOnly ? c.origin === 'CORE' : true;
+            return matchSearch && matchCore;
+        });
+
+        const tbody = container.querySelector('#clients-list');
+        if (!tbody) return;
+
+        if (filtered.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="6" style="padding: 4rem; text-align: center; color: #94a3b8; font-weight: 500; font-size:1.1rem;">Nenhum cliente encontrado.</td></tr>`;
+            return;
+        }
+
+        tbody.innerHTML = filtered.map(c => `
+            <tr>
+                <td>
+                    <div style="font-weight: 800; color: #1e1b4b; font-size: 1.05rem;">${c.name}</div>
+                </td>
+                <td style="color: #475569; font-weight: 600; font-size: 0.95rem;">${c.phone || '-'}</td>
+                <td>
+                    <span style="background: ${c.origin === 'CORE' ? 'rgba(139, 92, 246, 0.1)' : '#f1f5f9'}; color: ${c.origin === 'CORE' ? 'var(--primary)' : '#475569'}; padding: 6px 12px; border-radius: 8px; font-size: 0.8rem; font-weight: 800; letter-spacing:0.05em; text-transform:uppercase;">
+                        ${c.origin || '-'}
+                    </span>
+                </td>
+                <td>${c.core_discount ? '<span style="background:#fef2f2; color:#ef4444; padding:6px 12px; border-radius:8px; font-size:0.8rem; font-weight:800; border:1px solid #fecaca; box-shadow:0 2px 5px rgba(239, 68, 68, 0.1);">🤑 15% OFF</span>' : '<span style="color:#cbd5e1; font-weight:bold;">—</span>'}</td>
+                <td>${c.has_access
+                    ? '<span style="background:#f0fdf4; color:#16a34a; padding:6px 12px; border-radius:8px; font-size:0.8rem; font-weight:800; border:1px solid #bbf7d0; box-shadow:0 2px 5px rgba(22, 163, 74, 0.1);">🔐 ATIVO</span>'
+                    : '<span style="color:#cbd5e1; font-weight:bold;">—</span>'
+                }</td>
+                <td style="text-align:right;">
+                    <button class="btn btn-sm edit-btn" data-json='${JSON.stringify(c).replace(/'/g, "&#39;")}' style="background:#fff; color:var(--primary); font-weight:800; border:2px solid #e2e8f0; border-radius:8px; padding:0.5rem 1rem; cursor:pointer; transition:all 0.2s; box-shadow:0 2px 4px rgba(0,0,0,0.02);" onmouseover="this.style.background='var(--primary)'; this.style.color='white'; this.style.borderColor='var(--primary)'" onmouseout="this.style.background='#fff'; this.style.color='var(--primary)'; this.style.borderColor='#e2e8f0'">Editar</button>
+                </td>
+            </tr>
+        `).join('');
+
+        tbody.querySelectorAll('.edit-btn').forEach(btn => {
+            btn.onclick = () => openEditModal(JSON.parse(btn.dataset.json));
+        });
+    };
 
     const loadClients = async () => {
         try {
             const res = await fetch('/api/clients');
             const { data } = await res.json();
-            const tbody = container.querySelector('#clients-list');
-            tbody.innerHTML = data.map(c => `
-                <tr>
-                    <td><b>${c.name}</b></td>
-                    <td>${c.phone || '-'}</td>
-                    <td>${c.origin || '-'}</td>
-                    <td>${c.core_discount ? '<span style="background:#d1fae5; color:#065f46; padding:2px 8px; border-radius:12px; font-size:0.8rem; font-weight:600;">15% OFF</span>' : '-'}</td>
-                    <td>${c.has_access
-                        ? '<span style="background:#d1fae5; color:#065f46; padding:2px 8px; border-radius:12px; font-size:0.8rem; font-weight:600;">🔐 Ativo</span>'
-                        : '<span style="color:#94a3b8; font-size:0.85rem;">—</span>'
-                    }</td>
-                    <td>
-                        <button class="btn btn-secondary btn-sm edit-btn" data-json='${JSON.stringify(c).replace(/'/g, "&#39;")}'>Editar</button>
-                    </td>
-                </tr>
-            `).join('');
-
-            tbody.querySelectorAll('.edit-btn').forEach(btn => {
-                btn.onclick = () => openEditModal(JSON.parse(btn.dataset.json));
-            });
+            clientsData = data || [];
+            renderClientsList();
         } catch (e) {
             console.error(e);
         }
     };
+
+    // Bind Search & Filter Events
+    setTimeout(() => {
+        const searchInput = container.querySelector('#client-search');
+        const coreFilter = container.querySelector('#client-core-filter');
+        if (searchInput) searchInput.addEventListener('input', renderClientsList);
+        if (coreFilter) coreFilter.addEventListener('change', renderClientsList);
+        
+        // Focus state styling for search input
+        if (searchInput) {
+            searchInput.addEventListener('focus', () => searchInput.style.borderColor = 'var(--primary)');
+            searchInput.addEventListener('blur', () => searchInput.style.borderColor = '#cbd5e1');
+        }
+    }, 0);
 
     const modal = container.querySelector('#client-modal');
     const form = container.querySelector('#client-form');
@@ -308,7 +376,7 @@ export const render = () => {
         const password = container.querySelector('#cred-password').textContent;
         const link = container.querySelector('#cred-link').textContent;
         const text = `Login: ${username}\nSenha: ${password}\nLink: ${link}`;
-        navigator.clipboard.writeText(text).then(() => {
+        window.copyTextToClipboard(text).then(() => {
             container.querySelector('#btn-copy-creds').textContent = '✅ Copiado!';
             setTimeout(() => {
                 container.querySelector('#btn-copy-creds').textContent = '📋 Copiar Dados';

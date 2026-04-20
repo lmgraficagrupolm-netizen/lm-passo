@@ -3,8 +3,12 @@ export const render = () => {
     const container = document.createElement('div');
 
     container.innerHTML = `
-        <div class="view-header">
-            <div class="view-title">Controle de Estoque</div>
+        <!-- Header -->
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 2rem;">
+            <div style="display:flex; flex-direction:column; gap:0.2rem;">
+                <h2 style="font-size: 1.8rem; font-weight: 900; background: linear-gradient(135deg, var(--primary), #4c1d95); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin:0; letter-spacing: -0.03em;">Controle de Estoque</h2>
+                <p style="color: #64748b; margin: 0; font-size: 0.95rem; font-weight:500; white-space: nowrap;">Visão geral da disponibilidade de insumos e matérias-primas.</p>
+            </div>
         </div>
 
         <!-- Summary Cards -->
@@ -415,7 +419,7 @@ export const render = () => {
                     </thead>
                     <tbody>
                         ${data.map(m => {
-                const date = new Date(m.created_at).toLocaleString('pt-BR');
+                const date = window.parseDBDate(m.created_at).toLocaleString('pt-BR');
                 const typeLabel = m.type === 'entrada' ? '📦 Entrada'
                     : m.type === 'saida_pedido' ? '📤 Saída Pedido'
                         : m.type === 'perda' ? '🚫 Perda'

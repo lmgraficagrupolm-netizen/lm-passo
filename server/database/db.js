@@ -22,7 +22,8 @@ function initDb() {
             username TEXT UNIQUE,
             password TEXT,
             role TEXT,
-            name TEXT
+            name TEXT,
+            avatar TEXT
         )`);
 
         // Clients Table
@@ -195,7 +196,6 @@ function initDb() {
 
         // Seed Default Users if not exist
         const defaultUsers = [
-            { username: 'admin', password: '123456', role: 'master', name: 'Administrador' },
             { username: 'vendedor', password: '123456', role: 'vendedor', name: 'Vendedor' },
             { username: 'financeiro', password: '123456', role: 'financeiro', name: 'Financeiro' },
             { username: 'producao', password: '123456', role: 'producao', name: 'Produção' },
@@ -359,6 +359,72 @@ function initDb() {
 
     // Migration: add launched_to_core to dispatch_costs
     db.run("ALTER TABLE dispatch_costs ADD COLUMN launched_to_core INTEGER DEFAULT 0", (err) => { /* ignore if exists */ });
+    // Reminders Table (pedidos / lembretes da equipe)
+    db.run(`CREATE TABLE IF NOT EXISTS reminders (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        title TEXT NOT NULL,
+        description TEXT DEFAULT '',
+        priority TEXT DEFAULT 'normal',
+        status TEXT DEFAULT 'pendente',
+        created_by INTEGER,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        concluded_at DATETIME,
+        FOREIGN KEY(created_by) REFERENCES users(id)
+    )`);
+    db.run("ALTER TABLE reminders ADD COLUMN position INTEGER DEFAULT 0", (err) => { /* ignore */ });
+
+    // Menu Orders Table (cardápios para lançar no CORE)
+    db.run(`CREATE TABLE IF NOT EXISTS menu_orders (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        client_id INTEGER,
+        quantity INTEGER NOT NULL DEFAULT 1,
+        event_name TEXT NOT NULL,
+        producer_name TEXT NOT NULL,
+        print_type TEXT NOT NULL DEFAULT 'frente',
+        status TEXT DEFAULT 'pendente',
+        launched_to_core INTEGER DEFAULT 0,
+        order_id INTEGER,
+        created_by INTEGER,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY(created_by) REFERENCES users(id)
+    )`);
+    db.run("ALTER TABLE menu_orders ADD COLUMN client_id INTEGER", (err) => { /* ignore */ });
+    db.run("ALTER TABLE menu_orders ADD COLUMN order_id INTEGER", (err) => { /* ignore */ });
+    db.run("ALTER TABLE menu_orders ADD COLUMN position INTEGER DEFAULT 0", (err) => { /* ignore */ });
+
+    // Migration: team_chat additions
+    db.run("ALTER TABLE team_chat ADD COLUMN is_edited INTEGER DEFAULT 0", (err) => { /* ignore */ });
+    db.run("ALTER TABLE team_chat ADD COLUMN edited_at DATETIME", (err) => { /* ignore */ });
+    db.run("ALTER TABLE team_chat ADD COLUMN reply_to_id INTEGER", (err) => { /* ignore */ });
+    db.run("ALTER TABLE team_chat ADD COLUMN reply_to_author TEXT", (err) => { /* ignore */ });
+    db.run("ALTER TABLE team_chat ADD COLUMN reply_to_msg TEXT", (err) => { /* ignore */ });
+    db.run("ALTER TABLE team_chat ADD COLUMN attachment_url TEXT", (err) => { /* ignore */ });
+
+    // ── FIREBASE SYNC QUEUE ────────────────────────────────
+    db.run(`CREATE TABLE IF NOT EXISTS firebase_sync_queue (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        table_name TEXT NOT NULL,
+        record_id INTEGER NOT NULL,
+        action TEXT NOT NULL,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )`);
+
+    const syncTables = [
+        'clients', 'products', 'orders', 'order_items', 'catalogue_items', 
+        'suppliers', 'dispatch_costs', 'users', 'team_chat', 'stock_movements',
+        'reminders', 'menu_orders'
+    ];
+
+    syncTables.forEach(table => {
+        db.run(`CREATE TRIGGER IF NOT EXISTS trg_${table}_insert_sync AFTER INSERT ON ${table}
+        BEGIN INSERT INTO firebase_sync_queue (table_name, record_id, action) VALUES ('${table}', NEW.id, 'INSERT'); END;`);
+        
+        db.run(`CREATE TRIGGER IF NOT EXISTS trg_${table}_update_sync AFTER UPDATE ON ${table}
+        BEGIN INSERT INTO firebase_sync_queue (table_name, record_id, action) VALUES ('${table}', NEW.id, 'UPDATE'); END;`);
+
+        db.run(`CREATE TRIGGER IF NOT EXISTS trg_${table}_delete_sync AFTER DELETE ON ${table}
+        BEGIN INSERT INTO firebase_sync_queue (table_name, record_id, action) VALUES ('${table}', OLD.id, 'DELETE'); END;`);
+    });
 }
 
 module.exports = db;

@@ -1,5 +1,29 @@
-
 console.log('App.js initialized');
+
+window.copyTextToClipboard = async (text) => {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+        return navigator.clipboard.writeText(text);
+    } else {
+        // Fallback for non-HTTPS local network access
+        const textArea = document.createElement("textarea");
+        textArea.value = text;
+        textArea.style.position = "fixed";
+        textArea.style.left = "-999999px";
+        textArea.style.top = "-999999px";
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+        try {
+            document.execCommand('copy');
+            return Promise.resolve();
+        } catch (err) {
+            console.error('Fallback copy errored', err);
+            return Promise.reject(err);
+        } finally {
+            textArea.remove();
+        }
+    }
+};
 
 // State
 const state = {
@@ -45,7 +69,7 @@ const render = () => {
     }
 
     // Main Layout
-    import('./components/layout.js').then(module => {
+    import('./components/layout.js?v=' + Date.now()).then(module => {
         const layout = module.render(state.user, logoutHandler, navigate);
         app.appendChild(layout);
 
@@ -75,6 +99,8 @@ const loadView = (view, container) => {
         case 'compras': modulePath = './components/compras.js'; break;
         case 'admin': modulePath = './components/admin.js'; break;
         case 'demand': modulePath = './components/demand.js'; break;
+        case 'reminders': modulePath = './components/reminders.js'; break;
+        case 'chat': modulePath = './components/chatWidget.js'; break;
         case 'client_portal': modulePath = './components/client_portal.js'; break;
         case 'client_financial': modulePath = './components/client_financial.js'; break;
         default:

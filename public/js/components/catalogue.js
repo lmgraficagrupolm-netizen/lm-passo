@@ -6,17 +6,16 @@ export const render = () => {
     const isAdmin = user && user.role === 'master';
 
     let html = `
-        <div class="view-header" style="margin-bottom: 1.5rem;">
-            <div>
-                <div class="view-title">Catálogo Digital</div>
-                <p style="color: var(--text-secondary); font-size: 0.9rem; margin-top: 0.25rem;">
-                    Inspirações, modelos e peças prontas para compartilhar com seus clientes.
-                </p>
+        <!-- Header -->
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 2rem;">
+            <div style="display:flex; flex-direction:column; gap:0.2rem;">
+                <h2 style="font-size: 1.8rem; font-weight: 900; background: linear-gradient(135deg, var(--primary), #4c1d95); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin:0; letter-spacing: -0.03em;">Catálogo Digital</h2>
+                <p style="color: #64748b; margin: 0; font-size: 0.95rem; font-weight:500; white-space: nowrap;">Inspirações, modelos e peças prontas para compartilhar com seus clientes.</p>
             </div>
             ${isAdmin ? `
-                <button class="btn btn-primary" id="add-catalogue-btn" style="width:auto; display:flex; align-items:center; gap:8px;">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" /></svg>
-                    Adicionar Novo Item
+                <button class="btn btn-primary" id="add-catalogue-btn" style="padding: 0.8rem 1.5rem; border-radius: 12px; font-weight:800; text-transform:uppercase; letter-spacing:0.05em; display:flex; align-items:center; gap:0.5rem; box-shadow:0 4px 15px rgba(139, 92, 246, 0.3); transition:all 0.2s;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='none'">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+                    NOVO ITEM
                 </button>
             ` : ''}
         </div>
@@ -60,25 +59,35 @@ export const render = () => {
 
     container.innerHTML = html;
 
-    const loadItems = async () => {
+    // ── URL pública para links ───────────────────────────────────────
+    let shareBaseUrl = localStorage.getItem('catalogue_public_url') || window.location.origin;
+
+    const getShareBase = () => shareBaseUrl;
+
+    // Busca URL pública do servidor automaticamente (ngrok, Railway, etc.)
+    fetch('/api/public-url').then(r => r.json()).then(data => {
+        if (data.url && !data.url.includes('localhost') && !data.url.includes('127.0.0.1') && !/http:\/\/192\./.test(data.url) && !localStorage.getItem('catalogue_public_url')) {
+            shareBaseUrl = data.url;
+        }
+    }).catch(() => {});
+
+    let allItems = [];
+    let currentPage = 1;
+    const PAGE_SIZE = 14;
+
+    const renderPage = (data, page) => {
         const grid = container.querySelector('#catalogue-grid');
-        try {
-            const res = await fetch('/api/catalogue');
-            if (!res.ok) {
-                const text = await res.text();
-                grid.innerHTML = `<p style="color:red; padding:2rem;">Erro ao carregar: ${text}</p>`;
-                return;
-            }
-            
-            const payload = await res.json();
-            const data = payload.data || [];
+        const total = data.length;
+        const totalPages = Math.ceil(total / PAGE_SIZE);
+        const start = (page - 1) * PAGE_SIZE;
+        const pageItems = data.slice(start, start + PAGE_SIZE);
 
-            if (data.length === 0) {
-                grid.innerHTML = '<p style="color:#64748b; padding:2rem; width:100%; text-align:center;">O catálogo está vazio no momento.</p>';
-                return;
-            }
+        if (pageItems.length === 0) {
+            grid.innerHTML = '<p style="color:#64748b; padding:2rem; width:100%; text-align:center;">O catálogo está vazio no momento.</p>';
+            return;
+        }
 
-            grid.innerHTML = data.map(item => {
+        grid.innerHTML = pageItems.map(item => {
                 const safeTitle = (item.title || '').replace(/"/g, '&quot;');
                 const safeDesc = (item.description || '');
                 const displayDesc = safeDesc.replace(/\\n/g, '<br>');
@@ -135,6 +144,8 @@ export const render = () => {
                     return `<img 
                         src="${url}" 
                         alt="${title}" 
+                        loading="lazy"
+                        decoding="async"
                         class="catalogue-image" 
                         style="min-height:180px;width:100%;object-fit:cover;border-radius:8px;background:#f1f5f9;"
                         onerror="this.outerHTML='<div style=\\'height:180px;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#fef2f2;border-radius:8px;border:2px dashed #fca5a5;color:#dc2626;padding:1rem;text-align:center;font-size:0.82rem;\\'><svg viewBox=\\'0 0 24 24\\' width=\\'32\\' height=\\'32\\' fill=\\'none\\' stroke=\\'currentColor\\' stroke-width=\\'2\\'><circle cx=\\'12\\' cy=\\'12\\' r=\\'10\\'/><line x1=\\'12\\' y1=\\'8\\' x2=\\'12\\' y2=\\'12\\'/><line x1=\\'12\\' y1=\\'16\\' x2=\\'12.01\\' y2=\\'16\\'/></svg><b style=\\'margin-top:0.5rem;\\'>Imagem não encontrada</b><span style=\\'font-size:0.72rem;margin-top:0.25rem;word-break:break-all;opacity:0.7;\\'>${url}</span></div>'"
@@ -185,28 +196,53 @@ export const render = () => {
                         <p class="catalogue-desc">${displayDesc || 'Nenhuma descrição adicionada.'}</p>
                     </div>
                     <div class="catalogue-actions">
-                        <button class="btn btn-secondary cat-link-btn" data-id="${item.id}" title="Copiar Link" style="flex: 0.5; padding: 0.6rem;">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" style="vertical-align:text-bottom;"><path stroke-linecap="round" stroke-linejoin="round" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" /></svg> Link
+                        <button class="btn btn-secondary cat-link-btn" data-id="${item.id}" title="Copiar Link" style="flex: 1; min-width: 40%; padding: 0.6rem;">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" style="vertical-align:text-bottom; flex-shrink:0;"><path stroke-linecap="round" stroke-linejoin="round" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" /></svg> Link
                         </button>
-                        <button class="btn btn-secondary cat-copy-btn" data-img="${item.image_url}" data-desc="${encodeURIComponent(safeDesc)}" style="display:flex; align-items:center; gap:6px; justify-content:center;">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2" /></svg> 
+                        <button class="btn btn-secondary cat-copy-btn" data-img="${item.image_url}" data-desc="${encodeURIComponent(safeDesc)}" style="flex: 1; min-width: 40%; display:flex; align-items:center; gap:6px; justify-content:center; padding: 0.6rem;">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" style="flex-shrink:0;"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2" /></svg>
                             Copiar
                         </button>
-                        <button class="btn btn-primary cat-share-btn" data-img="${item.image_url}" data-desc="${encodeURIComponent(safeDesc)}" style="display:flex; align-items:center; gap:6px; justify-content:center;">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 448 512"><path d="M380.9 97.1c-4.9-5.1-13-5.1-17.9 0L247 213.1c-5.1 5.1-5.1 13.3 0 18.4l20.1 20.1c5.1 5.1 13.3 5.1 18.4 0L382.4 155c5.1-5.1 5.1-13.3 0-18.4l-1.5-1.5zM224 416c-8.8 0-16-7.2-16-16V316.5l-63.5-63.5-86.4 86.4C44.7 352.8 32 371.4 32 391.1v24.9c0 35.3 28.7 64 64 64h256.4c19.7 0 38.3-12.7 51.7-26.1l111.4-111.4c15.1-15.1 15.1-39.7 0-54.8l-123.5-123.5c-5.1-5.1-13.3-5.1-18.4 0L348.5 176c-5.1 5.1-5.1 13.3 0 18.4l63.5 63.5H320c-8.8 0-16 7.2-16 16v96c0 8.8 7.2 16 16 16h96c8.8 0 16-7.2 16-16V304h-10.3l-20.1-20.1c-5.1-5.1-13.3-5.1-18.4 0l-123.5 123.5c-5.1 5.1-5.1 13.3 0 18.4l1.5 1.5c4.9 5.1 13 5.1 17.9 0l115.9-115.9c5.1-5.1 5.1-13.3 0-18.4l-20.1-20.1c-5.1-5.1-13.3-5.1-18.4 0L224 416z"/></svg> 
-                            Compartilhar
+                        <button class="cat-share-btn" data-id="${item.id}" data-img="${item.image_url}" data-desc="${encodeURIComponent(safeDesc)}" title="Enviar pelo WhatsApp" style="flex: 1 1 100%; display:flex; align-items:center; gap:6px; justify-content:center; background:#25D366; color:#fff; border:none; font-weight:700; border-radius:8px; padding:0.6rem 0.5rem; cursor:pointer; font-size:0.9rem; transition: background 0.2s;">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" viewBox="0 0 24 24" style="flex-shrink:0;"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.136.558 4.14 1.535 5.877L.057 23.428a.75.75 0 00.917.92l5.688-1.456A11.946 11.946 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 22c-1.946 0-3.773-.497-5.363-1.367l-.38-.217-3.977 1.018 1.052-3.875-.232-.388A9.944 9.944 0 012 12C2 6.477 6.477 2 12 2s10 4.477 10 10-4.477 10-10 10z"/></svg>
+                            WhatsApp
                         </button>
                     </div>
                 </div>
                 `;
-            }).join('');
+        }).join('');
 
-            // Attach listeners to items
-            attachItemEvents();
+        // Pagination controls
+        if (totalPages > 1) {
+            const paginationHtml = `
+                <div style="width:100%; display:flex; justify-content:center; align-items:center; gap:0.75rem; padding:1.5rem 0; grid-column:1/-1;">
+                    <button id="cat-prev-page" style="padding:0.5rem 1.2rem; border:1px solid #e2e8f0; border-radius:8px; background:white; cursor:pointer; font-weight:600; color:#475569; ${page <= 1 ? 'opacity:0.4; cursor:default;' : ''}" ${page <= 1 ? 'disabled' : ''}>← Anterior</button>
+                    <span style="color:#64748b; font-size:0.9rem;">Página <b>${page}</b> de <b>${totalPages}</b> &nbsp;·&nbsp; ${total} itens</span>
+                    <button id="cat-next-page" style="padding:0.5rem 1.2rem; border:1px solid #e2e8f0; border-radius:8px; background:white; cursor:pointer; font-weight:600; color:#475569; ${page >= totalPages ? 'opacity:0.4; cursor:default;' : ''}" ${page >= totalPages ? 'disabled' : ''}>Próxima →</button>
+                </div>`;
+            grid.insertAdjacentHTML('beforeend', paginationHtml);
+            grid.querySelector('#cat-prev-page')?.addEventListener('click', () => { if (page > 1) { currentPage--; renderPage(allItems, currentPage); window.scrollTo(0,0); } });
+            grid.querySelector('#cat-next-page')?.addEventListener('click', () => { if (page < totalPages) { currentPage++; renderPage(allItems, currentPage); window.scrollTo(0,0); } });
+        }
 
+        attachItemEvents();
+    };
+
+    const loadItems = async () => {
+        const grid = container.querySelector('#catalogue-grid');
+        try {
+            const res = await fetch('/api/catalogue');
+            if (!res.ok) {
+                const text = await res.text();
+                grid.innerHTML = `<p style="color:red; padding:2rem;">Erro ao carregar: ${text}</p>`;
+                return;
+            }
+            const payload = await res.json();
+            allItems = payload.data || [];
+            currentPage = 1;
+            renderPage(allItems, currentPage);
         } catch (err) {
             console.error('Erro ao carregar catálogo:', err);
-            const grid = container.querySelector('#catalogue-grid');
             if (grid) grid.innerHTML = `<p style="color:red; padding:2rem;">Erro interno ao carregar a interface: ${err.message}</p>`;
         }
     };
@@ -285,11 +321,11 @@ export const render = () => {
         container.querySelectorAll('.cat-link-btn').forEach(btn => {
             btn.onclick = async (e) => {
                 const id = e.currentTarget.dataset.id;
-                const link = window.location.origin + '/c/' + id;
+                const link = getShareBase() + '/c/' + id;
                 const originalHTML = btn.innerHTML;
                 
                 try {
-                    await navigator.clipboard.writeText(link);
+                    await window.copyTextToClipboard(link);
                     btn.innerHTML = '<ion-icon name="checkmark-outline"></ion-icon> Link Copiado!';
                     if (window.showToastAlert) window.showToastAlert('Link exclusivo copiado! O cliente verá sua arte ao abrir.', 'green');
                 } catch (err) {
@@ -305,19 +341,25 @@ export const render = () => {
             btn.onclick = async (e) => {
                 const imgUrl = e.currentTarget.dataset.img;
                 const desc = decodeURIComponent(e.currentTarget.dataset.desc);
+                
+                // Extrair ID para montar o link
+                const id = e.currentTarget.parentElement.querySelector('.cat-link-btn').dataset.id;
+                const link = window.location.origin + '/c/' + id;
+                const descWithLink = desc ? (desc + '\n\n' + link) : link;
+                
                 const originalText = btn.innerHTML;
                 
                 btn.innerHTML = '<ion-icon name="sync-outline"></ion-icon> Copiando...';
                 
                 try {
-                    await copyToClipboard(imgUrl, desc);
+                    await copyToClipboard(imgUrl, descWithLink);
                     btn.innerHTML = '<ion-icon name="checkmark-outline"></ion-icon> Copiado!';
                     if (window.showToastAlert) window.showToastAlert('Imagem copiada! Ao colar (CTRL+V) nos chats que suportam, o texto pode ir junto.', 'green');
                 } catch (err) {
                     console.warn('Fallback copy error:', err);
-                    if (navigator.clipboard) navigator.clipboard.writeText(desc);
+                    if (navigator.clipboard) window.copyTextToClipboard(descWithLink);
                     btn.innerHTML = '<ion-icon name="checkmark-outline"></ion-icon> Texto Copiado';
-                    if (window.showToastAlert) window.showToastAlert('Erro ao copiar imagem pelo navegador. Apenas o texto foi copiado.', 'orange');
+                    if (window.showToastAlert) window.showToastAlert('Apenas o texto + link foram copiados.', 'orange');
                 }
 
                 setTimeout(() => { btn.innerHTML = originalText; }, 3000);
@@ -330,6 +372,9 @@ export const render = () => {
                 const imgUrl = e.currentTarget.dataset.img;
                 const desc = decodeURIComponent(e.currentTarget.dataset.desc);
                 
+                const id = e.currentTarget.dataset.id;
+                const link = getShareBase() + '/c/' + id;
+
                 // Web Share API if on mobile
                 if (navigator.share && /Android|iPhone|iPad/i.test(navigator.userAgent)) {
                     try {
@@ -337,16 +382,16 @@ export const render = () => {
                         const blob = await r.blob();
                         const file = new File([blob], 'catalogo_lm_passo.png', { type: blob.type });
                         await navigator.share({
-                            title: 'LM PASSO',
-                            text: desc,
+                            title: 'LM GRÁFICA',
+                            text: desc + '\n\n' + link,
                             files: [file]
                         });
                         return;
                     } catch (err) {} // ignore aborts or fallback
                 }
 
-                // Fallback Window Open WhatsApp Link
-                const waLink = `https://api.whatsapp.com/send?text=${encodeURIComponent(desc)}`;
+                // Abre WhatsApp com APENAS o link — assim aparece azul e com prévia do produto
+                const waLink = `https://api.whatsapp.com/send?text=${encodeURIComponent(link)}`;
                 window.open(waLink, '_blank');
             };
         });
@@ -375,25 +420,57 @@ export const render = () => {
         closeBtn.onclick = closeModal;
         cancelBtn.onclick = closeModal;
 
+        // ── Compressor de imagem no browser (Canvas API) ──────────────────────
+        const compressImage = (file, maxWidth = 1200, quality = 0.80) => new Promise((resolve) => {
+            // PDFs e vetores passam sem compressão
+            const ext = file.name.split('.').pop().toLowerCase();
+            if (['pdf','cdr','ai','eps','svg'].includes(ext)) { resolve(file); return; }
+
+            const img = new Image();
+            const url = URL.createObjectURL(file);
+            img.onload = () => {
+                URL.revokeObjectURL(url);
+                let w = img.width, h = img.height;
+                if (w > maxWidth) { h = Math.round(h * maxWidth / w); w = maxWidth; }
+                const canvas = document.createElement('canvas');
+                canvas.width = w; canvas.height = h;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, w, h);
+                canvas.toBlob(blob => {
+                    resolve(new File([blob], file.name.replace(/\.[^.]+$/, '.jpg'), { type: 'image/jpeg' }));
+                }, 'image/jpeg', quality);
+            };
+            img.onerror = () => { URL.revokeObjectURL(url); resolve(file); };
+            img.src = url;
+        });
+
+        const compressFiles = async (fileList) => {
+            const compressed = [];
+            for (const f of fileList) compressed.push(await compressImage(f));
+            return compressed;
+        };
+        // ──────────────────────────────────────────────────────────────────────
+
         form.onsubmit = async (e) => {
             e.preventDefault();
             const submitBtn = form.querySelector('[type="submit"]');
             submitBtn.disabled = true;
-            submitBtn.textContent = 'Salvando...';
+            submitBtn.textContent = 'Comprimindo...';
 
             const editId = container.querySelector('#cat-edit-id').value;
             const title = container.querySelector('#cat-title').value;
             const desc = container.querySelector('#cat-desc').value;
             const fileInput = container.querySelector('#cat-file');
 
+
             try {
                 if (editId) {
                     let res;
                     if (fileInput.files.length > 0) {
                         const formData = new FormData();
-                        for (let i = 0; i < fileInput.files.length; i++) {
-                            formData.append('images', fileInput.files[i]);
-                        }
+                        const compressed = await compressFiles(Array.from(fileInput.files));
+                        submitBtn.textContent = 'Salvando...';
+                        compressed.forEach(f => formData.append('images', f));
                         formData.append('title', title);
                         formData.append('description', desc);
                         
@@ -426,10 +503,10 @@ export const render = () => {
                         submitBtn.textContent = 'Salvar Item';
                         return;
                     }
+                    const compressedFiles = await compressFiles(Array.from(fileInput.files));
+                    submitBtn.textContent = 'Enviando...';
                     const formData = new FormData();
-                    for (let i = 0; i < fileInput.files.length; i++) {
-                        formData.append('images', fileInput.files[i]);
-                    }
+                    compressedFiles.forEach(f => formData.append('images', f));
                     formData.append('title', title);
                     formData.append('description', desc);
 

@@ -3,10 +3,15 @@ export const render = () => {
     const container = document.createElement('div');
 
     container.innerHTML = `
-        <div class="view-header" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1rem">
-            <div class="view-title">Solicitações de Compra</div>
-            <button class="btn btn-primary" id="new-purchase-btn" style="width:auto; display:flex; align-items:center; gap:0.4rem">
-                <ion-icon name="add-circle-outline"></ion-icon> Nova Solicitação
+        <!-- Header -->
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 2rem;">
+            <div style="display:flex; flex-direction:column; gap:0.2rem;">
+                <h2 style="font-size: 1.8rem; font-weight: 900; background: linear-gradient(135deg, var(--primary), #4c1d95); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin:0; letter-spacing: -0.03em;">Solicitações de Compra</h2>
+                <p style="color: #64748b; margin: 0; font-size: 0.95rem; font-weight:500; white-space: nowrap;">Gerencie pedidos de materiais ao fornecedor e reabastecimento.</p>
+            </div>
+            <button class="btn btn-primary" id="new-purchase-btn" style="padding: 0.8rem 1.5rem; border-radius: 12px; font-weight:800; text-transform:uppercase; letter-spacing:0.05em; display:flex; align-items:center; gap:0.5rem; box-shadow:0 4px 15px rgba(139, 92, 246, 0.3); transition:all 0.2s;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='none'">
+                <ion-icon name="add-circle-outline" style="font-size:1.2rem;"></ion-icon>
+                NOVA SOLICITAÇÃO
             </button>
         </div>
 
@@ -169,7 +174,7 @@ export const render = () => {
         return '<span style="background:#fee2e2;color:#991b1b;padding:2px 10px;border-radius:20px;font-size:0.78rem;font-weight:600">🔴 Cancelada</span>';
     };
 
-    const fmtDate = (d) => d ? new Date(d).toLocaleDateString('pt-BR') : '-';
+    const fmtDate = (d) => d ? window.parseDBDate(d).toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' }) : '-';
     const fmtCurrency = (v) => v != null ? `R$ ${parseFloat(v).toFixed(2).replace('.', ',')}` : '-';
 
     // ── Load Data ──────────────────────────────────────────────────────────────

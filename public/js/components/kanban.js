@@ -3,6 +3,7 @@ export const render = () => {
     const container = document.createElement('div');
     const isClient = user.role === 'cliente';
     const isProducao = user.role === 'producao';
+    const isVendedor = user.role === 'vendedor';
     const clientId = user.client_id;
 
     let notifiedLateOrders = new Set();
@@ -52,11 +53,18 @@ export const render = () => {
     };
 
     container.innerHTML = `
-        <div class="view-header">
-            <div class="view-title">${isClient ? '📋 Meus Pedidos' : 'Quadro de Produção'}</div>
-            ${isClient ? '' : `<div style="display:flex; gap:0.5rem">
-                <button class="btn btn-secondary" style="width:auto;" id="btn-archived">📁 Pedidos Arquivados</button>
-                <button class="btn btn-primary" style="width: auto;" id="btn-new-order">Novo Pedido</button>
+        <!-- Header -->
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 2rem;">
+            <div style="display:flex; flex-direction:column; gap:0.2rem;">
+                <h2 style="font-size: 1.8rem; font-weight: 900; background: linear-gradient(135deg, var(--primary), #4c1d95); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin:0; letter-spacing: -0.03em;">${isClient ? '📋 Meus Pedidos' : 'Quadro de Produção'}</h2>
+                <p style="color: #64748b; margin: 0; font-size: 0.95rem; font-weight:500; white-space: nowrap;">${isClient ? 'Acompanhe seus pedidos' : 'Acompanhamento e controle de status dos pedidos.'}</p>
+            </div>
+            ${isClient ? '' : `<div style="display:flex; gap:0.75rem; align-items:center;">
+                <button class="btn" style="padding: 0.8rem 1.25rem; border-radius: 12px; font-weight:700; color:#475569; background:#fff; border:2px solid #e2e8f0; box-shadow:0 2px 8px rgba(0,0,0,0.02); transition:all 0.2s;" id="btn-archived" onmouseover="this.style.background='#f8fafc'; this.style.borderColor='#cbd5e1'" onmouseout="this.style.background='#fff'; this.style.borderColor='#e2e8f0'">📁 Pedidos Arquivados</button>
+                <button class="btn btn-primary" style="padding: 0.8rem 1.5rem; border-radius: 12px; font-weight:800; text-transform:uppercase; letter-spacing:0.05em; display:flex; align-items:center; gap:0.5rem; box-shadow:0 4px 15px rgba(139, 92, 246, 0.3); transition:all 0.2s;" id="btn-new-order" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='none'">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+                    NOVO PEDIDO
+                </button>
             </div>`}
         </div>
         <div class="kanban-board">
@@ -111,36 +119,41 @@ export const render = () => {
                 
                 <div id="order-step-1">
                     <!-- Internal Service Toggle -->
-                    <div style="display:flex; align-items:center; gap:0.75rem; margin-bottom:1rem; padding:0.6rem 1rem; background:#eff6ff; border:1px solid #bfdbfe; border-radius:8px; cursor:pointer;" id="internal-toggle-container">
-                        <input type="checkbox" id="internal-toggle" style="width:18px; height:18px; cursor:pointer;">
-                        <label for="internal-toggle" style="margin:0; cursor:pointer; font-weight:600; color:#1d4ed8; font-size:0.95rem;">🏢 Serviço Interno</label>
-                        <span style="font-size:0.8rem; color:#64748b;">(uso interno da empresa)</span>
+                    <div style="display:flex; align-items:center; justify-content:space-between; gap:1rem; margin-bottom:1.5rem; padding:1rem 1.25rem; background:rgba(139, 92, 246, 0.04); border:1px solid rgba(139, 92, 246, 0.15); border-radius:12px; cursor:pointer; transition:all 0.2s;" id="internal-toggle-container" onmouseover="this.style.background='rgba(139, 92, 246, 0.08)'" onmouseout="this.style.background='rgba(139, 92, 246, 0.04)'">
+                        <div style="display:flex; flex-direction:column;">
+                            <label for="internal-toggle" style="margin:0; cursor:pointer; font-weight:800; color:var(--primary); font-size:1.05rem;">🏢 Pedido Interno</label>
+                            <span style="font-size:0.8rem; color:#64748b; font-weight:500;">Uso exclusivo para demandas da própria gráfica.</span>
+                        </div>
+                        <input type="checkbox" id="internal-toggle" style="width:24px; height:24px; cursor:pointer; accent-color:var(--primary);">
                     </div>
+                    
                     <!-- Top Row: Client and Deadline -->
-                    <div id="client-row" style="display: grid; grid-template-columns: 2fr 1fr; gap: 1.5rem; margin-bottom: 1.5rem;">
-                        <div class="form-group" style="margin:0">
-                             <label style="font-weight: 600; color: #555; margin-bottom: 0.5rem; display: block;">Cliente</label>
+                    <div id="client-row" style="display: grid; grid-template-columns: 2fr 1fr; gap: 1.25rem; margin-bottom: 1.5rem;">
+                        <div class="form-group" style="margin:0; background: #fff; padding: 1.25rem; border-radius: 16px; border: 1px solid #e2e8f0; box-shadow: 0 4px 15px rgba(0,0,0,0.02);">
+                             <label style="font-size: 0.8rem; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.75rem; display: block;">👤 Cliente</label>
                              <div style="display:flex; gap:0.5rem; position:relative;" id="client-autocomplete-wrap">
                                  <div style="flex:1; position:relative;">
-                                     <input type="text" id="client-search" placeholder="Buscar cliente..." autocomplete="off"
-                                         style="width:100%; padding:0.5rem; border:1px solid #ccc; border-radius:4px; box-sizing:border-box;">
+                                     <input type="text" id="client-search" placeholder="Buscar por Nome ou Telefone..." autocomplete="off"
+                                         style="width:100%; padding:0.8rem 1rem; font-size:1rem; border:2px solid #e2e8f0; border-radius:12px; box-sizing:border-box; transition:border-color 0.2s, box-shadow 0.2s;"
+                                         onfocus="this.style.borderColor='var(--primary)'; this.style.boxShadow='0 0 0 4px rgba(139, 92, 246, 0.1)';"
+                                         onblur="this.style.borderColor='#e2e8f0'; this.style.boxShadow='none';">
                                      <!-- Hidden field that stores the selected client ID -->
                                      <input type="hidden" id="client-select">
-                                     <div id="client-suggestions" style="display:none; position:absolute; top:100%; left:0; right:0; background:#fff; border:1px solid #ccc; border-top:none; border-radius:0 0 6px 6px; max-height:200px; overflow-y:auto; z-index:1000; box-shadow:0 4px 12px rgba(0,0,0,0.1);"></div>
+                                     <div id="client-suggestions" style="display:none; position:absolute; top:calc(100% + 4px); left:0; right:0; background:#fff; border:1px solid #e2e8f0; border-radius:12px; max-height:220px; overflow-y:auto; z-index:1000; box-shadow:0 10px 25px rgba(0,0,0,0.1);"></div>
                                  </div>
-                                 <button class="btn btn-secondary" id="btn-quick-client" title="Novo Cliente" style="width: 40px; padding: 0; font-size: 1.2rem; display: flex; align-items: center; justify-content: center;">+</button>
+                                 <button class="btn btn-secondary" id="btn-quick-client" title="Novo Cliente" style="width: 48px; border-radius: 12px; padding: 0; font-size: 1.4rem; display: flex; align-items: center; justify-content: center; background:#f8fafc; border:2px solid #e2e8f0; color:var(--primary); font-weight:bold; transition:all 0.2s;" onmouseover="this.style.background='var(--primary)'; this.style.color='white'; this.style.borderColor='var(--primary)';">+</button>
                              </div>
                          </div>
                         
-                        <div class="form-group" style="margin:0">
-                            <label style="font-weight: 600; color: #555; margin-bottom: 0.5rem; display: block;">Prazo</label>
-                            <div style="display:flex; gap:0.5rem; padding: 0.5rem; background: #f8f9fa; border-radius: 4px; border: 1px solid #e9ecef;">
-                                <label style="cursor:pointer; display:flex; align-items:center; gap:0.3rem; font-size: 0.9rem;">
-                                    <input type="radio" name="deadline_option" value="3D" checked> 
+                        <div class="form-group" style="margin:0; background: #fff; padding: 1.25rem; border-radius: 16px; border: 1px solid #e2e8f0; box-shadow: 0 4px 15px rgba(0,0,0,0.02);">
+                            <label style="font-size: 0.8rem; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.75rem; display: block;">⏳ Prazo da Produção</label>
+                            <div style="display:flex; gap:0.5rem; background: #f8fafc; padding: 0.4rem; border-radius: 12px; border: 1px solid #e2e8f0;">
+                                <label style="cursor:pointer; display:flex; align-items:center; justify-content:center; gap:0.4rem; padding:0.6rem; flex:1; border-radius:8px; background:#fff; font-size: 0.95rem; font-weight:600; box-shadow:0 1px 3px rgba(0,0,0,0.05); color:#334155;">
+                                    <input type="radio" name="deadline_option" value="3D" checked style="accent-color:var(--primary);"> 
                                     3 Dias
                                 </label>
-                                <label style="cursor:pointer; display:flex; align-items:center; gap:0.3rem; color:#dc2626; font-weight:bold; font-size: 0.9rem;">
-                                    <input type="radio" name="deadline_option" value="1D"> 
+                                <label style="cursor:pointer; display:flex; align-items:center; justify-content:center; gap:0.4rem; padding:0.6rem; flex:1; border-radius:8px; background:#fef2f2; border:1px solid #fee2e2; color:#b91c1c; font-weight:700; font-size: 0.95rem;">
+                                    <input type="radio" name="deadline_option" value="1D" style="accent-color:#dc2626;"> 
                                     1 Dia
                                 </label>
                             </div>
@@ -148,111 +161,129 @@ export const render = () => {
                     </div>
 
                     <!-- Cart Section -->
-                    <div style="background:#f0fdf4; border:2px solid #86efac; border-radius: 8px; padding: 1rem; margin-bottom: 1.5rem;">
-                        <label style="font-weight:700; font-size:0.95rem; margin-bottom: 0.75rem; display: flex; align-items:center; gap:0.4rem; color: #166534;">🛒 Produtos do Pedido</label>
+                    <div style="background: rgba(139, 92, 246, 0.03); border: 1px solid rgba(139, 92, 246, 0.15); border-left: 4px solid var(--primary); border-radius: 16px; padding: 1.5rem; margin-bottom: 1.5rem; box-shadow: 0 4px 20px rgba(0,0,0,0.015);">
+                        <label style="font-size: 0.9rem; font-weight: 800; color: var(--primary); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 1rem; display: flex; align-items:center; gap:0.5rem;">📦 Lista de Produtos</label>
                         
-                        <div style="margin-bottom:0.5rem;">
-                            <small style="display:block; margin-bottom:2px; color:#666">Filtrar por Tipo</small>
-                            <select id="product-type-filter" class="form-control" style="width:100%; padding:0.5rem; border:1px solid #ccc; border-radius:4px;">
-                                <option value="">Todos os tipos</option>
-                            </select>
-                        </div>
-                        <div style="margin-bottom:0.5rem;">
-                            <small style="display:block; margin-bottom:2px; color:#666">Buscar por Nome</small>
-                            <input type="text" id="product-name-search" placeholder="Digite para filtrar..." style="width:100%; padding:0.5rem; border:1px solid #ccc; border-radius:4px; box-sizing:border-box;">
-                        </div>
-                        <div style="display: grid; grid-template-columns: 3fr 1fr auto; gap: 0.5rem; align-items: end; margin-bottom:0.5rem;">
+                        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:1rem; margin-bottom:1rem;">
                             <div>
-                                <small style="display:block; margin-bottom:2px; color:#666">Produto</small>
-                                <select id="product-select" class="form-control" style="width:100%; padding: 0.5rem; border: 1px solid #ccc; border-radius: 4px;"><option value="">Selecione...</option></select>
+                                <small style="display:block; margin-bottom:4px; font-weight:700; color:#64748b; font-size:0.75rem; text-transform:uppercase;">Filtrar por Categoria</small>
+                                <select id="product-type-filter" class="form-control" style="width:100%; padding:0.6rem 1rem; font-size:0.95rem; border:1px solid #cbd5e1; border-radius:8px; background:#fff; transition:border-color 0.2s;">
+                                    <option value="">Todos os tipos</option>
+                                </select>
                             </div>
                             <div>
-                                <small style="display:block; margin-bottom:2px; color:#666">Qtd</small>
-                                <input type="number" id="item-qty" value="1" min="1" class="form-control" style="width:100%; padding: 0.5rem; border: 1px solid #ccc; border-radius: 4px;">
+                                <small style="display:block; margin-bottom:4px; font-weight:700; color:#64748b; font-size:0.75rem; text-transform:uppercase;">Buscar por Nome</small>
+                                <input type="text" id="product-name-search" placeholder="O que você procura?" style="width:100%; padding:0.6rem 1rem; font-size:0.95rem; border:1px solid #cbd5e1; border-radius:8px; background:#fff; box-sizing:border-box; transition:border-color 0.2s;">
                             </div>
-                            <button class="btn" id="btn-add-item" type="button" style="height: 38px; line-height: 1; background:#16a34a; color:white; border:none; border-radius:6px; padding:0 1rem; font-weight:600;">+ Adicionar</button>
                         </div>
+
+                        <div style="display: grid; grid-template-columns: 3fr 1fr auto; gap: 0.75rem; align-items: end; margin-bottom:1rem; background: #fff; padding: 1rem; border-radius: 12px; border: 1px solid #e2e8f0; box-shadow: 0 2px 10px rgba(0,0,0,0.02);">
+                            <div>
+                                <small style="display:block; margin-bottom:4px; font-weight:700; color:#334155;">Produto Selecionado</small>
+                                <select id="product-select" class="form-control" style="width:100%; padding: 0.6rem 1rem; font-size:0.95rem; border: 2px solid #e2e8f0; border-radius: 8px; font-weight:600;"><option value="">Escolha um item...</option></select>
+                            </div>
+                            <div>
+                                <small style="display:block; margin-bottom:4px; font-weight:700; color:#334155;">Quantidade</small>
+                                <input type="number" id="item-qty" value="1" min="1" class="form-control" style="width:100%; padding: 0.6rem 1rem; font-size:1.1rem; font-weight:bold; border: 2px solid #e2e8f0; border-radius: 8px; text-align:center;">
+                            </div>
+                            <button class="btn" id="btn-add-item" type="button" style="height: 48px; background:linear-gradient(135deg, var(--primary), #4c1d95); color:white; border:none; border-radius:8px; padding:0 1.5rem; font-weight:800; text-transform:uppercase; letter-spacing:0.05em; box-shadow:0 4px 15px rgba(139, 92, 246, 0.3); transition:all 0.2s;">+ INCLUIR</button>
+                        </div>
+
                         <!-- Color selector for pulseiras -->
-                        <div id="color-select-container" style="display:none; margin-bottom:0.5rem; background:#fefce8; border:1px solid #fde68a; border-radius:6px; padding:8px 10px;">
-                            <small id="pulseira-price-label" style="display:block; margin-bottom:6px; color:#92400e; font-weight:600;">🎨 Selecione a cor da pulseira:</small>
+                        <div id="color-select-container" style="display:none; margin-bottom:1rem; background:#fff; border:1px solid #e2e8f0; border-radius:12px; padding:1rem; box-shadow:0 2px 10px rgba(0,0,0,0.02);">
+                            <small id="pulseira-price-label" style="display:block; margin-bottom:10px; color:#1e1b4b; font-weight:800; text-transform:uppercase; font-size:0.8rem; letter-spacing:0.05em;">🎨 Definir a Cor do Material:</small>
                             <!-- Toggle sem personalização -->
-                            <label id="sem-personaliz-label" style="display:flex; align-items:center; gap:0.5rem; margin-bottom:6px; cursor:pointer; background:#fff7ed; border:1px solid #fed7aa; border-radius:6px; padding:5px 8px;">
-                                <input type="checkbox" id="sem-personalizacao" style="width:16px; height:16px; cursor:pointer; accent-color:#ea580c;">
-                                <span style="font-size:0.875rem; font-weight:600; color:#c2410c;">Sem personalização — <b>R$ 0,20/un</b></span>
+                            <label id="sem-personaliz-label" style="display:flex; align-items:center; gap:0.5rem; margin-bottom:10px; cursor:pointer; background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:8px 12px; transition:all 0.2s;" onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background='#f8fafc'">
+                                <input type="checkbox" id="sem-personalizacao" style="width:18px; height:18px; cursor:pointer; accent-color:var(--primary);">
+                                <span style="font-size:0.9rem; font-weight:700; color:#334155;">Venda SEM Personalização — <b style="color:var(--primary)">R$ 0,20/un</b></span>
                             </label>
                             <div id="color-select-wrap">
-                                <select id="color-select" class="form-control" style="width:100%; padding:0.4rem; border:1px solid #fcd34d; border-radius:4px;">
+                                <select id="color-select" class="form-control" style="width:100%; padding:0.6rem 1rem; font-size:0.95rem; border:2px solid #e2e8f0; border-radius:8px; font-weight:600;">
                                     <option value="">Carregando cores...</option>
                                 </select>
                             </div>
                         </div>
-                        <div id="stock-warning" style="font-size:0.8rem; color:red; margin-top:0.25rem; min-height: 1.2em;"></div>
+                        <div id="stock-warning" style="font-size:0.85rem; font-weight:bold; color:#dc2626; margin-top:0.25rem; min-height: 1.2em;"></div>
 
                         <!-- Cart List -->
-                        <div class="cart-list" style="margin-top:0.5rem; max-height:180px; overflow-y:auto; background: #fff; border:1px solid #bbf7d0; border-radius: 6px;">
-                             <table style="width:100%; font-size:0.9rem; border-collapse:collapse">
-                                 <thead style="background:#dcfce7; color: #166534;">
+                        <div class="cart-list" style="margin-top:0.5rem; max-height:220px; overflow-y:auto; background: #fff; border:1px solid #e2e8f0; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.02);">
+                             <table style="width:100%; font-size:0.95rem; border-collapse:collapse;">
+                                 <thead style="background:#f8fafc; border-bottom:2px solid #e2e8f0; color: #475569; position:sticky; top:0; z-index:10;">
                                      <tr>
-                                         <th style="padding:8px; text-align:left; font-weight: 600;">Produto</th>
-                                         <th style="padding:8px; text-align:center; font-weight: 600;">Qtd</th>
-                                         <th style="padding:8px; text-align:right; font-weight: 600;">Subtotal</th>
-                                         <th style="width:30px"></th>
+                                         <th style="padding:12px; text-align:left; font-weight: 800; font-size:0.8rem; text-transform:uppercase; letter-spacing:0.05em;">Produto</th>
+                                         <th style="padding:12px; text-align:center; font-weight: 800; font-size:0.8rem; text-transform:uppercase; letter-spacing:0.05em;">Qtd</th>
+                                         <th style="padding:12px; text-align:right; font-weight: 800; font-size:0.8rem; text-transform:uppercase; letter-spacing:0.05em;">Subtotal</th>
+                                         <th style="width:40px"></th>
                                      </tr>
                                  </thead>
                                  <tbody id="cart-tbody">
-                                     <tr><td colspan="4" style="text-align:center; padding:1.5rem; color:#94a3b8">Nenhum item adicionado</td></tr>
+                                     <tr><td colspan="4" style="text-align:center; padding:2.5rem; color:#94a3b8; font-weight:500; font-size:1rem;">Nenhum produto incluído ainda.</td></tr>
                                  </tbody>
                              </table>
                         </div>
                     </div>
 
                     <form id="order-form">
-                        <div class="form-group">
-                            <label style="font-weight: 600; color: #555;">Descrição Geral / Observações</label>
-                            <textarea name="description" rows="2" placeholder="Detalhes do pedido..." style="width: 100%; padding: 0.5rem; border: 1px solid #ccc; border-radius: 4px;"></textarea>
-                        </div>
-                        <div class="form-group">
-                            <label style="font-weight: 600; color: #555;">📎 Anexos (imagens / PDF / CDR)</label>
-                            <input type="file" id="order-attachments" multiple accept="image/*,.pdf,.cdr" style="width:100%; padding:0.5rem; border:1px solid #ccc; border-radius:4px; font-size:0.9rem;">
-                            <div id="attachment-preview" style="display:flex; gap:0.5rem; flex-wrap:wrap; margin-top:0.5rem;"></div>
+                        <div style="display:grid; grid-template-columns: 1fr; gap:1.25rem; margin-bottom:1.5rem;">
+                            <!-- Description -->
+                            <div class="form-group" style="margin:0; background: #fff; padding: 1.25rem; border-radius: 16px; border: 1px solid #e2e8f0; box-shadow: 0 4px 15px rgba(0,0,0,0.02);">
+                                <label style="font-size: 0.8rem; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.75rem; display: block;">📝 Descrição Geral / Observações</label>
+                                <textarea name="description" rows="2" placeholder="Descreva os detalhes importantes da produção..." style="width: 100%; padding: 0.8rem 1rem; font-size:1rem; border: 2px solid #e2e8f0; border-radius: 12px; box-sizing:border-box; transition:border-color 0.2s; resize:vertical; font-family:inherit;" onfocus="this.style.borderColor='var(--primary)'" onblur="this.style.borderColor='#e2e8f0'"></textarea>
+                            </div>
+
+                            <!-- Attachments -->
+                            <div class="form-group" style="margin:0; background: #fff; padding: 1.25rem; border-radius: 16px; border: 1px solid #e2e8f0; box-shadow: 0 4px 15px rgba(0,0,0,0.02);">
+                                <label style="font-size: 0.8rem; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.75rem; display: block;">📎 Anexos (Imagens / PDF / CDR)</label>
+                                <div style="position:relative; width:100%;">
+                                    <input type="file" id="order-attachments" multiple accept="image/*,.pdf,.cdr" style="width:100%; padding: 0.8rem; background:#f8fafc; border: 2px dashed #cbd5e1; border-radius:12px; font-size:0.95rem; font-weight:600; color:#475569; cursor:pointer;" onmouseover="this.style.borderColor='var(--primary)'; this.style.backgroundColor='#faf5ff'" onmouseout="this.style.borderColor='#cbd5e1'; this.style.backgroundColor='#f8fafc'">
+                                </div>
+                                <div id="attachment-preview" style="display:flex; gap:0.5rem; flex-wrap:wrap; margin-top:0.75rem;"></div>
+                            </div>
                         </div>
                         
-                        <div style="display:flex; justify-content:space-between; align-items:center; margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid #eee;">
-                             <div style="display: flex; gap: 1rem; width: 55%; flex-wrap: wrap;">
-                                 <div class="form-group" style="margin-bottom:0; flex: 1; min-width: 120px;">
-                                    <label style="font-weight: 600; color: #555;">Pagamento</label>
-                                    <select name="payment_method" id="order-payment-method" style="width: 100%; padding: 0.5rem; border: 1px solid #ccc; border-radius: 4px;">
+                        <!-- Financial & Core Event Info -->
+                        <div style="background: rgba(139, 92, 246, 0.03); border: 1px solid rgba(139, 92, 246, 0.15); border-radius: 16px; padding: 1.5rem; margin-bottom: 1.5rem; box-shadow: 0 4px 20px rgba(0,0,0,0.015); display: flex; flex-wrap: wrap; gap: 1.5rem; align-items: stretch;">
+                             <div style="display: flex; gap: 1rem; flex: 2; min-width:300px;">
+                                 <div class="form-group" style="margin:0; flex: 1;">
+                                    <label style="font-size: 0.75rem; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.5rem; display: block;">Pagamento</label>
+                                    <select name="payment_method" id="order-payment-method" style="width: 100%; padding: 0.75rem 1rem; font-size:1rem; border: 2px solid #e2e8f0; border-radius: 12px; font-weight:600; color:#1e1b4b; background:#fff;">
                                         <option value="Pix">Pix</option>
                                         <option value="Cartão">Cartão</option>
                                         <option value="Dinheiro">Dinheiro</option>
                                         <option value="Boleto">Boleto</option>
+                                        <option value="A Receber">A Receber</option>
                                         <option value="CORE">CORE</option>
                                     </select>
-                                    <div id="core-auto-info" style="display:none; margin-top:4px; font-size:0.75rem; color:#7c3aed; font-weight:600;"></div>
+                                    <div id="core-auto-info" style="display:none; margin-top:6px; font-size:0.8rem; color:var(--primary); font-weight:700;"></div>
                                  </div>
-                                 <div class="form-group" style="margin-bottom:0; flex: 1; min-width: 100px;">
-                                    <label style="font-weight: 600; color: #555;">Desconto (%)</label>
-                                    <select name="discount" id="order-discount" style="width: 100%; padding: 0.5rem; border: 1px solid #ccc; border-radius: 4px;">
+                                 <div class="form-group" style="margin:0; flex: 1;">
+                                    <label style="font-size: 0.75rem; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.5rem; display: block;">Desconto</label>
+                                    <select name="discount" id="order-discount" style="width: 100%; padding: 0.75rem 1rem; font-size:1rem; border: 2px solid #e2e8f0; border-radius: 12px; font-weight:600; color:#ef4444; background:#fff;">
                                         <option value="0">Nenhum</option>
                                         <option value="10">10%</option>
                                         <option value="15">15%</option>
                                     </select>
                                  </div>
                              </div>
+                             
                              <!-- Event Name Field (visible only for CORE) -->
-                             <div id="event-name-group" style="display:none; flex:1; min-width:180px; margin-left:1rem;">
-                                 <label style="font-weight:600; color:#7c3aed; display:block; margin-bottom:0.25rem; font-size:0.9rem;">🏷️ Nome do Evento</label>
-                                 <input type="text" id="order-event-name" placeholder="Ex: Festa Junina 2025" style="width:100%; padding:0.5rem; border:2px solid #7c3aed; border-radius:4px; font-size:0.9rem; box-sizing:border-box;">
+                             <div id="event-name-group" style="display:none; flex:1; min-width:200px;">
+                                 <label style="font-size: 0.75rem; font-weight: 800; color: var(--primary); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.5rem; display: flex; align-items:center; gap:0.3rem;">🏷️ Nome do Evento (Core)</label>
+                                 <input type="text" id="order-event-name" placeholder="Ex: Festa Junina 2025" style="width:100%; padding:0.75rem 1rem; font-size:1rem; border:2px solid var(--primary); border-radius:12px; font-weight:600; color:#1e1b4b; background:#fff; box-sizing:border-box; box-shadow: 0 2px 10px rgba(139, 92, 246, 0.1);">
                              </div>
-                            <div style="text-align:right">
-                                <label style="display:block; font-size: 0.9rem; color: #666;">Valor a Cobrar (R$)</label>
-                                <input type="number" step="0.01" min="0" id="cart-total-input" name="total_value" value="" placeholder="0.00" style="font-size:1.5rem; font-weight:bold; color:#2563eb; width:150px; text-align:right; border:1px solid #ccc; border-radius:4px; padding:0.3rem 0.5rem; background:#f8fafc; cursor:not-allowed;" readonly>
-                                <div style="font-size:0.75rem; color:#999; margin-top:2px;" id="cart-total-auto"></div>
+                             
+                            <div style="flex:1; min-width:200px; background:linear-gradient(135deg, var(--primary), #4c1d95); padding: 1.25rem; border-radius: 12px; color:white; box-shadow:0 8px 20px rgba(139, 92, 246, 0.3); display:flex; flex-direction:column; justify-content:center;">
+                                <label style="font-size: 0.75rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; opacity:0.8; margin-bottom:0.25rem; display:block;">Valor a Cobrar</label>
+                                <div style="display:flex; align-items:center;">
+                                    <span style="font-size:1.5rem; font-weight:800; opacity:0.7; margin-right:4px;">R$</span>
+                                    <input type="number" step="0.01" min="0" id="cart-total-input" name="total_value" value="" placeholder="0.00" style="font-size:2rem; font-weight:800; color:#fff; width:100%; background:transparent; border:none; outline:none; letter-spacing:-0.02em; padding:0; cursor:not-allowed;" readonly>
+                                </div>
+                                <div style="font-size:0.75rem; color:rgba(255,255,255,0.7); margin-top:4px; font-weight:600;" id="cart-total-auto"></div>
                             </div>
                         </div>
                         
                         <div style="margin-top: 1.5rem;">
-                            <button type="submit" class="btn btn-primary" style="width:100%; padding: 0.8rem; font-size: 1.1rem;" id="btn-create-order" disabled>Criar Pedido</button>
+                            <button type="submit" class="btn" style="width:100%; padding: 1rem; font-size: 1.15rem; font-weight:800; text-transform:uppercase; letter-spacing:0.05em; background:var(--primary); color:white; border-radius:16px; border:none; box-shadow:0 8px 25px rgba(139, 92, 246, 0.4); transition:all 0.2s;" id="btn-create-order" disabled onmouseover="if(!this.disabled) this.style.transform='translateY(-2px)'" onmouseout="if(!this.disabled) this.style.transform='none'">Criar Novo Pedido</button>
                         </div>
                     </form>
                 </div>
@@ -346,6 +377,9 @@ export const render = () => {
                  <!-- Comments Section -->
                 <div class="comments-section">
                     <h4>Comentários</h4>
+                    <p style="font-size:0.75rem; color:#94a3b8; margin: -0.25rem 0 0.75rem 0; display:flex; align-items:center; gap:4px;">
+                        🔒 Apenas a equipe interna visualiza estes comentários
+                    </p>
                     <div id="comments-list" style="max-height: 150px; overflow-y: auto; margin-bottom: 1rem;"></div>
                     <form id="comment-form" style="display: flex; gap: 0.5rem;">
                         <input type="text" id="comment-input" placeholder="Escreva um comentário..." style="flex:1; padding: 0.5rem; border: 1px solid #ccc; border-radius: 4px;" required>
@@ -406,7 +440,7 @@ export const render = () => {
                 <body>
                     <div class="header">
                         <h2>PEDIDO #${getOrderNum(order)}</h2>
-                        <small>${new Date().toLocaleDateString()} ${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</small>
+                        <small>${new Date().toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' })} ${new Date().toLocaleTimeString('pt-BR', { timeZone: 'America/Sao_Paulo', hour: '2-digit', minute: '2-digit' })}</small>
                     </div>
                     <div class="line"></div>
                     <div class="info">
@@ -458,7 +492,7 @@ export const render = () => {
         // Restrict payment options for vendedor
         const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
         if (['vendedor', 'producao'].includes(currentUser.role)) {
-            const allowed = ['Pix', 'Cartão'];
+            const allowed = ['Pix', 'Cartão', 'Dinheiro', 'A Receber'];
             [...paymentSelect.options].forEach(opt => {
                 if (!allowed.includes(opt.value)) opt.remove();
             });
@@ -584,6 +618,7 @@ export const render = () => {
 
         // Clear Cols
         const columnTimes = { aguardando_aceite: 0, producao: 0, em_balcao: 0, finalizado: 0 };
+        const columnAITimes = { aguardando_aceite: 0, producao: 0, em_balcao: 0, finalizado: 0 };
 
         visibleStatuses.forEach(status => {
             const col = container.querySelector(`#col-${status} .column-content`);
@@ -596,10 +631,13 @@ export const render = () => {
 
         const formatDuration = (min) => {
             if (!min) return '';
-            const h = Math.floor(min / 60);
-            const m = min % 60;
-            if (h > 0) return `${h}h${m > 0 ? ' ' + m + 'm' : ''}`;
-            return `${m}m`;
+            const totalMin = Math.round(min * 10) / 10; // round to 1 decimal
+            const h = Math.floor(totalMin / 60);
+            const m = Math.round(totalMin % 60);
+            if (h > 0) return `${h}h${m > 0 ? ' ' + m + 'min' : ''}`;
+            if (m > 0) return `${m}min`;
+            const sec = Math.round(totalMin * 60);
+            return `${sec}seg`;
         };
 
 
@@ -611,15 +649,18 @@ export const render = () => {
             if (order.total_estimated_time && columnTimes[order.status] !== undefined) {
                 columnTimes[order.status] += order.total_estimated_time;
             }
+            if (order.ai_estimated_time && columnAITimes[order.status] !== undefined) {
+                columnAITimes[order.status] += order.ai_estimated_time;
+            }
 
             // Check deadline for alert
             if (order.status === 'producao' && order.deadline_at) {
-                const deadlineMs = new Date(order.deadline_at).getTime();
+                const deadlineMs = window.parseDBDate(order.deadline_at).getTime();
                 const nowMs = Date.now();
                 // 2 hours = 7200000 ms
                 if (deadlineMs - nowMs <= 7200000 && !notifiedLateOrders.has(order.id)) {
                     notifiedLateOrders.add(order.id);
-                    showToastAlert(`O pedido #${getOrderNum(order)} (${order.client_name}) deve ser enviado ao balcão em breve. O prazo expira às ${new Date(order.deadline_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} do dia ${new Date(order.deadline_at).toLocaleDateString()}.`);
+                    showToastAlert(`O pedido #${getOrderNum(order)} (${order.client_name}) deve ser enviado ao balcão em breve. O prazo expira às ${window.parseDBDate(order.deadline_at).toLocaleTimeString('pt-BR', { timeZone: 'America/Sao_Paulo', hour: '2-digit', minute: '2-digit' })} do dia ${window.parseDBDate(order.deadline_at).toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' })}.`);
                 }
             }
 
@@ -657,27 +698,33 @@ export const render = () => {
 
                 // Formatting date and status specific UI
                 let badge = '';
-                if (order.status === 'producao' && order.deadline_at) {
-                    const deadline = new Date(order.deadline_at);
+                if (order.status === 'aguardando_aceite') {
+                    badge = `<span class="card-badge" style="background:#fefce8; color:#a16207; font-weight:700; padding:4px 8px; border-radius:6px; border:1px solid #fef08a;">⏳ Aguardando</span>`;
+                } else if (order.status === 'producao' && order.deadline_at) {
+                    const deadline = window.parseDBDate(order.deadline_at);
                     const now = new Date();
                     const diff = deadline - now;
                     const isUrgent = diff < 86400000; // 24h
                     if (isUrgent && diff > 0) card.classList.add('deadline-urgent');
                     if (diff < 0) {
                         card.style.borderLeftColor = 'red';
-                        badge = `<span class="card-badge" style="background:#fecaca; color:#b91c1c">Atrasado</span>`;
+                        badge = `<span class="card-badge" style="background:#fecaca; color:#b91c1c; font-weight:700; padding:4px 8px; border-radius:6px;">🚨 Atrasado</span>`;
                     } else {
                         const dt = order.deadline_type || '';
                         if (dt === '1D' || dt.toLowerCase().includes('1 dia') || dt.toLowerCase().includes('urgente')) {
                             card.style.borderLeftColor = '#3b82f6';
                             card.style.boxShadow = '0 0 8px rgba(59, 130, 246, 0.3)';
-                            badge = `<span class="card-badge" style="background:linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%); color:#fff; font-weight:bold; letter-spacing:0.5px; border:none; padding:3px 10px; border-radius:6px;">🚀 MÁX PRIORIDADE (1D)</span>`;
+                            badge = `<span class="card-badge" style="background:linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%); color:#fff; font-weight:bold; letter-spacing:0.5px; border:none; padding:4px 10px; border-radius:6px;">🚀 MÁX PRIORIDADE (1D)</span>`;
                         } else {
-                            badge = `<span class="card-badge">${dt}</span>`;
+                            badge = `<span class="card-badge" style="background:#eff6ff; color:#1d4ed8; font-weight:700; padding:4px 8px; border-radius:6px; border:1px solid #bfdbfe;">⏱️ ${dt}</span>`;
                         }
                     }
+                } else if (order.status === 'producao') {
+                    badge = `<span class="card-badge" style="background:#eff6ff; color:#1d4ed8; font-weight:700; padding:4px 8px; border-radius:6px; border:1px solid #bfdbfe;">⚙️ Em Produção</span>`;
                 } else if (order.status === 'em_balcao') {
-                    badge = `<span class="card-badge" style="background:#ffedd5; color:#c2410c">Em Balcão</span>`;
+                    badge = `<span class="card-badge" style="background:#fff7ed; color:#c2410c; font-weight:700; padding:4px 8px; border-radius:6px; border:1px solid #fed7aa;">🛍️ Em Balcão</span>`;
+                } else if (order.status === 'finalizado') {
+                    badge = `<span class="card-badge" style="background:#f0fdf4; color:#15803d; font-weight:700; padding:4px 8px; border-radius:6px; border:1px solid #bbf7d0;">✅ Finalizado</span>`;
                 }
 
                 // Pie chart for orders with checklist data
@@ -696,11 +743,14 @@ export const render = () => {
                 }
 
                 card.innerHTML = `
-                    <div class="card-header" style="justify-content:space-between;"><span>#${getOrderNum(order)}</span> <span>Lançado: ${new Date(order.created_at).toLocaleDateString()} ${new Date(order.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span></div>
-                    ${order.deadline_at ? `<div style="font-size:0.8rem; color:#059669; padding:2px 0 4px 0; font-weight:600; border-bottom:1px solid #eee; margin-bottom:4px;">📅 Entrega: ${new Date(order.deadline_at).toLocaleDateString()} ${new Date(order.deadline_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>` : ''}
+                    <div class="card-header" style="justify-content:space-between;"><span>#${getOrderNum(order)}</span> <span>Lançado: ${window.parseDBDate(order.created_at).toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' })} ${window.parseDBDate(order.created_at).toLocaleTimeString('pt-BR', { timeZone: 'America/Sao_Paulo', hour: '2-digit', minute: '2-digit' })}</span></div>
+                    ${order.deadline_at ? `<div style="font-size:0.8rem; color:#059669; padding:2px 0 4px 0; font-weight:600; border-bottom:1px solid #eee; margin-bottom:4px;">📅 Entrega: ${window.parseDBDate(order.deadline_at).toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' })} ${window.parseDBDate(order.deadline_at).toLocaleTimeString('pt-BR', { timeZone: 'America/Sao_Paulo', hour: '2-digit', minute: '2-digit' })}</div>` : ''}
                     <div class="card-title">${order.client_name || 'Cliente?'} ${order.is_internal ? '<span style="background:#dbeafe; color:#1d4ed8; padding:1px 6px; border-radius:10px; font-size:0.7rem; font-weight:600; margin-left:4px;">🏢 Interno</span>' : ''}</div>
                     <div class="card-detail" style="font-size:0.85rem; color:#555; white-space:pre-wrap;">${order.product_name || 'Produto?'}</div>
-                    ${order.status === 'producao' && order.total_estimated_time ? (order.has_terceirizado ? `<div style="font-size:0.8rem; color:#1d4ed8; margin-top:4px; font-weight:600;">📅 ${order.total_estimated_time} dia${order.total_estimated_time == 1 ? '' : 's'} úteis</div>` : `<div style="font-size:0.8rem; color:#7c3aed; margin-top:4px; font-weight:600;">⏱️ ${formatDuration(order.total_estimated_time)}</div>`) : ''}
+                    <div style="display:flex; gap:0.5rem; flex-wrap:wrap; margin-top:4px;">
+                        ${order.status === 'producao' && order.total_estimated_time ? (order.has_terceirizado ? `<div style="font-size:0.8rem; color:#1d4ed8; font-weight:600;">📅 ${order.total_estimated_time} dia${order.total_estimated_time == 1 ? '' : 's'} úteis</div>` : `<div style="font-size:0.8rem; color:#7c3aed; font-weight:600;">⏱️ ${formatDuration(order.total_estimated_time)}</div>`) : ''}
+                        ${order.ai_estimated_time ? `<div style="font-size:0.8rem; color:#059669; font-weight:700; background:#f0fdf4; padding:1px 6px; border-radius:6px; border:1px solid #bbf7d0;">⏱️ Est. Produção: ${formatDuration(order.ai_estimated_time)}</div>` : ''}
+                    </div>
                     ${pieHtml}
                     <div class="card-footer">
                         <span>${order.created_by_name?.split(' ')[0]}</span>
@@ -721,8 +771,12 @@ export const render = () => {
         ['aguardando_aceite', 'producao'].forEach(status => {
             const statsEl = container.querySelector(`#col-${status} .column-stats`);
             const totalMin = columnTimes[status];
-            if (statsEl && totalMin > 0) {
-                statsEl.textContent = `⏱️ ${formatDuration(totalMin)}`;
+            const totalAIMin = columnAITimes[status];
+            if (statsEl) {
+                let html = '';
+                if (totalMin > 0) html += `⏱️ ${formatDuration(totalMin)}`;
+                if (totalAIMin > 0) html += (html ? ' | ' : '') + `⏱️ Produção: ${formatDuration(totalAIMin)}`;
+                statsEl.innerHTML = html;
             }
         });
     };
@@ -749,8 +803,8 @@ export const render = () => {
             const formatCheckDate = (val) => {
                 if (!val || val === true) return '';
                 try {
-                    const d = new Date(val);
-                    return `<span style="font-size:0.75rem; color:#6b7280; margin-left:auto;">✅ ${d.toLocaleDateString()} ${d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>`;
+                    const d = window.parseDBDate(val);
+                    return `<span style="font-size:0.75rem; color:#6b7280; margin-left:auto;">✅ ${d.toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' })} ${d.toLocaleTimeString('pt-BR', { timeZone: 'America/Sao_Paulo', hour: '2-digit', minute: '2-digit' })}</span>`;
                 } catch { return ''; }
             };
 
@@ -764,18 +818,46 @@ export const render = () => {
             }
 
             content.innerHTML = `
-                <div class="form-group"><label>Produtos:</label>
-                    <div style="white-space:pre-line; background:#f0fdf4; padding:0.5rem; border:1px solid #bbf7d0; border-radius:4px;">${order.product_name || order.products_summary || '-'}</div>
-                </div>
-                ${order.description ? `<div class="form-group"><label>Descrição:</label> <div style="background:#f8fafc; padding:0.5rem; border-radius:4px; white-space:pre-wrap;">${order.description}</div></div>` : ''}
-                <div class="form-group" style="display:flex; gap:1rem; flex-wrap:wrap; align-items:center">
-                    <span style="padding:4px 12px; border-radius:12px; font-size:0.9rem; font-weight:600; background:#eff6ff; color:#1d4ed8;">💳 ${order.payment_method || '-'}</span>
-                    <span style="font-weight:bold; color:#7c3aed; font-size:1.1rem;">R$ ${(order.total_value || 0).toFixed(2)}</span>
-                </div>
-                <div class="form-group" style="display:flex; gap:1rem; flex-wrap:wrap; align-items:center; background:#f8fafc; padding:0.75rem; border-radius:8px; border:1px solid #e2e8f0; margin-top:1rem;">
-                    <div><label style="color:#64748b; font-size:0.85rem;">Data de Lançamento:</label> <div style="font-weight:600;">${new Date(order.created_at).toLocaleDateString()}</div></div>
-                    <div><label style="color:#64748b; font-size:0.85rem;">Horário de Lançamento:</label> <div style="font-weight:600;">${new Date(order.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div></div>
-                    ${order.deadline_at ? `<div><label style="color:#64748b; font-size:0.85rem;">Data de Entrega (${order.deadline_type || 'Prazo'}):</label> <div style="font-weight:600; color:#059669;">${new Date(order.deadline_at).toLocaleDateString()} ${new Date(order.deadline_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div></div>` : ''}
+                <div style="display:grid; grid-template-columns: 1fr; gap:1.25rem;">
+                    <div style="background: rgba(139, 92, 246, 0.04); border: 1px solid rgba(139, 92, 246, 0.15); border-left: 4px solid var(--primary); padding: 1.25rem; border-radius: 16px;">
+                        <span style="font-size: 0.8rem; font-weight: 800; color: var(--primary); text-transform: uppercase; letter-spacing: 0.05em; display:block; margin-bottom:0.5rem;">📦 Produtos do Pedido</span>
+                        <div style="white-space:pre-line; color: #1e1b4b; font-size: 1.05rem; font-weight: 600; line-height: 1.5;">${order.product_name || order.products_summary || '-'}</div>
+                    </div>
+                    ${order.description ? `
+                    <div style="background: #f8fafc; border: 1px solid #e2e8f0; padding: 1.25rem; border-radius: 16px;">
+                        <span style="font-size: 0.8rem; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em; display:block; margin-bottom:0.5rem;">📝 Descrição / Observações</span>
+                        <div style="white-space:pre-wrap; color: #334155; font-size: 0.95rem; line-height: 1.6; font-weight:500;">${order.description}</div>
+                    </div>` : ''}
+                    
+                    <div style="display:flex; gap:1rem; flex-wrap:wrap;">
+                        <div style="flex:1; background: #fff; border: 1px solid #e2e8f0; padding: 1.25rem; border-radius: 16px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); display:flex; flex-direction:column; justify-content:center;">
+                            <span style="font-size: 0.75rem; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em;">Pagamento</span>
+                            <div style="font-size:1.1rem; font-weight:800; color:#1d4ed8; margin-top:0.25rem;">💳 ${order.payment_method || '-'}</div>
+                        </div>
+                        <div style="flex:1; background: linear-gradient(135deg, #4c1d95, var(--primary)); padding: 1.25rem; border-radius: 16px; box-shadow: 0 8px 20px rgba(139, 92, 246, 0.3); color: white; display:flex; flex-direction:column; justify-content:center;">
+                            <span style="font-size: 0.75rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; opacity: 0.8;">Valor Total</span>
+                            <div style="font-size:1.6rem; font-weight:800; margin-top:0.25rem; letter-spacing:-0.02em;">R$ ${(order.total_value || 0).toFixed(2)}</div>
+                        </div>
+                        ${order.ai_estimated_time ? `
+                        <div style="background: #f0fdf4; border: 1px solid #bbf7d0; padding: 1.25rem; border-radius: 16px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); display:flex; flex-direction:column; justify-content:center;">
+                            <span style="font-size: 0.75rem; font-weight: 800; color: #166534; text-transform: uppercase; letter-spacing: 0.05em;">⏱️ Estimativa de Produção</span>
+                            <div style="font-size:1.1rem; font-weight:800; color:#15803d; margin-top:0.25rem;">${formatDuration(order.ai_estimated_time)}</div>
+                            <small style="color:#166534; font-size:0.7rem; margin-top:4px; white-space:pre-line;">${order.production_notes || ''}</small>
+                        </div>
+                        ` : ''}
+                    </div>
+
+                    <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; background: #f8fafc; padding: 1.25rem; border-radius: 16px; border: 1px solid #e2e8f0;">
+                        <div>
+                            <span style="font-size: 0.75rem; font-weight: 800; color: #94a3b8; text-transform: uppercase; display:block; margin-bottom:0.25rem;">📅 Lançamento</span>
+                            <div style="font-weight:700; color:#334155;">${window.parseDBDate(order.created_at).toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' })} às ${window.parseDBDate(order.created_at).toLocaleTimeString('pt-BR', { timeZone: 'America/Sao_Paulo', hour: '2-digit', minute: '2-digit' })}</div>
+                        </div>
+                        ${order.deadline_at ? `
+                        <div>
+                            <span style="font-size: 0.75rem; font-weight: 800; color: #94a3b8; text-transform: uppercase; display:block; margin-bottom:0.25rem;">🚀 Previsão (${order.deadline_type || 'Prazo'})</span>
+                            <div style="font-weight:800; color:#059669;">${window.parseDBDate(order.deadline_at).toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' })} às ${window.parseDBDate(order.deadline_at).toLocaleTimeString('pt-BR', { timeZone: 'America/Sao_Paulo', hour: '2-digit', minute: '2-digit' })}</div>
+                        </div>` : ''}
+                    </div>
                 </div>
                 ${order.status === 'producao' ? `
                     <div style="margin-top:1rem; padding:0.75rem; background:#f9fafb; border-radius:8px; border:1px solid #e5e7eb">
@@ -808,10 +890,10 @@ export const render = () => {
         }
 
         if (order.status === 'aguardando_aceite') {
-            const deadlineDate = order.deadline_at ? new Date(order.deadline_at) : null;
+            const deadlineDate = order.deadline_at ? window.parseDBDate(order.deadline_at) : null;
             const now = new Date();
             const isExpired = deadlineDate && now > deadlineDate;
-            const deadlineLabel = deadlineDate ? deadlineDate.toLocaleDateString() + ' ' + deadlineDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'N/A';
+            const deadlineLabel = deadlineDate ? deadlineDate.toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' }) + ' ' + deadlineDate.toLocaleTimeString('pt-BR', { timeZone: 'America/Sao_Paulo', hour: '2-digit', minute: '2-digit' }) : 'N/A';
 
             if (isVendedor) {
                 // Vendedor: read-only, just show status
@@ -847,8 +929,8 @@ export const render = () => {
             const formatCheckDate = (val) => {
                 if (!val || val === true) return '';
                 try {
-                    const d = new Date(val);
-                    return `<span style="font-size:0.75rem; color:#6b7280; margin-left:auto;">✅ ${d.toLocaleDateString()} ${d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>`;
+                    const d = window.parseDBDate(val);
+                    return `<span style="font-size:0.75rem; color:#6b7280; margin-left:auto;">✅ ${d.toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' })} ${d.toLocaleTimeString('pt-BR', { timeZone: 'America/Sao_Paulo', hour: '2-digit', minute: '2-digit' })}</span>`;
                 } catch { return ''; }
             };
 
@@ -932,7 +1014,7 @@ export const render = () => {
             const _colorEb = _pctEb === 100 ? '#22c55e' : _pctEb >= 50 ? '#f59e0b' : '#ef4444';
             const _fmtEb = (val) => {
                 if (!val || val === true) return '';
-                try { const d = new Date(val); return `<span style="font-size:0.75rem;color:#6b7280;margin-left:auto;">✅ ${d.toLocaleDateString()} ${d.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}</span>`; } catch { return ''; }
+                try { const d = window.parseDBDate(val); return `<span style="font-size:0.75rem;color:#6b7280;margin-left:auto;">✅ ${d.toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' })} ${d.toLocaleTimeString('pt-BR', { timeZone: 'America/Sao_Paulo', hour: '2-digit', minute: '2-digit' })}</span>`; } catch { return ''; }
             };
             actions = `
                <div style="margin-top:1rem; padding:0.75rem; background:#f9fafb; border-radius:8px; border:1px solid #e5e7eb">
@@ -973,7 +1055,7 @@ export const render = () => {
             const _colorFin = _pctFin === 100 ? '#22c55e' : _pctFin >= 50 ? '#f59e0b' : '#ef4444';
             const _fmtFin = (val) => {
                 if (!val || val === true) return '';
-                try { const d = new Date(val); return `<span style="font-size:0.75rem;color:#6b7280;margin-left:auto;">✅ ${d.toLocaleDateString()} ${d.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}</span>`; } catch { return ''; }
+                try { const d = window.parseDBDate(val); return `<span style="font-size:0.75rem;color:#6b7280;margin-left:auto;">✅ ${d.toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' })} ${d.toLocaleTimeString('pt-BR', { timeZone: 'America/Sao_Paulo', hour: '2-digit', minute: '2-digit' })}</span>`; } catch { return ''; }
             };
             actions = `
                <div style="margin-top:1rem; padding:0.75rem; background:#f9fafb; border-radius:8px; border:1px solid #e5e7eb">
@@ -1001,7 +1083,7 @@ export const render = () => {
             const _colorFin2 = _pctFin2 === 100 ? '#22c55e' : _pctFin2 >= 50 ? '#f59e0b' : '#ef4444';
             const _fmtFin2 = (val) => {
                 if (!val || val === true) return '';
-                try { const d = new Date(val); return `<span style="font-size:0.75rem;color:#6b7280;margin-left:auto;">✅ ${d.toLocaleDateString()} ${d.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}</span>`; } catch { return ''; }
+                try { const d = window.parseDBDate(val); return `<span style="font-size:0.75rem;color:#6b7280;margin-left:auto;">✅ ${d.toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' })} ${d.toLocaleTimeString('pt-BR', { timeZone: 'America/Sao_Paulo', hour: '2-digit', minute: '2-digit' })}</span>`; } catch { return ''; }
             };
             actions = `
                <div style="margin-top:1rem; padding:0.75rem; background:#f9fafb; border-radius:8px; border:1px solid #e5e7eb">
@@ -1019,28 +1101,38 @@ export const render = () => {
         }
 
         content.innerHTML = `
-            <div style="display:flex; justify-content:space-between; align-items:start">
-                <div>
-                     <div class="form-group"><label>Cliente:</label> <div>${order.client_name}${order.client_phone ? ` <span style="color:#64748b; font-size:0.9em;">— 📞 ${order.client_phone}</span>` : ''}</div></div>
-
-                     <div class="form-group">
-                        <label>Produtos:</label> 
-                        <div style="white-space: pre-line; background: #f0fdf4; padding: 0.5rem; border: 1px solid #bbf7d0; border-radius: 4px;">${order.product_name}</div>
-                     </div>
+            <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:1.5rem; gap: 1rem; flex-wrap: wrap;">
+                <div style="flex:1;">
+                     <div style="font-size:0.8rem; font-weight:800; color:#94a3b8; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:0.25rem;">👤 Cliente</div>
+                     <div style="font-size:1.4rem; font-weight:800; color:var(--primary); line-height:1.2;">${order.client_name}</div>
+                     ${order.client_phone ? `<div style="font-size:0.95rem; font-weight:600; color:#64748b; margin-top:0.25rem;">📞 ${order.client_phone}</div>` : ''}
                 </div>
-                <div style="display:flex; gap:0.5rem">
-                    <button class="btn btn-sm btn-secondary btn-reprint" title="Reimprimir Notinha" style="height:fit-content; background:#f8fafc; color:#475569; border:1px solid #cbd5e1;">
+                <div style="display:flex; gap:0.5rem; flex-wrap: wrap;">
+                    <button class="btn btn-secondary btn-reprint" title="Reimprimir Notinha" style="padding:0.5rem 0.85rem; border-radius:12px; background:#fff; border:1px solid #e2e8f0; color:#475569; font-size:0.85rem; font-weight:800; box-shadow:0 2px 8px rgba(0,0,0,0.03); transition:all 0.2s;">
                         🖨️ Notinha
                     </button>
-                    <button class="btn btn-sm btn-secondary btn-nf" title="Copiar Dados Nota Fiscal" style="height:fit-content; background:#f8fafc; color:#475569; border:1px solid #cbd5e1;">
-                        📄 Dados NF
+                    <button class="btn btn-secondary btn-nf" title="Copiar Dados Nota Fiscal" style="padding:0.5rem 0.85rem; border-radius:12px; background:#fff; border:1px solid #e2e8f0; color:#475569; font-size:0.85rem; font-weight:800; box-shadow:0 2px 8px rgba(0,0,0,0.03); transition:all 0.2s;">
+                        📄 Notas
                     </button>
-                    <button class="btn btn-sm btn-secondary btn-whatsapp" title="Copiar para WhatsApp" style="height:fit-content">
-                        📱 Copiar
+                    <button class="btn btn-primary btn-whatsapp" title="Copiar para WhatsApp" style="padding:0.5rem 1rem; border-radius:12px; font-size:0.85rem; font-weight:800; box-shadow:0 4px 15px rgba(139,92,246,0.3);">
+                        📱 Copiar WPP
                     </button>
                 </div>
             </div>
-            <div class="form-group"><label>Descrição:</label> <div style="background:#f8fafc; padding:0.5rem; border-radius:4px; white-space:pre-wrap;">${order.description}</div></div>
+
+            <div style="display:grid; grid-template-columns: 1fr; gap:1.25rem; margin-bottom:1.5rem;">
+                <div style="background: rgba(139, 92, 246, 0.04); border: 1px solid rgba(139, 92, 246, 0.15); border-left: 4px solid var(--primary); padding: 1.25rem; border-radius: 16px;">
+                    <span style="font-size: 0.8rem; font-weight: 800; color: var(--primary); text-transform: uppercase; letter-spacing: 0.05em; display:block; margin-bottom:0.5rem;">📦 Produtos do Pedido</span>
+                    <div style="white-space:pre-line; color: #1e1b4b; font-size: 1.05rem; font-weight: 600; line-height: 1.5;">${order.product_name}</div>
+                </div>
+                
+                ${order.description ? `
+                <div style="background: #f8fafc; border: 1px solid #e2e8f0; padding: 1.25rem; border-radius: 16px;">
+                    <span style="font-size: 0.8rem; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em; display:block; margin-bottom:0.5rem;">📝 Descrição / Observações</span>
+                    <div style="white-space:pre-wrap; color: #334155; font-size: 0.95rem; line-height: 1.6; font-weight:500;">${order.description}</div>
+                </div>` : ''}
+            </div>
+
             ${order.attachments ? `<div class="form-group"><label>📎 Anexos:</label>
                 <div style="display:flex; gap:0.5rem; flex-wrap:wrap; margin-top:0.25rem;">
                     ${order.attachments.split(',').filter(f => f).map(f => {
@@ -1072,16 +1164,37 @@ export const render = () => {
                     }).join('')}
                 </div>
             </div>` : ''}
-            <div class="form-group" style="display:flex; gap:1rem; flex-wrap:wrap; align-items:center">
-                <div><label>Valor Final:</label> <b style="color:#2563eb">R$ ${order.total_value}</b></div>
-                ${order.discount_value > 0 ? `<div><label>Desconto:</label> <b style="color:#ef4444">- R$ ${order.discount_value.toFixed(2)}</b></div>` : ''}
-                <div><label>Pagamento:</label> ${order.payment_method}</div>
-                ${order.has_terceirizado && order.total_estimated_time ? `<div><label>Prazo de Entrega (Terceirizado):</label> <span style="display:inline-block; background:#eff6ff; border:1px solid #bfdbfe; border-radius:10px; padding:2px 10px; font-size:0.85em; color:#1d4ed8; font-weight:600;">📅 ${order.total_estimated_time} dia${order.total_estimated_time == 1 ? '' : 's'} úteis</span></div>` : ''}
+            <div style="display:flex; gap:1rem; flex-wrap:wrap; margin-bottom:1.5rem;">
+                <div style="flex:1; background: #fff; border: 1px solid #e2e8f0; padding: 1.25rem; border-radius: 16px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); display:flex; flex-direction:column; justify-content:center;">
+                    <span style="font-size: 0.75rem; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em;">Pagamento</span>
+                    <div style="font-size:1.1rem; font-weight:800; color:#1d4ed8; margin-top:0.25rem;">💳 ${order.payment_method}</div>
+                </div>
+                ${order.discount_value > 0 ? `
+                <div style="flex:1; background: #fef2f2; border: 1px solid #fecaca; padding: 1.25rem; border-radius: 16px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); display:flex; flex-direction:column; justify-content:center;">
+                    <span style="font-size: 0.75rem; font-weight: 800; color: #ef4444; text-transform: uppercase; letter-spacing: 0.05em;">Desconto</span>
+                    <div style="font-size:1.1rem; font-weight:800; color:#b91c1c; margin-top:0.25rem;">- R$ ${order.discount_value.toFixed(2)}</div>
+                </div>` : ''}
+                <div style="flex:1.5; background: linear-gradient(135deg, #4c1d95, var(--primary)); padding: 1.25rem; border-radius: 16px; box-shadow: 0 8px 20px rgba(139, 92, 246, 0.3); color: white; display:flex; flex-direction:column; justify-content:center;">
+                    <span style="font-size: 0.75rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; opacity: 0.8;">Valor Final</span>
+                    <div style="font-size:1.8rem; font-weight:800; margin-top:0.25rem; letter-spacing:-0.02em;">R$ ${order.total_value}</div>
+                </div>
             </div>
-            <div class="form-group" style="display:flex; gap:1rem; flex-wrap:wrap; align-items:center; background:#f8fafc; padding:0.75rem; border-radius:8px; border:1px solid #e2e8f0;">
-                <div><label style="color:#64748b; font-size:0.85rem;">Data de Lançamento:</label> <div style="font-weight:600;">${new Date(order.created_at).toLocaleDateString()}</div></div>
-                <div><label style="color:#64748b; font-size:0.85rem;">Horário de Lançamento:</label> <div style="font-weight:600;">${new Date(order.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div></div>
-                ${order.deadline_at ? `<div><label style="color:#64748b; font-size:0.85rem;">Data de Entrega (${order.deadline_type || 'Prazo'}):</label> <div style="font-weight:600; color:#059669;">${new Date(order.deadline_at).toLocaleDateString()} ${new Date(order.deadline_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div></div>` : ''}
+
+            <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; background: #f8fafc; padding: 1.25rem; border-radius: 16px; border: 1px solid #e2e8f0;">
+                <div>
+                    <span style="font-size: 0.75rem; font-weight: 800; color: #94a3b8; text-transform: uppercase; display:block; margin-bottom:0.25rem;">📅 Lançamento</span>
+                    <div style="font-weight:700; color:#334155;">${window.parseDBDate(order.created_at).toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' })} às ${window.parseDBDate(order.created_at).toLocaleTimeString('pt-BR', { timeZone: 'America/Sao_Paulo', hour: '2-digit', minute: '2-digit' })}</div>
+                </div>
+                ${order.deadline_at ? `
+                <div>
+                    <span style="font-size: 0.75rem; font-weight: 800; color: #94a3b8; text-transform: uppercase; display:block; margin-bottom:0.25rem;">🚀 Entrega (${order.deadline_type || 'Prazo'})</span>
+                    <div style="font-weight:800; color:#059669;">${window.parseDBDate(order.deadline_at).toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' })} às ${window.parseDBDate(order.deadline_at).toLocaleTimeString('pt-BR', { timeZone: 'America/Sao_Paulo', hour: '2-digit', minute: '2-digit' })}</div>
+                </div>` : ''}
+                ${order.has_terceirizado && order.total_estimated_time ? `
+                <div>
+                    <span style="font-size: 0.75rem; font-weight: 800; color: #94a3b8; text-transform: uppercase; display:block; margin-bottom:0.25rem;">🏭 Prazo Terceirizado</span>
+                    <div style="font-weight:800; color:#1d4ed8; background:#eff6ff; padding:2px 8px; border-radius:6px; display:inline-block;">${order.total_estimated_time} dia${order.total_estimated_time == 1 ? '' : 's'} úteis</div>
+                </div>` : ''}
             </div>
             ${actions}
             <div style="margin-top: 1rem; border-top: 1px solid #eee; padding-top: 1rem;">
@@ -1167,7 +1280,7 @@ export const render = () => {
                 `*Valor Total:* R$ ${(order.total_value || 0).toFixed(2)}\n` +
                 `*Itens:*\n - ${itemsFormatted}`;
 
-            navigator.clipboard.writeText(text).then(() => {
+            window.copyTextToClipboard(text).then(() => {
                 alert('Dados para Nota Fiscal copiados!');
             });
         };
@@ -1178,14 +1291,14 @@ export const render = () => {
             const itemsFormatted = order.product_name.replace(/, /g, '\n- ');
 
             const text = `* Pedido #${getOrderNum(order)} *\n` +
-                `* Data:* ${new Date(order.created_at).toLocaleString()}\n` +
+                `* Data:* ${window.parseDBDate(order.created_at).toLocaleString()}\n` +
                 `* Cliente:* ${order.client_name}\n` +
                 `* Itens:*\n - ${itemsFormatted}\n` +
                 `* Valor:* R$ ${order.total_value}\n` +
                 `* Status:* ${order.status.replace('_', ' ').toUpperCase()}\n` +
                 `* Pagamento:* ${order.payment_method}`;
 
-            navigator.clipboard.writeText(text).then(() => {
+            window.copyTextToClipboard(text).then(() => {
                 alert('Copiado para o WhatsApp!');
             });
         };
@@ -1261,7 +1374,7 @@ export const render = () => {
                         const dateSpan = document.createElement('span');
                         dateSpan.className = 'check-date';
                         dateSpan.style.cssText = 'font-size:0.75rem; color:#6b7280; margin-left:auto;';
-                        dateSpan.textContent = `✅ ${d.toLocaleDateString()} ${d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
+                        dateSpan.textContent = `✅ ${d.toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' })} ${d.toLocaleTimeString('pt-BR', { timeZone: 'America/Sao_Paulo', hour: '2-digit', minute: '2-digit' })}`;
                         label.appendChild(dateSpan);
                     } else {
                         label.style.background = '#fff';
@@ -1452,6 +1565,13 @@ export const render = () => {
             loadComments(order.id);
         };
 
+        // Remove legacy (i) info icon from comments header (fix for browser cache)
+        const commentsH4 = container.querySelector('.comments-section h4');
+        if (commentsH4) {
+            commentsH4.querySelectorAll('span').forEach(s => s.remove());
+            commentsH4.textContent = 'Comentários';
+        }
+
         modal.classList.add('open');
     };
 
@@ -1462,7 +1582,7 @@ export const render = () => {
         list.innerHTML = data.map(c => `
             <div class="comment">
                 <span class="comment-author">${c.user_name}</span>
-                <span class="comment-time">${new Date(c.created_at).toLocaleString()}</span>
+                <span class="comment-time">${window.parseDBDate(c.created_at).toLocaleString()}</span>
                 <div class="comment-text">${c.message}</div>
             </div>
         `).join('');
@@ -2246,7 +2366,7 @@ export const render = () => {
                 summary += `\n*Total:* ${total}\n` +
                     `*Pagamento:* ${payment}`;
 
-                navigator.clipboard.writeText(summary).then(() => {
+                window.copyTextToClipboard(summary).then(() => {
                     alert(`Pedido criado! Resumo copiado para a área de transferência.\nID Grupo: ${json.group_id}`);
                 }).catch(err => {
                     console.error('Auto-copy failed', err);
@@ -2293,7 +2413,7 @@ export const render = () => {
             }
             archivedList.innerHTML = data.map(o => `
                 <div class="card" style="border-left: 4px solid #94a3b8; opacity:0.85;">
-                    <div class="card-header">#${getOrderNum(o)} - ${new Date(o.created_at).toLocaleDateString('pt-BR')}</div>
+                    <div class="card-header">#${getOrderNum(o)} - ${window.parseDBDate(o.created_at).toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' })}</div>
                     <div class="card-title">${o.client_name || 'Cliente?'}</div>
                     <div class="card-detail" style="font-size:0.85rem; color:#555;">${o.product_name || o.products_summary || '-'}</div>
                     <div class="card-footer">

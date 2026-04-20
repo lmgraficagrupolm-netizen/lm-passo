@@ -38,7 +38,7 @@ exports.register = (req, res) => {
 };
 
 exports.getAllUsers = (req, res) => {
-    db.all("SELECT id, username, name, role FROM users ORDER BY name", [], (err, rows) => {
+    db.all("SELECT id, username, name, role, avatar FROM users ORDER BY name", [], (err, rows) => {
         if (err) return res.status(500).json({ error: err.message });
         res.json({ data: rows });
     });
@@ -82,5 +82,17 @@ exports.deleteUser = (req, res) => {
         if (err) return res.status(500).json({ error: err.message });
         if (this.changes === 0) return res.status(404).json({ error: 'Usuário não encontrado' });
         res.json({ message: 'Usuário excluído com sucesso' });
+    });
+};
+
+exports.uploadAvatar = (req, res) => {
+    if (!req.file) {
+        return res.status(400).json({ error: 'Nenhuma imagem enviada.' });
+    }
+    const avatarUrl = `/uploads/${req.file.filename}`;
+    db.run("UPDATE users SET avatar = ? WHERE id = ?", [avatarUrl, req.params.id], function (err) {
+        if (err) return res.status(500).json({ error: err.message });
+        if (this.changes === 0) return res.status(404).json({ error: 'Usuário não encontrado' });
+        res.json({ message: 'Avatar atualizado com sucesso', avatar: avatarUrl });
     });
 };

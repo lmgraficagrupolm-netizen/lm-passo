@@ -13,8 +13,12 @@ export const render = () => {
     };
 
     container.innerHTML = `
-        <div class="view-header">
-            <div class="view-title">📋 Meus Pedidos</div>
+        <!-- Header -->
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 2rem;">
+            <div style="display:flex; flex-direction:column; gap:0.2rem;">
+                <h2 style="font-size: 1.8rem; font-weight: 900; background: linear-gradient(135deg, var(--primary), #4c1d95); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin:0; letter-spacing: -0.03em;">📋 Meus Pedidos</h2>
+                <p style="color: #64748b; margin: 0; font-size: 0.95rem; font-weight:500; white-space: nowrap;">Acompanhe o andamento dos seus pedidos em produção.</p>
+            </div>
         </div>
 
         <!-- Summary Cards -->
@@ -91,7 +95,7 @@ export const render = () => {
 
             listEl.innerHTML = data.map(order => {
                 const s = statusLabels[order.status] || { label: order.status, color: '#6b7280', bg: '#f9fafb', icon: '❓' };
-                const createdDate = new Date(order.created_at).toLocaleDateString('pt-BR');
+                const createdDate = window.parseDBDate(order.created_at).toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' });
 
                 // Checklist progress
                 let progressHtml = '';
@@ -125,12 +129,12 @@ export const render = () => {
                 // Deadline info
                 let deadlineHtml = '';
                 if (order.deadline_at && ['aguardando_aceite', 'producao'].includes(order.status)) {
-                    const dl = new Date(order.deadline_at);
+                    const dl = window.parseDBDate(order.deadline_at);
                     const now = new Date();
                     const isExpired = now > dl;
                     deadlineHtml = `
                         <div style="font-size:0.8rem; margin-top:0.4rem; color:${isExpired ? '#dc2626' : '#059669'}; font-weight:600;">
-                            📅 Prazo: ${dl.toLocaleDateString('pt-BR')} ${isExpired ? '(Atrasado!)' : ''}
+                            📅 Prazo: ${dl.toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' })} ${isExpired ? '(Atrasado!)' : ''}
                         </div>
                     `;
                 }
@@ -141,6 +145,7 @@ export const render = () => {
                             <div style="flex:1; min-width:200px;">
                                 <div style="font-size:0.8rem; color:#94a3b8; margin-bottom:0.25rem;">📅 ${createdDate}</div>
                                 <div style="font-weight:700; font-size:1rem; color:#1e293b; margin-bottom:0.25rem;">${order.products_summary || 'Pedido'}</div>
+                                ${order.event_name ? `<div style="font-size:0.85rem; font-weight:600; color:#8b5cf6; margin-bottom:0.2rem;">🎉 Evento: ${order.event_name}</div>` : ''}
                                 ${order.description ? `<div style="font-size:0.85rem; color:#64748b; white-space:pre-wrap;">${order.description}</div>` : ''}
                                 ${deadlineHtml}
                             </div>

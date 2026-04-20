@@ -1,4 +1,6 @@
 const db = require('../database/db');
+const { brasiliaDatetime, brasiliaISO } = require('../utils/dateHelper');
+const { calculateProductionTime } = require('../utils/production_calculator');
 
 // Helper to calculate deadline (dias úteis)
 const calculateDeadline = (days) => {
@@ -24,11 +26,11 @@ exports.getAllOrders = (req, res) => {
         mu.name as moved_by_name,
         COALESCE(o.products_summary, p.name) as product_name,
         COALESCE(
-            (SELECT SUM(CAST(p2.production_time AS INTEGER) * oi.quantity) 
+            (SELECT SUM(CAST(p2.production_time AS REAL) * oi.quantity) 
              FROM order_items oi 
              JOIN products p2 ON oi.product_id = p2.id 
              WHERE oi.order_id = o.id),
-            (SELECT CAST(p.production_time AS INTEGER) 
+            (SELECT CAST(p.production_time AS REAL) 
              FROM products p 
              WHERE p.id = o.product_id),
             0
@@ -51,7 +53,7 @@ exports.getAllOrders = (req, res) => {
     // Simple verification (in production we would use the token user info directly)
     // If role is Vendedor, maybe see only their own? For now, open or filter if requested.
 
-    sql += " ORDER BY o.created_at DESC";
+    sql += " ORDER BY CASE WHEN o.status = 'finalizado' THEN COALESCE(o.moved_at, o.created_at) ELSE o.created_at END DESC";
 
     db.all(sql, [], (err, rows) => {
         if (err) return res.status(500).json({ error: err.message });
@@ -61,6 +63,20 @@ exports.getAllOrders = (req, res) => {
             checklist: r.checklist ? JSON.parse(r.checklist) : { arte: false, impressao: false, corte: false, embalagem: false }
         }));
         res.json({ data });
+
+        // Auto-archive old finalizado orders (>30)
+        db.run(`
+            UPDATE orders 
+            SET status = 'arquivado' 
+            WHERE id IN (
+                SELECT id FROM orders 
+                WHERE status = 'finalizado' 
+                ORDER BY COALESCE(moved_at, created_at) DESC 
+                LIMIT -1 OFFSET 30
+            )
+        `, (err) => {
+            if (err) console.error("Error auto-archiving orders:", err);
+        });
     });
 };
 
@@ -137,7 +153,6 @@ exports.createOrder = (req, res) => {
                     return res.status(500).json({ error: errors.join(', ') });
                 }
 
-                // Se algum item é terceirizado, forçar prazo de 5 dias
                 const hasTerceirizado = readyItems.some(i => i.is_terceirizado);
                 const deadline_days = hasTerceirizado ? 5 : (deadline_option === '1D' ? 1 : 3);
                 const effective_deadline_option = hasTerceirizado ? '5D' : deadline_option;
@@ -146,95 +161,81 @@ exports.createOrder = (req, res) => {
                 const finalTotal = total_value || 0;
                 const finalDiscount = discount_value || 0;
                 const finalInternal = is_internal ? 1 : 0;
-                const finalTerceirizado = hasTerceirizado ? 1 : 0;
                 const finalEventName = event_name || '';
 
-                const sqlOrder = `INSERT INTO orders (client_id, description, total_value, discount_value, payment_method, created_by, status, deadline_type, deadline_at, products_summary, is_internal, is_terceirizado, event_name, payment_code) VALUES (?, ?, ?, ?, ?, ?, 'aguardando_aceite', ?, ?, ?, ?, ?, ?, ?)`;
+                // === ESTIMATIVA DE PRODUÇÃO (LOCAL) ===
+                const estData = calculateProductionTime(readyItems);
+                const aiMinutes = estData.minutes;
+                const aiDescription = estData.breakdown;
 
-                db.run(sqlOrder, [client_id, description, finalTotal, finalDiscount, payment_method, created_by, effective_deadline_option, deadline_at, summaryStr, finalInternal, finalTerceirizado, finalEventName, payment_code || ''], function (err) {
-                    if (err) {
-                        db.run("ROLLBACK");
-                        return res.status(500).json({ error: err.message });
-                    }
+                const sqlOrder = `INSERT INTO orders (client_id, description, total_value, discount_value, payment_method, created_by, status, deadline_type, deadline_at, products_summary, is_internal, is_terceirizado, event_name, payment_code, ai_estimated_time, production_notes) VALUES (?, ?, ?, ?, ?, ?, 'aguardando_aceite', ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
 
-                    const orderId = this.lastID;
+                db.run(sqlOrder, [client_id, description, finalTotal, finalDiscount, payment_method, created_by, effective_deadline_option, deadline_at, summaryStr, finalInternal, hasTerceirizado ? 1 : 0, finalEventName, payment_code || '', aiMinutes, aiDescription], function (err) {
+                        if (err) {
+                            db.run("ROLLBACK");
+                            return res.status(500).json({ error: err.message });
+                        }
 
-                    const sqlItem = `INSERT INTO order_items (order_id, product_id, quantity, price, product_snapshot_name, color_variant_id, color_name) VALUES (?, ?, ?, ?, ?, ?, ?)`;
-                    let insertedItems = 0;
+                        const orderId = this.lastID;
+                        const sqlItem = `INSERT INTO order_items (order_id, product_id, quantity, price, product_snapshot_name, color_variant_id, color_name) VALUES (?, ?, ?, ?, ?, ?, ?)`;
+                        let insertedItems = 0;
 
-                    readyItems.forEach(item => {
-                        db.run(sqlItem, [orderId, item.product_id, item.quantity, item.price, item.name, item.color_variant_id, item.color_name], (err) => {
-                            if (err) {
-                                console.error("Item insert failed", err);
-                            }
-                            insertedItems++;
-                            if (insertedItems === readyItems.length) {
-                                // === RESERVAR ESTOQUE ===
-                                const reserveStock = (afterReserve) => {
-                                    if (finalInternal) { afterReserve(); return; } // serviço interno não reserva estoque
-                                    let reserveDone = 0;
-                                    readyItems.forEach(ri => {
-                                        if (ri.color_variant_id) {
-                                            // Pulseira: debitar da variante de cor
-                                            db.run(
-                                                "UPDATE product_color_variants SET quantity = MAX(0, quantity - ?) WHERE id = ?",
-                                                [ri.quantity, ri.color_variant_id],
-                                                () => {
+                        readyItems.forEach(item => {
+                            db.run(sqlItem, [orderId, item.product_id, item.quantity, item.price, item.name, item.color_variant_id, item.color_name], (err) => {
+                                insertedItems++;
+                                if (insertedItems === readyItems.length) {
+                                    // === RESERVAR ESTOQUE ===
+                                    const reserveStock = (afterReserve) => {
+                                        if (finalInternal) { afterReserve(); return; }
+                                        let reserveDone = 0;
+                                        readyItems.forEach(ri => {
+                                            if (ri.color_variant_id) {
+                                                db.run("UPDATE product_color_variants SET quantity = MAX(0, quantity - ?) WHERE id = ?", [ri.quantity, ri.color_variant_id], () => {
                                                     db.get("SELECT product_id FROM product_color_variants WHERE id = ?", [ri.color_variant_id], (err, cv) => {
                                                         if (cv) {
                                                             db.get("SELECT SUM(quantity) as total FROM product_color_variants WHERE product_id = ?", [cv.product_id], (err, row) => {
                                                                 db.run("UPDATE products SET stock = ? WHERE id = ?", [(row && row.total) || 0, cv.product_id]);
                                                             });
                                                         }
-                                                        db.run("INSERT INTO stock_movements (product_id, quantity_change, type, reason, user_id) VALUES (?, ?, 'reserva_pedido', ?, ?)",
-                                                            [ri.product_id, -ri.quantity, `Reserva Pedido #${orderId} — Cor: ${ri.color_name || ''}`, null]);
+                                                        db.run("INSERT INTO stock_movements (product_id, quantity_change, type, reason, user_id) VALUES (?, ?, 'reserva_pedido', ?, ?)", [ri.product_id, -ri.quantity, `Reserva Pedido #${orderId} — Cor: ${ri.color_name || ''}`, null]);
                                                         reserveDone++;
                                                         if (reserveDone === readyItems.length) afterReserve();
                                                     });
-                                                }
-                                            );
-                                        } else {
-                                            // Produto normal
-                                            db.run("UPDATE products SET stock = MAX(0, stock - ?) WHERE id = ?", [ri.quantity, ri.product_id], () => {
-                                                db.run("INSERT INTO stock_movements (product_id, quantity_change, type, reason, user_id) VALUES (?, ?, 'reserva_pedido', ?, ?)",
-                                                    [ri.product_id, -ri.quantity, `Reserva Pedido #${orderId}`, null]);
-                                                reserveDone++;
-                                                if (reserveDone === readyItems.length) afterReserve();
-                                            });
-                                        }
-                                    });
-                                };
+                                                });
+                                            } else {
+                                                db.run("UPDATE products SET stock = MAX(0, stock - ?) WHERE id = ?", [ri.quantity, ri.product_id], () => {
+                                                    db.run("INSERT INTO stock_movements (product_id, quantity_change, type, reason, user_id) VALUES (?, ?, 'reserva_pedido', ?, ?)", [ri.product_id, -ri.quantity, `Reserva Pedido #${orderId}`, null]);
+                                                    reserveDone++;
+                                                    if (reserveDone === readyItems.length) afterReserve();
+                                                });
+                                            }
+                                        });
+                                    };
 
-                                reserveStock(() => {
-                                    // Marcar pedido como estoque reservado
-                                    db.run("UPDATE orders SET stock_reserved = 1 WHERE id = ?", [orderId]);
-
-                                    if (finalInternal) {
-                                        let costsDone = 0;
-                                        readyItems.forEach(ci => {
-                                            const costPrice = parseFloat(ci.unit_cost) || 0;
-                                            const costAmount = costPrice * (ci.quantity || 1);
-                                            db.run(
-                                                "INSERT INTO material_cost_movements (product_id, order_id, cost_amount, quantity, description) VALUES (?, ?, ?, ?, ?)",
-                                                [ci.product_id, orderId, costAmount, ci.quantity, `Pedido Interno #${orderId} — ${ci.name}`],
-                                                () => {
+                                    reserveStock(() => {
+                                        db.run("UPDATE orders SET stock_reserved = 1 WHERE id = ?", [orderId]);
+                                        if (finalInternal) {
+                                            let costsDone = 0;
+                                            readyItems.forEach(ci => {
+                                                const costPrice = parseFloat(ci.unit_cost) || 0;
+                                                const costAmount = costPrice * (ci.quantity || 1);
+                                                db.run("INSERT INTO material_cost_movements (product_id, order_id, cost_amount, quantity, description) VALUES (?, ?, ?, ?, ?)", [ci.product_id, orderId, costAmount, ci.quantity, `Pedido Interno #${orderId} — ${ci.name}`], () => {
                                                     db.run("UPDATE products SET cost_value = COALESCE(cost_value, 0) + ? WHERE id = ?", [costAmount, ci.product_id]);
                                                     costsDone++;
                                                     if (costsDone === readyItems.length) {
                                                         db.run("COMMIT");
                                                         res.json({ message: 'Pedido interno criado com sucesso', group_id: orderId });
                                                     }
-                                                }
-                                            );
-                                        });
-                                    } else {
-                                        db.run("COMMIT");
-                                        res.json({ message: 'Pedido criado com sucesso', group_id: orderId, is_terceirizado: hasTerceirizado });
-                                    }
-                                });
-                            }
+                                                });
+                                            });
+                                        } else {
+                                            db.run("COMMIT");
+                                            res.json({ message: 'Pedido criado com sucesso', group_id: orderId, is_terceirizado: hasTerceirizado });
+                                        }
+                                    });
+                                }
+                            });
                         });
-                    });
                 });
             }
         };
@@ -288,6 +289,15 @@ exports.acceptOrder = (req, res) => {
             if (err) return res.status(500).json({ error: err.message });
             res.json({ message: 'Pedido aceito e em produção', deadline_at: order.deadline_at });
         });
+    });
+};
+exports.markAsPaid = (req, res) => {
+    const { payment_method } = req.body;
+    if (!payment_method) return res.status(400).json({ error: 'Forma de pagamento não informada.' });
+
+    db.run("UPDATE orders SET payment_method = ? WHERE id = ?", [payment_method, req.params.id], function(err) {
+        if (err) return res.status(500).json({ error: err.message });
+        res.json({ message: 'Pagamento atualizado com sucesso' });
     });
 };
 
@@ -575,7 +585,7 @@ exports.getClientOrders = (req, res) => {
     const clientId = req.params.clientId;
     const sql = `
         SELECT o.id, o.created_at, o.description, o.total_value, o.discount_value, o.payment_method,
-               o.products_summary, o.status, o.deadline_at, o.deadline_type, o.checklist, o.payment_code,
+               o.products_summary, o.status, o.deadline_at, o.deadline_type, o.checklist, o.payment_code, o.event_name,
                c.name as client_name, c.cpf as client_cpf, c.address as client_address, c.city as client_city, c.state as client_state, c.zip_code as client_zip_code
         FROM orders o
         LEFT JOIN clients c ON o.client_id = c.id

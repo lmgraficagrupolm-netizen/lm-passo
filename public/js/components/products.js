@@ -4,27 +4,37 @@ export const render = () => {
     const canEdit = !['producao', 'vendedor'].includes(currentUser.role);
 
     container.innerHTML = `
-        <div class="view-header">
-            <div class="view-title">Produtos</div>
-            ${canEdit ? '<button class="btn btn-primary" style="width: auto;" id="btn-new-product">Adicionar Produto</button>' : ''}
+        <!-- Header -->
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 2rem;">
+            <div style="display:flex; flex-direction:column; gap:0.2rem;">
+                <h2 style="font-size: 1.8rem; font-weight: 900; background: linear-gradient(135deg, var(--primary), #4c1d95); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin:0; letter-spacing: -0.03em;">Produtos</h2>
+                <p style="color: #64748b; margin: 0; font-size: 0.95rem; font-weight:500; white-space: nowrap;">Gerenciamento de catálogo, valores e estoque de materiais.</p>
+            </div>
+            ${canEdit ? `<button class="btn btn-primary" style="padding: 0.8rem 1.5rem; border-radius: 12px; font-weight:800; text-transform:uppercase; letter-spacing:0.05em; display:flex; align-items:center; gap:0.5rem; box-shadow:0 4px 15px rgba(139, 92, 246, 0.3); transition:all 0.2s;" id="btn-new-product" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='none'">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+                NOVO PRODUTO
+            </button>` : ''}
         </div>
-        <div style="background:#eff6ff; border:1px solid #bfdbfe; border-radius:6px; padding:0.75rem 1rem; margin-bottom:1rem; display:flex; align-items:center; gap:0.5rem; font-size:0.9rem; color:#1e40af;">
-            <span>📦</span>
-            <span>Cadastre os produtos aqui. Controle de estoque e cores de pulseiras na aba <a href="#" id="link-estoque" style="font-weight:bold; color:#2563eb; text-decoration:underline;">Estoque</a>.</span>
+        <div style="background: linear-gradient(135deg, rgba(239, 246, 255, 0.8), rgba(219, 234, 254, 0.5)); backdrop-filter: blur(10px); border:1px solid rgba(191, 219, 254, 0.8); border-radius:12px; padding:1rem; margin-bottom:1.5rem; display:flex; align-items:center; gap:0.75rem; font-size:0.95rem; color:#1e40af; box-shadow: 0 4px 15px rgba(0,0,0,0.02);">
+            <span style="font-size:1.5rem;">📦</span>
+            <span style="line-height:1.4;">Cadastre os produtos aqui. Controle de estoque e cores de pulseiras na aba <a href="#" id="link-estoque" style="font-weight:700; color:#2563eb; text-decoration:none; background:rgba(255,255,255,0.7); padding:2px 8px; border-radius:8px; box-shadow:0 2px 4px rgba(0,0,0,0.05); transition:all 0.2s;" onmouseover="this.style.background='#fff'; this.style.transform='translateY(-1px)';" onmouseout="this.style.background='rgba(255,255,255,0.7)'; this.style.transform='none';">Estoque</a>.</span>
         </div>
-        <div style="display:flex; gap:0.5rem; flex-wrap:wrap; margin-bottom:1rem; padding:0.75rem; background:white; border-radius:8px; border:1px solid var(--border);">
-            <input type="text" id="product-filter-search" placeholder="🔍 Buscar produto..." style="flex:2; min-width:180px; padding:0.5rem 0.75rem; border:1px solid var(--border); border-radius:6px; font-size:0.9rem;">
-            <select id="product-filter-type" style="flex:1; min-width:130px; padding:0.5rem; border:1px solid var(--border); border-radius:6px; font-size:0.9rem;">
-                <option value="">Todos os tipos</option>
+        <div style="display:flex; gap:0.75rem; flex-wrap:wrap; margin-bottom:1.5rem; padding:1.25rem; background:rgba(255,255,255,0.85); backdrop-filter:blur(12px); border-radius:16px; border:1px solid rgba(255,255,255,0.6); box-shadow:0 8px 30px rgba(0,0,0,0.04);">
+            <div style="flex:2; min-width:200px; display:flex; align-items:center; background:white; border-radius:10px; border:1px solid #e2e8f0; padding:0 1rem; box-shadow:inset 0 2px 4px rgba(0,0,0,0.02); transition:all 0.2s;" onfocusin="this.style.borderColor='var(--primary)'; this.style.boxShadow='0 0 0 3px var(--primary-glow)';" onfocusout="this.style.borderColor='#e2e8f0'; this.style.boxShadow='inset 0 2px 4px rgba(0,0,0,0.02)';">
+                <span style="opacity:0.6;">🔍</span>
+                <input type="text" id="product-filter-search" placeholder="Buscar produto..." style="width:100%; padding:0.75rem 0.5rem; border:none; background:transparent; outline:none; font-size:0.95rem;">
+            </div>
+            <select id="product-filter-type" style="flex:1; min-width:140px; padding:0.75rem 1rem; border:1px solid #e2e8f0; border-radius:10px; font-size:0.95rem; background:white; outline:none; cursor:pointer; box-shadow:var(--shadow-sm); transition:all 0.2s;" onfocus="this.style.borderColor='var(--primary)';" onblur="this.style.borderColor='#e2e8f0';">
+                <option value="">Tipos (Todos)</option>
             </select>
-            <select id="product-filter-prazo" style="flex:1; min-width:150px; padding:0.5rem; border:1px solid var(--border); border-radius:6px; font-size:0.9rem;">
-                <option value="">Todos os prazos</option>
+            <select id="product-filter-prazo" style="flex:1; min-width:160px; padding:0.75rem 1rem; border:1px solid #e2e8f0; border-radius:10px; font-size:0.95rem; background:white; outline:none; cursor:pointer; box-shadow:var(--shadow-sm); transition:all 0.2s;" onfocus="this.style.borderColor='var(--primary)';" onblur="this.style.borderColor='#e2e8f0';">
+                <option value="">Prazos (Todos)</option>
                 <option value="1d">⚡ 1 Dia (Urgente)</option>
                 <option value="3d">📅 3 Dias</option>
                 <option value="terc">🏭 Terceirizado</option>
             </select>
-            <select id="product-filter-produto" style="flex:1; min-width:160px; padding:0.5rem; border:1px solid var(--border); border-radius:6px; font-size:0.9rem;">
-                <option value="">Todos os produtos</option>
+            <select id="product-filter-produto" style="flex:1; min-width:180px; padding:0.75rem 1rem; border:1px solid #e2e8f0; border-radius:10px; font-size:0.95rem; background:white; outline:none; cursor:pointer; box-shadow:var(--shadow-sm); transition:all 0.2s;" onfocus="this.style.borderColor='var(--primary)';" onblur="this.style.borderColor='#e2e8f0';">
+                <option value="">Produto Específico</option>
             </select>
         </div>
         <table class="data-table">
@@ -205,7 +215,7 @@ export const render = () => {
             <tr>
                 <td>
                     <b>${p.name}</b>
-                    <button type="button" onclick="navigator.clipboard.writeText('LM | GRÁFICA - ${p.name.replace(/'/g, "\\'")}')" title="Copiar nome formato Financeiro" style="background:none; border:none; cursor:pointer; font-size:0.95rem; margin-left:4px; filter:grayscale(1) opacity(0.5); transition:all 0.2s;" onmouseover="this.style.filter='none'" onmouseout="this.style.filter='grayscale(1) opacity(0.5)'">📋</button>
+                    <button type="button" onclick="window.copyTextToClipboard('LM | GRÁFICA - ${p.name.replace(/'/g, "\\'")}')" title="Copiar nome formato Financeiro" style="background:none; border:none; cursor:pointer; font-size:0.95rem; margin-left:4px; filter:grayscale(1) opacity(0.5); transition:all 0.2s;" onmouseover="this.style.filter='none'" onmouseout="this.style.filter='grayscale(1) opacity(0.5)'">📋</button>
                     ${p.terceirizado ? ' <span style="background:#fef3c7; color:#92400e; padding:1px 6px; border-radius:8px; font-size:0.75em;">🏭 Terc.</span>' : ''}
                 </td>
                 <td>${p.type || '-'}</td>
@@ -610,7 +620,7 @@ export const render = () => {
                         <tbody>
                             ${data.map(c => `
                                 <tr style="border-bottom:1px solid #f1f5f9;">
-                                    <td style="padding:6px 8px; white-space:nowrap;">${new Date(c.created_at).toLocaleDateString('pt-BR')}</td>
+                                    <td style="padding:6px 8px; white-space:nowrap;">${window.parseDBDate(c.created_at).toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' })}</td>
                                     <td style="padding:6px 8px; color:#475569;">${c.description || '-'}</td>
                                     <td style="padding:6px 8px; text-align:center;">${c.quantity || 1}</td>
                                     <td style="padding:6px 8px; text-align:right; font-weight:600; color:#dc2626;">R$ ${(c.cost_amount || 0).toFixed(2)}</td>

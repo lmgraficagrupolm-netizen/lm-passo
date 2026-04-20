@@ -1,7 +1,7 @@
 Set oWS = WScript.CreateObject("WScript.Shell")
 sStartup = oWS.SpecialFolders("Startup")
 sLinkFile = sStartup & "\LMPasso.lnk"
-sTarget = "C:\Users\T.i\.gemini\antigravity\scratch\lm-passo\INICIAR_SILENCIOSO.vbs"
+sTarget = "C:\Users\T.i\.gemini\antigravity\scratch\lm-passo\INICIAR_REDE.bat"
 sWorkDir = "C:\Users\T.i\.gemini\antigravity\scratch\lm-passo"
 
 Set oLink = oWS.CreateShortcut(sLinkFile)

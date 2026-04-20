@@ -4,8 +4,12 @@ export const render = () => {
     const container = document.createElement('div');
 
     container.innerHTML = `
-        <div class="view-header">
-            <div class="view-title">💰 Meu Financeiro</div>
+        <!-- Header -->
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 2rem;">
+            <div style="display:flex; flex-direction:column; gap:0.2rem;">
+                <h2 style="font-size: 1.8rem; font-weight: 900; background: linear-gradient(135deg, var(--primary), #4c1d95); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin:0; letter-spacing: -0.03em;">💰 Meu Financeiro</h2>
+                <p style="color: #64748b; margin: 0; font-size: 0.95rem; font-weight:500; white-space: nowrap;">Acompanhe o extrato das suas compras e faturamentos em aberto.</p>
+            </div>
         </div>
 
         <!-- Summary Cards -->
@@ -78,7 +82,7 @@ export const render = () => {
                 if (!haystack.includes(search)) return false;
             }
             if (monthFilter) {
-                const d = new Date(s.created_at);
+                const d = window.parseDBDate(s.created_at);
                 const key = `${d.getFullYear()}-${String(d.getMonth()).padStart(2, '0')}`;
                 if (key !== monthFilter) return false;
             }
@@ -97,7 +101,7 @@ export const render = () => {
 
         const months = {};
         data.forEach(s => {
-            const d = new Date(s.created_at);
+            const d = window.parseDBDate(s.created_at);
             const key = `${d.getFullYear()}-${String(d.getMonth()).padStart(2, '0')}`;
             if (!months[key]) {
                 months[key] = {
@@ -124,7 +128,7 @@ export const render = () => {
                 const m = months[key];
                 const rows = m.items.map(s => `
                     <tr>
-                        <td>${new Date(s.created_at).toLocaleDateString('pt-BR')}</td>
+                        <td>${window.parseDBDate(s.created_at).toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' })}</td>
                         <td style="font-size:0.85rem">${s.products_summary || '-'}${s.event_name ? `<br><span style="background:#f3e8ff; color:#7c3aed; padding:1px 6px; border-radius:10px; font-size:0.7rem; font-weight:600; display:inline-block; margin-top:2px;">🏷️ ${s.event_name}</span>` : ''}</td>
                         <td style="font-size:0.85rem; max-width:200px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${(s.description || '').replace(/"/g, '&quot;')}">${s.description || '-'}</td>
                         <td style="font-weight:bold; color:#7c3aed">R$ ${(s.total_value || 0).toFixed(2)}</td>
@@ -235,7 +239,7 @@ export const render = () => {
             const monthSet = new Set();
             const eventSet = new Set();
             allData.forEach(s => {
-                const d = new Date(s.created_at);
+                const d = window.parseDBDate(s.created_at);
                 const key = `${d.getFullYear()}-${String(d.getMonth()).padStart(2, '0')}`;
                 monthSet.add(key);
                 if (s.event_name) eventSet.add(s.event_name);

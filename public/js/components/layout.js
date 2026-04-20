@@ -21,6 +21,12 @@ export const render = (user, onLogout, onNavigate) => {
         document.documentElement.style.setProperty('--primary-hover', '#059669');
         document.documentElement.style.setProperty('--bg-color', '#f0fdf4');
         document.documentElement.style.setProperty('--border', '#a7f3d0');
+    } else if (user.username === 'gerente') {
+        document.documentElement.style.setProperty('--sidebar-bg', '#4a044e');
+        document.documentElement.style.setProperty('--primary', '#d946ef');
+        document.documentElement.style.setProperty('--primary-hover', '#c026d3');
+        document.documentElement.style.setProperty('--bg-color', '#fdf4ff');
+        document.documentElement.style.setProperty('--border', '#f5d0fe');
     } else {
         document.documentElement.style.setProperty('--sidebar-bg', '#2e1065');
         document.documentElement.style.setProperty('--primary', '#7c3aed');
@@ -43,6 +49,7 @@ export const render = (user, onLogout, onNavigate) => {
         demand: `<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>`,
         fornecedores: `<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><rect x="1" y="3" width="15" height="13" rx="1"/><path stroke-linecap="round" stroke-linejoin="round" d="M16 8h4l3 3v5h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>`,
         admin: `<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path stroke-linecap="round" stroke-linejoin="round" d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z"/></svg>`,
+        reminders: `<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>`,
         logout: `<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>`,
         cash: `<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><line x1="12" y1="1" x2="12" y2="23"/><path stroke-linecap="round" stroke-linejoin="round" d="M17 5H9.5a3.5 3.5 0 100 7h5a3.5 3.5 0 110 7H6"/></svg>`,
     };
@@ -53,49 +60,61 @@ export const render = (user, onLogout, onNavigate) => {
     if (user.role === 'cliente') {
         menuItems = `
             <li class="nav-item">
-                <a class="nav-link active" id="nav-client_financial" data-view="client_financial" title="Meu Financeiro">
-                    ${icons.cash} <span class="nav-text">Meu Financeiro</span>
+                <a class="nav-link active" id="nav-client_financial" data-view="client_financial" title="MEU FINANCEIRO">
+                    ${icons.cash} <span class="nav-text">MEU FINANCEIRO</span>
                 </a>
             </li>
         `;
     } else if (user.role === 'producao') {
         menuItems = `
             <li class="nav-item">
-                <a class="nav-link active" id="nav-kanban" data-view="kanban" title="Quadro">
-                    ${icons.kanban} <span class="nav-text">Quadro</span>
+                <a class="nav-link active" id="nav-kanban" data-view="kanban" title="QUADRO">
+                    ${icons.kanban} <span class="nav-text">QUADRO</span>
                 </a>
             </li>
             <li class="nav-item">
-                <a class="nav-link" id="nav-products" data-view="products" title="Produtos">
-                    ${icons.products} <span class="nav-text">Produtos</span>
+                <a class="nav-link" id="nav-products" data-view="products" title="PRODUTOS">
+                    ${icons.products} <span class="nav-text">PRODUTOS</span>
                 </a>
             </li>
             <li class="nav-item">
-                <a class="nav-link" id="nav-catalogue" data-view="catalogue" title="Catálogo">
-                    ${icons.catalogue} <span class="nav-text">Catálogo</span>
+                <a class="nav-link" id="nav-catalogue" data-view="catalogue" title="CATÁLOGO">
+                    ${icons.catalogue} <span class="nav-text">CATÁLOGO</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" id="nav-reminders" data-view="reminders" title="LEMBRETES" style="position:relative;">
+                    ${icons.reminders} <span class="nav-text">LEMBRETES</span>
+                    <span id="reminders-alert-badge" style="display:none; position:absolute; top:10px; right:10px; background:#ef4444; color:white; font-size:10px; font-weight:bold; padding:2px 6px; border-radius:10px; box-shadow:0 0 8px rgba(239,68,68,0.8);"></span>
                 </a>
             </li>
         `;
     } else {
         menuItems = `
             <li class="nav-item">
-                <a class="nav-link active" id="nav-kanban" data-view="kanban" title="Quadro">
-                    ${icons.kanban} <span class="nav-text">Quadro</span>
+                <a class="nav-link active" id="nav-kanban" data-view="kanban" title="QUADRO">
+                    ${icons.kanban} <span class="nav-text">QUADRO</span>
                 </a>
             </li>
             <li class="nav-item">
-                <a class="nav-link" id="nav-clients" data-view="clients" title="Clientes">
-                    ${icons.clients} <span class="nav-text">Clientes</span>
+                <a class="nav-link" id="nav-clients" data-view="clients" title="CLIENTES">
+                    ${icons.clients} <span class="nav-text">CLIENTES</span>
                 </a>
             </li>
             <li class="nav-item">
-                <a class="nav-link" id="nav-products" data-view="products" title="Produtos">
-                    ${icons.products} <span class="nav-text">Produtos</span>
+                <a class="nav-link" id="nav-products" data-view="products" title="PRODUTOS">
+                    ${icons.products} <span class="nav-text">PRODUTOS</span>
                 </a>
             </li>
             <li class="nav-item">
-                <a class="nav-link" id="nav-catalogue" data-view="catalogue" title="Catálogo">
-                    ${icons.catalogue} <span class="nav-text">Catálogo</span>
+                <a class="nav-link" id="nav-catalogue" data-view="catalogue" title="CATÁLOGO">
+                    ${icons.catalogue} <span class="nav-text">CATÁLOGO</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" id="nav-reminders" data-view="reminders" title="LEMBRETES" style="position:relative;">
+                    ${icons.reminders} <span class="nav-text">LEMBRETES</span>
+                    <span id="reminders-alert-badge" style="display:none; position:absolute; top:10px; right:10px; background:#ef4444; color:white; font-size:10px; font-weight:bold; padding:2px 6px; border-radius:10px; box-shadow:0 0 8px rgba(239,68,68,0.8);"></span>
                 </a>
             </li>
         `;
@@ -106,14 +125,14 @@ export const render = (user, onLogout, onNavigate) => {
     if (canSeeStock) {
         menuItems += `
         <li class="nav-item">
-            <a class="nav-link" id="nav-estoque" data-view="estoque" title="Estoque" style="position:relative;">
-                ${icons.estoque} <span class="nav-text">Estoque</span>
+            <a class="nav-link" id="nav-estoque" data-view="estoque" title="ESTOQUE" style="position:relative;">
+                ${icons.estoque} <span class="nav-text">ESTOQUE</span>
                 <span id="stock-alert-badge" style="display:none; position:absolute; top:10px; right:10px; background:#ef4444; color:white; font-size:10px; font-weight:bold; padding:2px 6px; border-radius:10px; box-shadow:0 0 8px rgba(239, 68, 68, 0.8);"></span>
             </a>
         </li>
         <li class="nav-item">
-            <a class="nav-link" id="nav-compras" data-view="compras" title="Compras">
-                ${icons.compras} <span class="nav-text">Compras</span>
+            <a class="nav-link" id="nav-compras" data-view="compras" title="COMPRAS">
+                ${icons.compras} <span class="nav-text">COMPRAS</span>
             </a>
         </li>
         `;
@@ -122,13 +141,13 @@ export const render = (user, onLogout, onNavigate) => {
     if (canSeeFinance) {
         menuItems += `
         <li class="nav-item">
-            <a class="nav-link" id="nav-financial" data-view="financial" title="Financeiro">
-                ${icons.financial} <span class="nav-text">Financeiro</span>
+            <a class="nav-link" id="nav-financial" data-view="financial" title="FINANCEIRO">
+                ${icons.financial} <span class="nav-text">FINANCEIRO</span>
             </a>
         </li>
         <li class="nav-item">
-            <a class="nav-link" id="nav-demand" data-view="demand" title="Demanda de Produtos">
-                ${icons.demand} <span class="nav-text">Demanda</span>
+            <a class="nav-link" id="nav-demand" data-view="demand" title="DEMANDA DE PRODUTOS">
+                ${icons.demand} <span class="nav-text">DEMANDA</span>
             </a>
         </li>
         `;
@@ -137,13 +156,13 @@ export const render = (user, onLogout, onNavigate) => {
     if (user.role === 'master') {
         menuItems += `
         <li class="nav-item">
-            <a class="nav-link" id="nav-fornecedores" data-view="fornecedores" title="Fornecedores">
-                ${icons.fornecedores} <span class="nav-text">Fornecedores</span>
+            <a class="nav-link" id="nav-fornecedores" data-view="fornecedores" title="FORNECEDORES">
+                ${icons.fornecedores} <span class="nav-text">FORNECEDORES</span>
             </a>
         </li>
         <li class="nav-item">
-            <a class="nav-link" id="nav-admin" data-view="admin" title="Admin">
-                ${icons.admin} <span class="nav-text">Admin</span>
+            <a class="nav-link" id="nav-admin" data-view="admin" title="ADMIN">
+                ${icons.admin} <span class="nav-text">ADMIN</span>
             </a>
         </li>
         `;
@@ -158,6 +177,10 @@ export const render = (user, onLogout, onNavigate) => {
             <ul class="nav-links">
                 ${menuItems}
             </ul>
+            <div class="sidebar-clock" id="sidebar-clock">
+                <div class="clock-time" id="clock-time">--:--:--</div>
+                <div class="clock-date" id="clock-date">--/--/----</div>
+            </div>
             <div class="user-info">
                 <div class="nav-text" style="margin-bottom:0.5rem; font-size:0.72rem; color:#94a3b8; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">Olá, ${user.name}</div>
                 <a class="nav-link" id="logout-btn" title="Sair" style="color:#ef4444;">
@@ -178,6 +201,19 @@ export const render = (user, onLogout, onNavigate) => {
     });
 
     container.querySelector('#logout-btn').addEventListener('click', onLogout);
+
+    // ── Live Clock (Horário de Brasília) ─────────────────────────────────────────
+    const updateClock = () => {
+        const now = new Date();
+        const brTime = now.toLocaleTimeString('pt-BR', { timeZone: 'America/Sao_Paulo', hour: '2-digit', minute: '2-digit', second: '2-digit' });
+        const brDate = now.toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo', weekday: 'short', day: '2-digit', month: '2-digit', year: 'numeric' });
+        const timeEl = container.querySelector('#clock-time');
+        const dateEl = container.querySelector('#clock-date');
+        if (timeEl) timeEl.textContent = brTime;
+        if (dateEl) dateEl.textContent = brDate.charAt(0).toUpperCase() + brDate.slice(1);
+    };
+    updateClock();
+    setInterval(updateClock, 1000);
 
     // Sidebar Toggle Logic removed (now handled by CSS hover)
 
@@ -210,6 +246,40 @@ export const render = (user, onLogout, onNavigate) => {
 
 
 
+    // Check pending reminders and show badge
+    if (user.role !== 'cliente') {
+        // Função reutilizável para atualizar o badge da sidebar
+        const applyReminderBadge = (count) => {
+            const badge = container.querySelector('#reminders-alert-badge');
+            if (!badge) return;
+            if (count > 0) {
+                badge.style.display = 'inline-block';
+                badge.textContent = count > 99 ? '+99' : count;
+            } else {
+                badge.style.display = 'none';
+                badge.textContent = '';
+            }
+        };
+
+        // Carga inicial ao abrir o app
+        setTimeout(async () => {
+            try {
+                const token = localStorage.getItem('token');
+                const res = await fetch('/api/reminders/pending-count', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const { count } = await res.json();
+                applyReminderBadge(count);
+            } catch (err) {
+                console.error('Reminders badge check failed:', err);
+            }
+        }, 1000);
+
+        // Atualização em tempo real: ouve evento disparado pelo reminders.js
+        window.addEventListener('reminders:updated', (e) => {
+            applyReminderBadge(e.detail.count);
+        });
+    }
 
     // Initialize Global Team Chat
     import('./chatWidget.js?v=' + Date.now()).then(module => {

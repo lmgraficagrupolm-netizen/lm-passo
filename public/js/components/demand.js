@@ -7,10 +7,14 @@ export const render = () => {
     ];
 
     container.innerHTML = `
-        <div class="view-header">
-            <div class="view-title">
-                <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8" style="vertical-align:middle; margin-right:0.4rem;"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
-                Demanda de Produtos
+        <!-- Header -->
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 2rem;">
+            <div style="display:flex; flex-direction:column; gap:0.2rem;">
+                <h2 style="font-size: 1.8rem; font-weight: 900; background: linear-gradient(135deg, var(--primary), #4c1d95); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin:0; letter-spacing: -0.03em;">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" style="vertical-align:middle; margin-right:0.2rem; color:var(--primary);"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+                    Demanda de Produtos
+                </h2>
+                <p style="color: #64748b; margin: 0; font-size: 0.95rem; font-weight:500; white-space: nowrap;">Análise de giro e popularidade dos itens vendidos.</p>
             </div>
         </div>
         <div style="max-width:960px;">
@@ -54,8 +58,8 @@ export const render = () => {
         const parts = period.split('—').map(p => p.trim());
         if (parts.length < 2) return period;
         const fmt = d => {
-            const dt = new Date(d + 'T12:00:00');
-            return dt.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', year: 'numeric' });
+            const dt = window.parseDBDate(d + 'T12:00:00');
+            return dt.toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo', day: '2-digit', month: 'short', year: 'numeric' });
         };
         return `${fmt(parts[0])} — ${fmt(parts[1])}`;
     };

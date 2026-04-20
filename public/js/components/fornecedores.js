@@ -2,13 +2,14 @@ export const render = () => {
     const container = document.createElement('div');
     container.innerHTML = `
         <!-- Header -->
-        <div class="view-header" style="margin-bottom:1.5rem">
-            <div>
-                <div class="view-title" style="font-size:1.5rem; font-weight:700">🏭 Fornecedores</div>
-                <p style="margin:0.2rem 0 0; color:#94a3b8; font-size:0.875rem">Gerencie os fornecedores e parceiros da empresa</p>
+        <!-- Header -->
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 2rem;">
+            <div style="display:flex; flex-direction:column; gap:0.2rem;">
+                <h2 style="font-size: 1.8rem; font-weight: 900; background: linear-gradient(135deg, var(--primary), #4c1d95); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin:0; letter-spacing: -0.03em;">🏭 Fornecedores</h2>
+                <p style="color: #64748b; margin: 0; font-size: 0.95rem; font-weight:500; white-space: nowrap;">Gerencie os fornecedores e parceiros da empresa.</p>
             </div>
-            <button class="btn btn-primary" id="btn-new-supplier" style="display:flex; align-items:center; gap:0.4rem; padding:0.6rem 1.2rem; font-weight:600; border-radius:8px; box-shadow:0 2px 8px rgba(124,58,237,0.3)">
-                <span style="font-size:1.2rem">＋</span> Novo Fornecedor
+            <button class="btn btn-primary" id="btn-new-supplier" style="padding: 0.8rem 1.5rem; border-radius: 12px; font-weight:800; text-transform:uppercase; letter-spacing:0.05em; display:flex; align-items:center; gap:0.5rem; box-shadow:0 4px 15px rgba(139, 92, 246, 0.3); transition:all 0.2s;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='none'">
+                <span style="font-size:1.2rem; line-height:1;">＋</span> NOVO FORNECEDOR
             </button>
         </div>
 
@@ -87,7 +88,7 @@ export const render = () => {
 
     const initials = (name) => name.trim().split(' ').slice(0, 2).map(w => w[0]).join('').toUpperCase();
 
-    const formatDate = (iso) => iso ? new Date(iso).toLocaleDateString('pt-BR') : '—';
+    const formatDate = (iso) => iso ? window.parseDBDate(iso).toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' }) : '—';
 
     const openModal = (supplier = null) => {
         const title = container.querySelector('#supplier-modal-title');

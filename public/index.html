@@ -7,7 +7,7 @@
     <meta name="theme-color" content="#7c3aed">
     <title>LM | PASSO - Gestão de Pedidos</title>
     <link rel="manifest" href="/manifest.json">
-    <link rel="stylesheet" href="css/main.css">
+    <link rel="stylesheet" href="css/main.css?v=2026-04-14-1755">
     <!-- Ionicons (local) -->
     <script type="module" src="/libs/ionicons/ionicons.esm.js"></script>
     <script nomodule src="/libs/ionicons/ionicons.js"></script>
@@ -16,6 +16,23 @@
 <body>
     <div id="app">Carregando aplicação... (Se esta mensagem não sumir, o Javascript não carregou)</div>
 
+    <!-- Date parser universal: SQLite CURRENT_TIMESTAMP is UTC -->
+    <script>
+        window.parseDBDate = function(str) {
+            if (!str) return new Date();
+            if (typeof str !== 'string') return new Date(str);
+            // Example: 2026-04-10 14:02:12 (from SQLite) -> force UTC
+            if (str.length === 19 && str[10] === ' ') {
+                return new Date(str.replace(' ', 'T') + 'Z');
+            }
+            // If it has T but no Z, force UTC
+            if (!str.includes('Z') && str.includes('T')) {
+                return new Date(str + 'Z');
+            }
+            return new Date(str);
+        };
+    </script>
+    
     <!-- Remove QUALQUER Service Worker existente antes de carregar o app -->
     <script>
         (async function limparSW() {
@@ -39,9 +56,12 @@
         })();
     </script>
 
-    <!-- Application Logic -->
-    <script type="module" src="js/app.js"></script>
-
+    <script>
+        const script = document.createElement('script');
+        script.type = 'module';
+        script.src = 'js/app.js?v=' + Date.now();
+        document.body.appendChild(script);
+    </script>
 </body>
 
 </html>
