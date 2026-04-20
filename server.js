@@ -61,7 +61,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/diag', diagRoutes);
 
 // Rota para o frontend (SPA Fallback)
-app.get('*', (req, res) => {
+app.get(/^(.*)$/, (req, res) => {
     if (req.path.startsWith('/api')) {
         return res.status(404).json({ error: 'Endpoint não encontrado' });
     }
