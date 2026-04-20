@@ -401,29 +401,31 @@ function initDb() {
     db.run("ALTER TABLE team_chat ADD COLUMN attachment_url TEXT", (err) => { /* ignore */ });
 
     // ── FIREBASE SYNC QUEUE ────────────────────────────────
-    db.run(`CREATE TABLE IF NOT EXISTS firebase_sync_queue (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        table_name TEXT NOT NULL,
-        record_id INTEGER NOT NULL,
-        action TEXT NOT NULL,
-        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-    )`);
+    db.serialize(() => {
+        db.run(`CREATE TABLE IF NOT EXISTS firebase_sync_queue (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            table_name TEXT NOT NULL,
+            record_id INTEGER NOT NULL,
+            action TEXT NOT NULL,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        )`);
 
-    const syncTables = [
-        'clients', 'products', 'orders', 'order_items', 'catalogue_items', 
-        'suppliers', 'dispatch_costs', 'users', 'team_chat', 'stock_movements',
-        'reminders', 'menu_orders'
-    ];
+        const syncTables = [
+            'clients', 'products', 'orders', 'order_items', 'catalogue_items', 
+            'suppliers', 'dispatch_costs', 'users', 'team_chat', 'stock_movements',
+            'reminders', 'menu_orders'
+        ];
 
-    syncTables.forEach(table => {
-        db.run(`CREATE TRIGGER IF NOT EXISTS trg_${table}_insert_sync AFTER INSERT ON ${table}
-        BEGIN INSERT INTO firebase_sync_queue (table_name, record_id, action) VALUES ('${table}', NEW.id, 'INSERT'); END;`);
-        
-        db.run(`CREATE TRIGGER IF NOT EXISTS trg_${table}_update_sync AFTER UPDATE ON ${table}
-        BEGIN INSERT INTO firebase_sync_queue (table_name, record_id, action) VALUES ('${table}', NEW.id, 'UPDATE'); END;`);
+        syncTables.forEach(table => {
+            db.run(`CREATE TRIGGER IF NOT EXISTS trg_${table}_insert_sync AFTER INSERT ON ${table}
+            BEGIN INSERT INTO firebase_sync_queue (table_name, record_id, action) VALUES ('${table}', NEW.id, 'INSERT'); END;`);
+            
+            db.run(`CREATE TRIGGER IF NOT EXISTS trg_${table}_update_sync AFTER UPDATE ON ${table}
+            BEGIN INSERT INTO firebase_sync_queue (table_name, record_id, action) VALUES ('${table}', NEW.id, 'UPDATE'); END;`);
 
-        db.run(`CREATE TRIGGER IF NOT EXISTS trg_${table}_delete_sync AFTER DELETE ON ${table}
-        BEGIN INSERT INTO firebase_sync_queue (table_name, record_id, action) VALUES ('${table}', OLD.id, 'DELETE'); END;`);
+            db.run(`CREATE TRIGGER IF NOT EXISTS trg_${table}_delete_sync AFTER DELETE ON ${table}
+            BEGIN INSERT INTO firebase_sync_queue (table_name, record_id, action) VALUES ('${table}', OLD.id, 'DELETE'); END;`);
+        });
     });
 }
 
