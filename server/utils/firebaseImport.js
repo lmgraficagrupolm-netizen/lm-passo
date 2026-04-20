@@ -2,8 +2,8 @@ const admin = require('firebase-admin');
 const sqlite3 = require('sqlite3').verbose();
 const fs = require('fs');
 const path = require('path');
+const { getServiceAccount } = require('./firebaseAuth');
 
-const CRED_PATH = path.resolve(process.cwd(), 'firebase-credentials.json');
 const DB_PATH = path.resolve(process.cwd(), 'database.sqlite');
 
 /**
@@ -23,20 +23,10 @@ async function restoreFromFirebase() {
                 }
             }
 
-            let serviceAccount = null;
-
-            if (process.env.FIREBASE_CREDENTIALS) {
-                try {
-                    serviceAccount = JSON.parse(process.env.FIREBASE_CREDENTIALS);
-                } catch (e) {
-                    console.error('❌ Erro ao ler FIREBASE_CREDENTIALS da variável de ambiente. O JSON é inválido.');
-                }
-            } else if (fs.existsSync(CRED_PATH)) {
-                serviceAccount = require(CRED_PATH);
-            }
+            const serviceAccount = getServiceAccount();
 
             if (!serviceAccount) {
-                console.log('⚠️ firebase-credentials.json (ou variável FIREBASE_CREDENTIALS) não encontrado. Ignorando auto-restauração.');
+                console.log('⚠️ Credenciais do Firebase não encontradas. Ignorando auto-restauração.');
                 return resolve(false);
             }
 

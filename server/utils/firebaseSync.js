@@ -2,25 +2,14 @@ const admin = require('firebase-admin');
 const fs = require('fs');
 const path = require('path');
 const db = require('../database/db');
-
-const CRED_PATH = path.resolve(process.cwd(), 'firebase-credentials.json');
+const { getServiceAccount } = require('./firebaseAuth');
 
 // Inicializa Firebase apenas se existir a chave
 let firestoreDb = null;
 let isSyncing = false;
 
 function initFirebase() {
-    let serviceAccount = null;
-
-    if (process.env.FIREBASE_CREDENTIALS) {
-        try {
-            serviceAccount = JSON.parse(process.env.FIREBASE_CREDENTIALS);
-        } catch (e) {
-            console.error('❌ Erro ao ler FIREBASE_CREDENTIALS (Sync Worker). O JSON é inválido.');
-        }
-    } else if (fs.existsSync(CRED_PATH)) {
-        serviceAccount = require(CRED_PATH);
-    }
+    const serviceAccount = getServiceAccount();
 
     if (serviceAccount && !admin.apps.length) {
         try {
@@ -107,11 +96,12 @@ async function processQueue() {
 
 function startWorker() {
     initFirebase();
-    if (process.env.FIREBASE_CREDENTIALS || fs.existsSync(CRED_PATH)) {
+    const serviceAccount = getServiceAccount();
+    if (serviceAccount) {
         // Verifica a fila a cada 2.5 segundos
         setInterval(processQueue, 2500);
     } else {
-        console.log('ℹ️  Firebase Sync desativado (firebase-credentials.json ou variável não encontrados).');
+        console.log('ℹ️  Firebase Sync desativado (Credenciais não encontradas).');
     }
 }
 
