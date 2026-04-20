@@ -8,9 +8,12 @@ const fs = require('fs');
 
 // Error Logging Function
 const logError = (err) => {
-    const errorLogPath = path.join(process.cwd(), 'error_log.txt');
-    const errorMessage = `[${new Date().toISOString()}] ERROR: ${err.message}\nSTACK: ${err.stack}\n\n`;
-    fs.appendFileSync(errorLogPath, errorMessage);
+    console.error('\n❌ CRITICAL ERROR:', err);
+    try {
+        const errorLogPath = path.join(process.cwd(), 'error_log.txt');
+        const errorMessage = `[${new Date().toISOString()}] ERROR: ${err.message}\nSTACK: ${err.stack}\n\n`;
+        fs.appendFileSync(errorLogPath, errorMessage);
+    } catch(e) {}
 };
 
 // Global Error Handlers
@@ -20,6 +23,7 @@ process.on('uncaughtException', (err) => {
 });
 
 process.on('unhandledRejection', (reason, promise) => {
+    console.error('\n❌ UNHANDLED REJECTION:', reason);
     logError(new Error(`Unhandled Rejection: ${reason}`));
 });
 
