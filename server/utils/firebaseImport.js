@@ -84,7 +84,9 @@ async function restoreFromFirebase() {
                 catalogue_items: ['id','title','description','image_url','created_at'],
                 suppliers:       ['id','name','phone','website','description','created_at'],
                 dispatch_costs:  ['id','order_id','carrier','amount','created_at','launched_to_core'],
-                team_chat:       ['id','user_id','user_name','user_role','message','created_at','is_edited','edited_at','reply_to_id','reply_to_author','reply_to_msg','attachment_url']
+                team_chat:       ['id','user_id','user_name','user_role','message','created_at','is_edited','edited_at','reply_to_id','reply_to_author','reply_to_msg','attachment_url'],
+                reminders:       ['id','title','description','priority','status','created_by','created_at','concluded_at','position'],
+                menu_orders:     ['id','client_id','quantity','event_name','producer_name','print_type','status','launched_to_core','order_id','created_by','created_at','position']
             };
 
             for (const [table, columns] of Object.entries(collections)) {
@@ -132,7 +134,37 @@ async function restoreFromFirebase() {
 
         } catch (error) {
             console.error('\n❌ Falha Crítica na Auto-restauração:', error);
-            resolve(false); 
+
+            // — FALLBACK FINAL: Garante que o usuário master existe mesmo assim —
+            try {
+                const sqlite3Fb = require('sqlite3').verbose();
+                const bcryptFb = require('bcryptjs');
+                const fallbackDb = new sqlite3Fb.Database(DB_PATH);
+                const fallbackUsers = [
+                    { username: 'master',  password: 'master123',  role: 'master', name: 'Master' },
+                    { username: 'gerente', password: 'gerente123', role: 'master', name: 'Gerente' }
+                ];
+                for (const u of fallbackUsers) {
+                    await new Promise((ok) => {
+                        fallbackDb.get('SELECT id FROM users WHERE username = ?', [u.username], (e, row) => {
+                            if (!row) {
+                                const hash = bcryptFb.hashSync(u.password, 10);
+                                fallbackDb.run(
+                                    'INSERT INTO users (username, password, role, name, plain_password) VALUES (?, ?, ?, ?, ?)',
+                                    [u.username, hash, u.role, u.name, u.password],
+                                    () => ok()
+                                );
+                            } else { ok(); }
+                        });
+                    });
+                }
+                fallbackDb.close();
+                console.log('✅ Fallback: usuários padrão garantidos após falha de restauração.');
+            } catch (fb) {
+                console.error('❌ Fallback também falhou:', fb.message);
+            }
+
+            resolve(false);
         }
     });
 }

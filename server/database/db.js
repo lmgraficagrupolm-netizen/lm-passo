@@ -196,10 +196,12 @@ function initDb() {
 
         // Seed Default Users if not exist
         const defaultUsers = [
-            { username: 'vendedor', password: '123456', role: 'vendedor', name: 'Vendedor' },
-            { username: 'financeiro', password: '123456', role: 'financeiro', name: 'Financeiro' },
-            { username: 'producao', password: '123456', role: 'producao', name: 'Produção' },
-            { username: 'interno', password: '123456', role: 'interno', name: 'Interno' }
+            { username: 'master',     password: 'master123',  role: 'master',     name: 'Master' },
+            { username: 'gerente',    password: 'gerente123', role: 'master',     name: 'Gerente' },
+            { username: 'vendedor',   password: '123456',     role: 'vendedor',   name: 'Vendedor' },
+            { username: 'financeiro', password: '123456',     role: 'financeiro', name: 'Financeiro' },
+            { username: 'producao',   password: '123456',     role: 'producao',   name: 'Produção' },
+            { username: 'interno',    password: '123456',     role: 'interno',    name: 'Interno' }
         ];
 
         defaultUsers.forEach(user => {
