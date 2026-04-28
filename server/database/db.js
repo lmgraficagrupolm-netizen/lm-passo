@@ -105,11 +105,47 @@ function initDb() {
             FOREIGN KEY(product_id) REFERENCES products(id),
             FOREIGN KEY(user_id) REFERENCES users(id)
         )`);
-        // Note: We will use 'deadline_type' in orders to store '1D' or '3D' which we already have.
+        db.run("ALTER TABLE clients ADD COLUMN active INTEGER DEFAULT 1", (err) => {
+            // Ignore if exists
+        });
+        db.run("ALTER TABLE clients ADD COLUMN loyalty_status INTEGER DEFAULT 0", (err) => {
+            // Ignore if exists
+        });
+        db.run("ALTER TABLE clients ADD COLUMN credit_limit REAL DEFAULT 0", (err) => {
+            // Ignore if exists
+        });
+        db.run("ALTER TABLE clients ADD COLUMN credit_balance REAL DEFAULT 0", (err) => {
+            // Ignore if exists
+        });
+        db.run("ALTER TABLE clients ADD COLUMN billing_date INTEGER", (err) => {
+            // Ignore if exists
+        });
+        db.run("ALTER TABLE clients ADD COLUMN cpf TEXT", (err) => {
+            // Ignore if exists
+        });
+        db.run("ALTER TABLE clients ADD COLUMN address TEXT", (err) => {
+            // Ignore if exists
+        });
+        db.run("ALTER TABLE clients ADD COLUMN city TEXT", (err) => {
+            // Ignore if exists
+        });
+        db.run("ALTER TABLE clients ADD COLUMN state TEXT", (err) => {
+            // Ignore if exists
+        });
+        db.run("ALTER TABLE clients ADD COLUMN zip_code TEXT", (err) => {
+            // Ignore if exists
+        });
+        db.run("ALTER TABLE orders ADD COLUMN is_priority INTEGER DEFAULT 0", (err) => {
+            // Ignore if exists
+        });
+        db.run("ALTER TABLE orders ADD COLUMN loyalty_discount REAL DEFAULT 0", (err) => {
+            // Ignore if exists
+        });
 
+        db.run("ALTER TABLE clients ADD COLUMN loyalty_tier TEXT DEFAULT 'bronze'", (err) => { /* ignore if exists */ });
+    db.run("ALTER TABLE clients ADD COLUMN loyalty_tier_notified INTEGER DEFAULT 1", (err) => { /* ignore if exists */ });
 
-
-        // Orders Table
+    // Orders Table
         db.run(`CREATE TABLE IF NOT EXISTS orders (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             client_id INTEGER,
@@ -298,6 +334,27 @@ function initDb() {
     db.run("ALTER TABLE clients ADD COLUMN state TEXT DEFAULT ''", (err) => { });
     db.run("ALTER TABLE clients ADD COLUMN zip_code TEXT DEFAULT ''", (err) => { });
 
+    // Migration: Loyalty and Credit system for clients
+    db.run("ALTER TABLE clients ADD COLUMN loyalty_status INTEGER DEFAULT 0", (err) => { });
+    db.run("ALTER TABLE clients ADD COLUMN credit_balance REAL DEFAULT 0", (err) => { });
+    db.run("ALTER TABLE clients ADD COLUMN credit_limit REAL DEFAULT 0", (err) => { });
+    db.run("ALTER TABLE clients ADD COLUMN billing_date INTEGER DEFAULT NULL", (err) => { });
+
+    // Client Credit Movements Table
+    db.run(`CREATE TABLE IF NOT EXISTS client_credit_movements (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        client_id INTEGER NOT NULL,
+        amount REAL NOT NULL,
+        type TEXT NOT NULL,
+        order_id INTEGER,
+        description TEXT,
+        created_by INTEGER,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY(client_id) REFERENCES clients(id),
+        FOREIGN KEY(order_id) REFERENCES orders(id),
+        FOREIGN KEY(created_by) REFERENCES users(id)
+    )`);
+
     // Migration: add client_id to users (links user account to a client for client portal)
     db.run("ALTER TABLE users ADD COLUMN client_id INTEGER DEFAULT NULL", (err) => { });
 
@@ -327,7 +384,8 @@ function initDb() {
     // Purchase Requests Table
     db.run(`CREATE TABLE IF NOT EXISTS purchase_requests (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
-        product_id INTEGER NOT NULL,
+        product_id INTEGER,
+        custom_product_name TEXT,
         supplier_id INTEGER,
         quantity INTEGER NOT NULL DEFAULT 1,
         unit_cost REAL DEFAULT 0,
@@ -342,6 +400,9 @@ function initDb() {
         FOREIGN KEY(requested_by) REFERENCES users(id),
         FOREIGN KEY(received_by) REFERENCES users(id)
     )`);
+
+    // Migration: add custom_product_name to purchase_requests if missing
+    db.run("ALTER TABLE purchase_requests ADD COLUMN custom_product_name TEXT", (err) => { /* ignore if exists */ });
     // Migration: add event_name for CORE orders
     db.run("ALTER TABLE orders ADD COLUMN event_name TEXT DEFAULT ''", (err) => { /* ignore if exists */ });
     // Migration: flag indicating stock was reserved at order creation
@@ -415,7 +476,7 @@ function initDb() {
         const syncTables = [
             'clients', 'products', 'orders', 'order_items', 'catalogue_items', 
             'suppliers', 'dispatch_costs', 'users', 'team_chat', 'stock_movements',
-            'reminders', 'menu_orders'
+            'reminders', 'menu_orders', 'client_credit_movements'
         ];
 
         syncTables.forEach(table => {

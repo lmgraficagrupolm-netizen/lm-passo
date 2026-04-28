@@ -52,39 +52,58 @@ export const render = (user, onLogout, onNavigate) => {
         reminders: `<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>`,
         logout: `<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>`,
         cash: `<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><line x1="12" y1="1" x2="12" y2="23"/><path stroke-linecap="round" stroke-linejoin="round" d="M17 5H9.5a3.5 3.5 0 100 7h5a3.5 3.5 0 110 7H6"/></svg>`,
+        star: `<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>`,
     };
 
 
     let menuItems = '';
 
     if (user.role === 'cliente') {
-        menuItems = `
-            <li class="nav-item">
-                <a class="nav-link active" id="nav-client_financial" data-view="client_financial" title="MEU FINANCEIRO">
-                    ${icons.cash} <span class="nav-text">MEU FINANCEIRO</span>
-                </a>
-            </li>
-        `;
+        if (user.loyalty_status) {
+            // Loyalty clients: CONTA FIDELIDADE + PONTUAÇÃO
+            menuItems = `
+                <li class="nav-item">
+                    <a class="nav-link active" id="nav-client_loyalty" data-view="client_loyalty" title="CONTA FIDELIDADE">
+                        ${icons.star} <span class="nav-text" translate="no">CONTA FIDELIDADE</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" id="nav-client_points" data-view="client_points" title="PONTUAÇÃO">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><ellipse cx="12" cy="8" rx="8" ry="3"/><path stroke-linecap="round" stroke-linejoin="round" d="M4 8v4c0 1.66 3.58 3 8 3s8-1.34 8-3V8"/><path stroke-linecap="round" stroke-linejoin="round" d="M4 12v4c0 1.66 3.58 3 8 3s8-1.34 8-3v-4"/></svg>
+                        <span class="nav-text" translate="no">PONTUAÇÃO</span>
+                    </a>
+                </li>
+            `;
+        } else {
+            // Regular clients: only show MEU FINANCEIRO
+            menuItems = `
+                <li class="nav-item">
+                    <a class="nav-link active" id="nav-client_financial" data-view="client_financial" title="MEU FINANCEIRO">
+                        ${icons.cash} <span class="nav-text" translate="no">MEU FINANCEIRO</span>
+                    </a>
+                </li>
+            `;
+        }
     } else if (user.role === 'producao') {
         menuItems = `
             <li class="nav-item">
                 <a class="nav-link active" id="nav-kanban" data-view="kanban" title="QUADRO">
-                    ${icons.kanban} <span class="nav-text">QUADRO</span>
+                    ${icons.kanban} <span class="nav-text" translate="no">QUADRO</span>
                 </a>
             </li>
             <li class="nav-item">
                 <a class="nav-link" id="nav-products" data-view="products" title="PRODUTOS">
-                    ${icons.products} <span class="nav-text">PRODUTOS</span>
+                    ${icons.products} <span class="nav-text" translate="no">PRODUTOS</span>
                 </a>
             </li>
             <li class="nav-item">
                 <a class="nav-link" id="nav-catalogue" data-view="catalogue" title="CATÁLOGO">
-                    ${icons.catalogue} <span class="nav-text">CATÁLOGO</span>
+                    ${icons.catalogue} <span class="nav-text" translate="no">CATÁLOGO</span>
                 </a>
             </li>
             <li class="nav-item">
                 <a class="nav-link" id="nav-reminders" data-view="reminders" title="LEMBRETES" style="position:relative;">
-                    ${icons.reminders} <span class="nav-text">LEMBRETES</span>
+                    ${icons.reminders} <span class="nav-text" translate="no">LEMBRETES</span>
                     <span id="reminders-alert-badge" style="display:none; position:absolute; top:10px; right:10px; background:#ef4444; color:white; font-size:10px; font-weight:bold; padding:2px 6px; border-radius:10px; box-shadow:0 0 8px rgba(239,68,68,0.8);"></span>
                 </a>
             </li>
@@ -93,27 +112,27 @@ export const render = (user, onLogout, onNavigate) => {
         menuItems = `
             <li class="nav-item">
                 <a class="nav-link active" id="nav-kanban" data-view="kanban" title="QUADRO">
-                    ${icons.kanban} <span class="nav-text">QUADRO</span>
+                    ${icons.kanban} <span class="nav-text" translate="no">QUADRO</span>
                 </a>
             </li>
             <li class="nav-item">
                 <a class="nav-link" id="nav-clients" data-view="clients" title="CLIENTES">
-                    ${icons.clients} <span class="nav-text">CLIENTES</span>
+                    ${icons.clients} <span class="nav-text" translate="no">CLIENTES</span>
                 </a>
             </li>
             <li class="nav-item">
                 <a class="nav-link" id="nav-products" data-view="products" title="PRODUTOS">
-                    ${icons.products} <span class="nav-text">PRODUTOS</span>
+                    ${icons.products} <span class="nav-text" translate="no">PRODUTOS</span>
                 </a>
             </li>
             <li class="nav-item">
                 <a class="nav-link" id="nav-catalogue" data-view="catalogue" title="CATÁLOGO">
-                    ${icons.catalogue} <span class="nav-text">CATÁLOGO</span>
+                    ${icons.catalogue} <span class="nav-text" translate="no">CATÁLOGO</span>
                 </a>
             </li>
             <li class="nav-item">
                 <a class="nav-link" id="nav-reminders" data-view="reminders" title="LEMBRETES" style="position:relative;">
-                    ${icons.reminders} <span class="nav-text">LEMBRETES</span>
+                    ${icons.reminders} <span class="nav-text" translate="no">LEMBRETES</span>
                     <span id="reminders-alert-badge" style="display:none; position:absolute; top:10px; right:10px; background:#ef4444; color:white; font-size:10px; font-weight:bold; padding:2px 6px; border-radius:10px; box-shadow:0 0 8px rgba(239,68,68,0.8);"></span>
                 </a>
             </li>
@@ -126,13 +145,13 @@ export const render = (user, onLogout, onNavigate) => {
         menuItems += `
         <li class="nav-item">
             <a class="nav-link" id="nav-estoque" data-view="estoque" title="ESTOQUE" style="position:relative;">
-                ${icons.estoque} <span class="nav-text">ESTOQUE</span>
+                ${icons.estoque} <span class="nav-text" translate="no">ESTOQUE</span>
                 <span id="stock-alert-badge" style="display:none; position:absolute; top:10px; right:10px; background:#ef4444; color:white; font-size:10px; font-weight:bold; padding:2px 6px; border-radius:10px; box-shadow:0 0 8px rgba(239, 68, 68, 0.8);"></span>
             </a>
         </li>
         <li class="nav-item">
             <a class="nav-link" id="nav-compras" data-view="compras" title="COMPRAS">
-                ${icons.compras} <span class="nav-text">COMPRAS</span>
+                ${icons.compras} <span class="nav-text" translate="no">COMPRAS</span>
             </a>
         </li>
         `;
@@ -142,12 +161,12 @@ export const render = (user, onLogout, onNavigate) => {
         menuItems += `
         <li class="nav-item">
             <a class="nav-link" id="nav-financial" data-view="financial" title="FINANCEIRO">
-                ${icons.financial} <span class="nav-text">FINANCEIRO</span>
+                ${icons.financial} <span class="nav-text" translate="no">FINANCEIRO</span>
             </a>
         </li>
         <li class="nav-item">
             <a class="nav-link" id="nav-demand" data-view="demand" title="DEMANDA DE PRODUTOS">
-                ${icons.demand} <span class="nav-text">DEMANDA</span>
+                ${icons.demand} <span class="nav-text" translate="no">DEMANDA</span>
             </a>
         </li>
         `;
@@ -157,12 +176,12 @@ export const render = (user, onLogout, onNavigate) => {
         menuItems += `
         <li class="nav-item">
             <a class="nav-link" id="nav-fornecedores" data-view="fornecedores" title="FORNECEDORES">
-                ${icons.fornecedores} <span class="nav-text">FORNECEDORES</span>
+                ${icons.fornecedores} <span class="nav-text" translate="no">FORNECEDORES</span>
             </a>
         </li>
         <li class="nav-item">
             <a class="nav-link" id="nav-admin" data-view="admin" title="ADMIN">
-                ${icons.admin} <span class="nav-text">ADMIN</span>
+                ${icons.admin} <span class="nav-text" translate="no">ADMIN</span>
             </a>
         </li>
         `;
@@ -172,7 +191,7 @@ export const render = (user, onLogout, onNavigate) => {
         <div class="sidebar" id="sidebar">
             <div class="sidebar-header" style="display:flex; align-items:center; gap:0.5rem; overflow:hidden; margin-bottom:2rem; padding:0.5rem; border-bottom:1px solid rgba(255,255,255,0.1);">
                 <img src="/logo.png" alt="Logo" style="width:32px; height:32px; border-radius:6px; object-fit:contain; flex-shrink:0;">
-                <span class="nav-text" style="white-space:nowrap; font-size:1.1rem; font-weight:800; letter-spacing:-0.02em;">LM | PASSO</span>
+                <span class="nav-text" translate="no" style="white-space:nowrap; font-size:1.1rem; font-weight:800; letter-spacing:-0.02em;">LM | PASSO</span>
             </div>
             <ul class="nav-links">
                 ${menuItems}
@@ -184,7 +203,7 @@ export const render = (user, onLogout, onNavigate) => {
             <div class="user-info">
                 <div class="nav-text" style="margin-bottom:0.5rem; font-size:0.72rem; color:#94a3b8; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">Olá, ${user.name}</div>
                 <a class="nav-link" id="logout-btn" title="Sair" style="color:#ef4444;">
-                    ${icons.logout} <span class="nav-text">Sair</span>
+                    ${icons.logout} <span class="nav-text" translate="no">Sair</span>
                 </a>
             </div>
         </div>
@@ -243,7 +262,6 @@ export const render = (user, onLogout, onNavigate) => {
             }
         }, 800);
     }
-
 
 
     // Check pending reminders and show badge

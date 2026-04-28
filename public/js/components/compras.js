@@ -74,7 +74,7 @@ export const render = () => {
                         <th>Produto</th>
                         <th>Fornecedor</th>
                         <th>Qtd</th>
-                        <th>Custo Unit.</th>
+                        <th>Custo do Material</th>
                         <th>Total</th>
                         <th>Status</th>
                         <th>Solicitante</th>
@@ -100,7 +100,12 @@ export const render = () => {
                         <label>Produto *</label>
                         <select id="np-product" required>
                             <option value="">Selecione o produto...</option>
+                            <option value="avulso" style="font-weight:bold; color:#7c3aed;">➕ MATERIAL FALTANTE (NÃO CADASTRADO)</option>
                         </select>
+                    </div>
+                    <div class="form-group" id="np-custom-product-group" style="display:none;">
+                        <label>Nome do Material Faltante *</label>
+                        <input type="text" id="np-custom-product" placeholder="Ex: Papel especial 180g...">
                     </div>
                     <div class="form-group">
                         <label>Fornecedor</label>
@@ -108,14 +113,18 @@ export const render = () => {
                             <option value="">— Sem fornecedor —</option>
                         </select>
                     </div>
-                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.75rem">
+                    <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:0.75rem">
                         <div class="form-group">
                             <label>Quantidade *</label>
                             <input type="number" id="np-quantity" min="1" value="1" required>
                         </div>
                         <div class="form-group">
-                            <label>Custo Unitário (R$)</label>
-                            <input type="number" id="np-unit-cost" min="0" step="0.01" value="0" placeholder="0,00">
+                            <label>Custo Total (R$)</label>
+                            <input type="number" id="np-total-cost" min="0" step="0.01" value="0" placeholder="0,00">
+                        </div>
+                        <div class="form-group">
+                            <label>Custo Unitário</label>
+                            <input type="number" id="np-unit-cost" value="0" readonly style="background:#f1f5f9; color:#64748b; cursor:not-allowed;">
                         </div>
                     </div>
                     <div class="form-group">
@@ -221,10 +230,12 @@ export const render = () => {
                         ${deleteBtn}
                    </div>`;
 
+            const productName = pr.product_name || pr.custom_product_name || 'Material Faltante';
+            const productType = pr.product_type || (pr.custom_product_name ? 'Avulso / Não Cadastrado' : '');
             return `
                 <tr>
                     <td style="color:#94a3b8;font-size:0.8rem">#${pr.id}</td>
-                    <td><b>${pr.product_name || '-'}</b><br><span style="font-size:0.75rem;color:#64748b">${pr.product_type || ''}</span></td>
+                    <td><b>${productName}</b><br><span style="font-size:0.75rem;color:#64748b">${productType}</span></td>
                     <td>${pr.supplier_name || '<span style="color:#94a3b8">—</span>'}</td>
                     <td style="text-align:center;font-weight:600">${pr.quantity}</td>
                     <td>${pr.unit_cost > 0 ? fmtCurrency(pr.unit_cost) : '<span style="color:#94a3b8">—</span>'}</td>
@@ -288,12 +299,36 @@ export const render = () => {
         }
     };
 
-    // ── New Purchase Modal ─────────────────────────────────────────────────────
     const newModal = container.querySelector('#new-purchase-modal');
     const newForm = container.querySelector('#new-purchase-form');
+    const productSelect = container.querySelector('#np-product');
+    const customProductGroup = container.querySelector('#np-custom-product-group');
+
+    const npQuantity = container.querySelector('#np-quantity');
+    const npTotalCost = container.querySelector('#np-total-cost');
+    const npUnitCost = container.querySelector('#np-unit-cost');
+
+    const calcUnitCost = () => {
+        const qty = parseInt(npQuantity.value) || 1;
+        const total = parseFloat(npTotalCost.value) || 0;
+        npUnitCost.value = (total / qty).toFixed(2);
+    };
+    npQuantity.addEventListener('input', calcUnitCost);
+    npTotalCost.addEventListener('input', calcUnitCost);
+
+    productSelect.addEventListener('change', (e) => {
+        if (e.target.value === 'avulso') {
+            customProductGroup.style.display = 'block';
+            container.querySelector('#np-custom-product').setAttribute('required', 'true');
+        } else {
+            customProductGroup.style.display = 'none';
+            container.querySelector('#np-custom-product').removeAttribute('required');
+        }
+    });
 
     container.querySelector('#new-purchase-btn').onclick = () => {
         newForm.reset();
+        customProductGroup.style.display = 'none';
         newModal.classList.add('open');
     };
     container.querySelector('#new-purchase-close').onclick = () => newModal.classList.remove('open');
@@ -301,14 +336,17 @@ export const render = () => {
 
     newForm.onsubmit = async (e) => {
         e.preventDefault();
-        const product_id = container.querySelector('#np-product').value;
+        const selectedProduct = productSelect.value;
+        const custom_product_name = container.querySelector('#np-custom-product').value;
+        const product_id = selectedProduct === 'avulso' ? null : selectedProduct;
+
         const supplier_id = container.querySelector('#np-supplier').value || null;
-        const quantity = parseInt(container.querySelector('#np-quantity').value);
-        const unit_cost = parseFloat(container.querySelector('#np-unit-cost').value) || 0;
+        const quantity = parseInt(npQuantity.value);
+        const unit_cost = parseFloat(npUnitCost.value) || 0; // Backend still expects unit_cost
         const notes = container.querySelector('#np-notes').value;
 
-        if (!product_id || quantity < 1) {
-            alert('Selecione o produto e informe uma quantidade válida.');
+        if ((!product_id && !custom_product_name) || quantity < 1) {
+            alert('Selecione o produto (ou informe o material faltante) e uma quantidade válida.');
             return;
         }
 
@@ -316,7 +354,7 @@ export const render = () => {
             const res = await fetch('/api/purchases', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ product_id, supplier_id, quantity, unit_cost, notes, requested_by: user.id })
+                body: JSON.stringify({ product_id, custom_product_name, supplier_id, quantity, unit_cost, notes, requested_by: user.id })
             });
             const result = await res.json();
             if (!res.ok) { alert(result.error || 'Erro ao criar solicitação'); return; }
@@ -338,34 +376,61 @@ export const render = () => {
 
         container.querySelector('#receive-purchase-id').value = id;
         const total = ((pr.unit_cost || 0) * (pr.quantity || 0)).toFixed(2).replace('.', ',');
+        const productName = pr.product_name || pr.custom_product_name || 'Material Faltante';
+
+        let supplierOptions = `<option value="">Não informado...</option>`;
+        const existingSupplierSelect = container.querySelector('#np-supplier');
+        if (existingSupplierSelect && existingSupplierSelect.options) {
+            for (let i = 1; i < existingSupplierSelect.options.length; i++) {
+                const opt = existingSupplierSelect.options[i];
+                supplierOptions += `<option value="${opt.value}" ${pr.supplier_id == opt.value ? 'selected' : ''}>${opt.text}</option>`;
+            }
+        }
 
         container.querySelector('#receive-details').innerHTML = `
             <div style="display:grid; gap:0.6rem">
                 <div style="display:flex; justify-content:space-between">
                     <span style="color:#64748b">Produto</span>
-                    <b>${pr.product_name}</b>
+                    <b>${productName}</b>
                 </div>
-                <div style="display:flex; justify-content:space-between">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
                     <span style="color:#64748b">Fornecedor</span>
-                    <span>${pr.supplier_name || '—'}</span>
+                    <select id="receive-supplier" style="width: 150px; padding: 0.2rem; font-size: 0.85rem; border-radius: 4px; border: 1px solid var(--border); background: var(--bg);">
+                        ${supplierOptions}
+                    </select>
                 </div>
                 <div style="display:flex; justify-content:space-between">
                     <span style="color:#64748b">Quantidade</span>
                     <b style="color:#10b981;font-size:1.1em">+${pr.quantity} unidades</b>
                 </div>
-                <div style="display:flex; justify-content:space-between">
-                    <span style="color:#64748b">Custo Total</span>
-                    <span>${pr.unit_cost > 0 ? 'R$ ' + total : '—'}</span>
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <span style="color:#64748b">Custo Total (R$)</span>
+                    <input type="number" step="0.01" id="receive-total-cost" value="${((pr.unit_cost || 0) * pr.quantity).toFixed(2)}" style="width: 100px; padding: 0.2rem; font-size: 0.85rem; border-radius: 4px; border: 1px solid var(--border); background: var(--bg); text-align: right;">
+                </div>
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <span style="color:#64748b">Custo Unitário</span>
+                    <input type="number" id="receive-unit-cost" value="${pr.unit_cost || 0}" readonly style="width: 100px; padding: 0.2rem; font-size: 0.85rem; border-radius: 4px; border: 1px solid transparent; background: transparent; text-align: right; color:#94a3b8; cursor:not-allowed;">
                 </div>
                 ${pr.notes ? `<div style="border-top:1px solid var(--border);padding-top:0.5rem;font-size:0.85rem;color:#64748b">${pr.notes}</div>` : ''}
             </div>
         `;
 
         receiveModal.classList.add('open');
+
+        // Logic for receive modal calculation
+        const receiveTotalCost = container.querySelector('#receive-total-cost');
+        const receiveUnitCost = container.querySelector('#receive-unit-cost');
+        receiveTotalCost.addEventListener('input', () => {
+            const total = parseFloat(receiveTotalCost.value) || 0;
+            receiveUnitCost.value = (total / pr.quantity).toFixed(2);
+        });
     };
 
     container.querySelector('#receive-confirm-btn').onclick = async () => {
         const id = container.querySelector('#receive-purchase-id').value;
+        const supplier_id = container.querySelector('#receive-supplier').value || null;
+        const unit_cost = parseFloat(container.querySelector('#receive-unit-cost').value) || 0;
+
         const btn = container.querySelector('#receive-confirm-btn');
         btn.disabled = true;
         btn.textContent = 'Processando...';
@@ -374,7 +439,7 @@ export const render = () => {
             const res = await fetch(`/api/purchases/${id}/receive`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ received_by: user.id })
+                body: JSON.stringify({ received_by: user.id, supplier_id, unit_cost })
             });
             const result = await res.json();
             if (!res.ok) { alert(result.error || 'Erro ao confirmar recebimento'); return; }
@@ -404,7 +469,7 @@ export const render = () => {
     // ── Delete Purchase (master only) ──────────────────────────────────────────
     const doDeletePurchase = async (id) => {
         const pr = allPurchases.find(p => p.id == id);
-        const name = pr ? pr.product_name : `#${id}`;
+        const name = pr ? (pr.product_name || pr.custom_product_name || `#${id}`) : `#${id}`;
         if (!confirm(`Excluir permanentemente a solicitação de "${name}"? Esta ação não pode ser desfeita.`)) return;
         try {
             const res = await fetch(`/api/purchases/${id}`, { method: 'DELETE' });
@@ -424,6 +489,8 @@ export const render = () => {
         const pr = allPurchases.find(p => p.id == id);
         if (!pr) return;
         const total = ((pr.unit_cost || 0) * (pr.quantity || 0)).toFixed(2).replace('.', ',');
+        const productName = pr.product_name || pr.custom_product_name || 'Material Faltante';
+        const productType = pr.product_type || (pr.custom_product_name ? 'Avulso / Não Cadastrado' : '—');
 
         container.querySelector('#details-content').innerHTML = `
             <div style="display:grid; gap:0.7rem; padding-bottom:1rem">
@@ -433,11 +500,11 @@ export const render = () => {
                 </div>
                 <div style="display:flex; justify-content:space-between">
                     <span style="color:#64748b">Produto</span>
-                    <b>${pr.product_name}</b>
+                    <b>${productName}</b>
                 </div>
                 <div style="display:flex; justify-content:space-between">
                     <span style="color:#64748b">Tipo</span>
-                    <span>${pr.product_type || '—'}</span>
+                    <span>${productType}</span>
                 </div>
                 <div style="display:flex; justify-content:space-between">
                     <span style="color:#64748b">Fornecedor</span>
@@ -448,7 +515,7 @@ export const render = () => {
                     <b>${pr.quantity}</b>
                 </div>
                 <div style="display:flex; justify-content:space-between">
-                    <span style="color:#64748b">Custo Unit.</span>
+                    <span style="color:#64748b">Custo do Material</span>
                     <span>${pr.unit_cost > 0 ? fmtCurrency(pr.unit_cost) : '—'}</span>
                 </div>
                 <div style="display:flex; justify-content:space-between">

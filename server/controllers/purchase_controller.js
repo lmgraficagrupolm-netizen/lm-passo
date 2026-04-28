@@ -25,17 +25,20 @@ exports.getAllPurchases = (req, res) => {
 
 // POST /api/purchases — Create a new purchase request
 exports.createPurchase = (req, res) => {
-    const { product_id, supplier_id, quantity, unit_cost, notes, requested_by } = req.body;
+    const { product_id, custom_product_name, supplier_id, quantity, unit_cost, notes, requested_by } = req.body;
 
-    if (!product_id || !quantity || quantity < 1) {
-        return res.status(400).json({ error: 'Campos obrigatórios: product_id, quantity (mínimo 1)' });
+    if (!product_id && (!custom_product_name || !custom_product_name.trim())) {
+        return res.status(400).json({ error: 'Selecione um produto ou informe o material faltante.' });
+    }
+    if (!quantity || quantity < 1) {
+        return res.status(400).json({ error: 'Quantidade mínima é 1.' });
     }
 
     const sql = `
-        INSERT INTO purchase_requests (product_id, supplier_id, quantity, unit_cost, notes, requested_by)
-        VALUES (?, ?, ?, ?, ?, ?)
+        INSERT INTO purchase_requests (product_id, custom_product_name, supplier_id, quantity, unit_cost, notes, requested_by)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
     `;
-    db.run(sql, [product_id, supplier_id || null, quantity, unit_cost || 0, notes || '', requested_by || null], function (err) {
+    db.run(sql, [product_id || null, custom_product_name || null, supplier_id || null, quantity, unit_cost || 0, notes || '', requested_by || null], function (err) {
         if (err) return res.status(500).json({ error: err.message });
         res.status(201).json({ message: 'Solicitação criada com sucesso', id: this.lastID });
     });
@@ -44,7 +47,7 @@ exports.createPurchase = (req, res) => {
 // PUT /api/purchases/:id/receive — Confirm receipt and update stock
 exports.receivePurchase = (req, res) => {
     const { id } = req.params;
-    const { received_by } = req.body;
+    const { received_by, supplier_id, unit_cost } = req.body;
 
     // First fetch the purchase request
     db.get("SELECT * FROM purchase_requests WHERE id = ?", [id], (err, pr) => {
@@ -54,29 +57,43 @@ exports.receivePurchase = (req, res) => {
             return res.status(400).json({ error: `Solicitação já está com status: ${pr.status}` });
         }
 
+        const finalSupplierId = supplier_id !== undefined ? (supplier_id || null) : pr.supplier_id;
+        const finalUnitCost = unit_cost !== undefined ? (parseFloat(unit_cost) || 0) : pr.unit_cost;
+
         db.serialize(() => {
             db.run("BEGIN TRANSACTION");
 
-            // Update stock
-            db.run("UPDATE products SET stock = stock + ? WHERE id = ?", [pr.quantity, pr.product_id], function (err) {
-                if (err) { db.run("ROLLBACK"); return res.status(500).json({ error: err.message }); }
-
-                // Insert stock movement
-                const reason = `Compra recebida (Solicitação #${id})`;
-                const movSql = `INSERT INTO stock_movements (product_id, quantity_change, type, reason, user_id) VALUES (?, ?, ?, ?, ?)`;
-                db.run(movSql, [pr.product_id, pr.quantity, 'entrada_compra', reason, received_by || null], function (err) {
+            if (pr.product_id) {
+                // Update stock
+                db.run("UPDATE products SET stock = stock + ? WHERE id = ?", [pr.quantity, pr.product_id], function (err) {
                     if (err) { db.run("ROLLBACK"); return res.status(500).json({ error: err.message }); }
 
-                    // Mark purchase request as received
-                    const updateSql = `UPDATE purchase_requests SET status = 'recebida', received_by = ?, received_at = CURRENT_TIMESTAMP WHERE id = ?`;
-                    db.run(updateSql, [received_by || null, id], function (err) {
+                    // Insert stock movement
+                    const reason = `Compra recebida (Solicitação #${id})`;
+                    const movSql = `INSERT INTO stock_movements (product_id, quantity_change, type, reason, user_id) VALUES (?, ?, ?, ?, ?)`;
+                    db.run(movSql, [pr.product_id, pr.quantity, 'entrada_compra', reason, received_by || null], function (err) {
                         if (err) { db.run("ROLLBACK"); return res.status(500).json({ error: err.message }); }
 
-                        db.run("COMMIT");
-                        res.json({ message: 'Compra recebida e estoque atualizado com sucesso!' });
+                        // Mark purchase request as received
+                        const updateSql = `UPDATE purchase_requests SET status = 'recebida', received_by = ?, received_at = CURRENT_TIMESTAMP, supplier_id = ?, unit_cost = ? WHERE id = ?`;
+                        db.run(updateSql, [received_by || null, finalSupplierId, finalUnitCost, id], function (err) {
+                            if (err) { db.run("ROLLBACK"); return res.status(500).json({ error: err.message }); }
+
+                            db.run("COMMIT");
+                            res.json({ message: 'Compra recebida e estoque atualizado com sucesso!' });
+                        });
                     });
                 });
-            });
+            } else {
+                // No product_id (missing material), just mark as received
+                const updateSql = `UPDATE purchase_requests SET status = 'recebida', received_by = ?, received_at = CURRENT_TIMESTAMP, supplier_id = ?, unit_cost = ? WHERE id = ?`;
+                db.run(updateSql, [received_by || null, finalSupplierId, finalUnitCost, id], function (err) {
+                    if (err) { db.run("ROLLBACK"); return res.status(500).json({ error: err.message }); }
+
+                    db.run("COMMIT");
+                    res.json({ message: 'Compra avulsa recebida com sucesso!' });
+                });
+            }
         });
     });
 };

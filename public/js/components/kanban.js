@@ -18,6 +18,10 @@ export const render = () => {
             bgStyle = 'background:linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%); border:1px solid #1e40af; box-shadow:0 10px 25px -5px rgba(59, 130, 246, 0.5), 0 8px 10px -6px rgba(59, 130, 246, 0.2);';
             icon = '🚀';
             title = 'Prioridade (PZ: 1 DIA)';
+        } else if (type === 'gold') {
+            bgStyle = 'background:linear-gradient(135deg, #f59e0b 0%, #d97706 100%); border:1px solid #b45309; box-shadow:0 10px 25px -5px rgba(245, 158, 11, 0.5), 0 8px 10px -6px rgba(245, 158, 11, 0.2); color: #fff;';
+            icon = '⭐';
+            title = 'Fidelidade (PZ: 1 DIA)';
         }
 
         toast.style.cssText = `position:fixed; top:24px; right:24px; color:#ffffff; padding:16px 20px; border-radius:12px; z-index:9999; width:340px; max-width:calc(100vw - 48px); font-family:system-ui, -apple-system, sans-serif; display:flex; align-items:center; gap:16px; transform:translateX(120%); transition:transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.5s ease; opacity:0; cursor:pointer; ${bgStyle}`;
@@ -253,6 +257,7 @@ export const render = () => {
                                         <option value="Boleto">Boleto</option>
                                         <option value="A Receber">A Receber</option>
                                         <option value="CORE">CORE</option>
+                                        <option value="Fidelidade" style="display:none;">Fidelidade</option>
                                     </select>
                                     <div id="core-auto-info" style="display:none; margin-top:6px; font-size:0.8rem; color:var(--primary); font-weight:700;"></div>
                                  </div>
@@ -263,6 +268,7 @@ export const render = () => {
                                         <option value="10">10%</option>
                                         <option value="15">15%</option>
                                     </select>
+                                    <div id="loyalty-discount-info" style="display:none; margin-top:6px; font-size:0.8rem; font-weight:800; color:#b45309; background:#fffbeb; border:1px solid #fde68a; border-radius:6px; padding:4px 8px;">⭐ Desconto Fidelidade: 5% (calculado sobre o valor bruto)</div>
                                  </div>
                              </div>
                              
@@ -492,7 +498,7 @@ export const render = () => {
         // Restrict payment options for vendedor
         const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
         if (['vendedor', 'producao'].includes(currentUser.role)) {
-            const allowed = ['Pix', 'Cartão', 'Dinheiro', 'A Receber'];
+            const allowed = ['Pix', 'Cartão', 'Dinheiro', 'A Receber', 'Fidelidade'];
             [...paymentSelect.options].forEach(opt => {
                 if (!allowed.includes(opt.value)) opt.remove();
             });
@@ -522,6 +528,55 @@ export const render = () => {
                     coreInfo.textContent = '';
                 }
             }
+            // Auto-select 1D deadline for loyalty clients + hide 3D option
+            const deadlineRadios = container.querySelectorAll('input[name="deadline_option"]');
+            const _deadline3DLabel = container.querySelector('label:has(input[name="deadline_option"][value="3D"])');
+            const _deadline1DLabel = container.querySelector('label:has(input[name="deadline_option"][value="1D"])');
+            if (client.loyalty_status) {
+                deadlineRadios.forEach(r => { r.checked = (r.value === '1D'); r.disabled = true; });
+                if (_deadline3DLabel) _deadline3DLabel.style.display = 'none';
+                if (_deadline1DLabel) {
+                    _deadline1DLabel.style.flex = 'unset';
+                    _deadline1DLabel.style.width = '100%';
+                    _deadline1DLabel.style.background = 'linear-gradient(90deg,#f59e0b,#d97706)';
+                    _deadline1DLabel.style.color = '#fff';
+                    _deadline1DLabel.style.borderColor = '#f59e0b';
+                    _deadline1DLabel.style.fontWeight = '900';
+                    _deadline1DLabel.style.cursor = 'default';
+                    _deadline1DLabel.innerHTML = '<input type="radio" name="deadline_option" value="1D" checked style="display:none;"><span style="font-size:1.1rem;">⭐</span> FIDELIDADE — PRAZO: 1 DIA (Prioritário)';
+                }
+                renderCart();
+            } else {
+                // Restore deadline options for non-loyalty clients
+                deadlineRadios.forEach(r => { r.disabled = false; if(r.value==='3D') r.checked=true; });
+                if (_deadline3DLabel) _deadline3DLabel.style.display = '';
+                if (_deadline1DLabel) {
+                    _deadline1DLabel.style.flex = '';
+                    _deadline1DLabel.style.width = '';
+                    _deadline1DLabel.style.background = '#fef2f2';
+                    _deadline1DLabel.style.color = '#b91c1c';
+                    _deadline1DLabel.style.borderColor = '#fee2e2';
+                    _deadline1DLabel.style.fontWeight = '700';
+                    _deadline1DLabel.style.cursor = 'pointer';
+                    _deadline1DLabel.innerHTML = '<input type="radio" name="deadline_option" value="1D" style="accent-color:#dc2626;"> 1 Dia';
+                }
+            }
+
+            // Loyalty discount notice + payment lock
+            const discountSelect = container.querySelector('#order-discount');
+            const loyaltyInfo = container.querySelector('#loyalty-discount-info');
+            if (client.loyalty_status) {
+                // Lock payment to Fidelidade
+                paymentSelect.value = 'Fidelidade';
+                paymentSelect.disabled = true;
+                if (discountSelect) { discountSelect.value = '0'; discountSelect.disabled = true; }
+                if (loyaltyInfo) loyaltyInfo.style.display = 'block';
+            } else {
+                // Restore payment select if not CORE
+                if (client.origin !== 'CORE') paymentSelect.disabled = false;
+                if (discountSelect) discountSelect.disabled = false;
+                if (loyaltyInfo) loyaltyInfo.style.display = 'none';
+            }
         };
         
         const isKitType = (val) => (val || '').toUpperCase().includes('KIT');
@@ -532,10 +587,11 @@ export const render = () => {
 
         const selectClient = (client) => {
             clientIdInput.value = client.id;
-            clientSearch.value = client.name;
-            clientSearch.style.borderColor = '#22c55e';
+            clientSearch.value = (client.loyalty_status ? '⭐ ' : '') + client.name;
+            clientSearch.style.borderColor = client.loyalty_status ? '#f59e0b' : '#22c55e';
             suggestions.style.display = 'none';
             applyClientDefaults(client);
+            if (typeof renderCart === 'function') renderCart(); // Recalculate total with loyalty discount
         };
 
         const showSuggestions = (term) => {
@@ -545,9 +601,9 @@ export const render = () => {
             if (!filtered.length) { suggestions.style.display = 'none'; return; }
             suggestions.innerHTML = filtered.slice(0, 12).map(c => `
                 <div class="client-suggestion-item" data-id="${c.id}"
-                    style="padding:0.5rem 0.75rem; cursor:pointer; font-size:0.95rem; border-bottom:1px solid #f1f5f9;"
-                    onmouseover="this.style.background='#eff6ff'" onmouseout="this.style.background=''"
-                >${c.name}${c.phone ? `<span style="color:#94a3b8; font-size:0.8rem; margin-left:0.5rem;">${c.phone}</span>` : ''}</div>
+                    style="padding:0.5rem 0.75rem; cursor:pointer; font-size:0.95rem; border-bottom:1px solid #f1f5f9; ${c.loyalty_status ? 'background:#fffbeb;' : ''}"
+                    onmouseover="this.style.background='${c.loyalty_status ? '#fef3c7' : '#eff6ff'}'" onmouseout="this.style.background='${c.loyalty_status ? '#fffbeb' : ''}'"
+                >${c.loyalty_status ? '<span style="color:#f59e0b; font-weight:900; margin-right:4px;">⭐</span>' : ''}${c.name}${c.phone ? `<span style="color:#94a3b8; font-size:0.8rem; margin-left:0.5rem;">${c.phone}</span>` : ''}${c.loyalty_status ? '<span style="color:#b45309; font-size:0.75rem; font-weight:700; margin-left:6px; background:#fde68a; padding:1px 5px; border-radius:4px;">FIDELIDADE</span>' : ''}</div>
             `).join('');
             suggestions.style.display = 'block';
             suggestions.querySelectorAll('.client-suggestion-item').forEach(item => {
@@ -606,6 +662,15 @@ export const render = () => {
     };
 
     const loadOrders = async () => {
+        if (!window._kanbanClientsRef) {
+            try {
+                const cRes = await fetch('/api/clients');
+                const cJson = await cRes.json();
+                window._kanbanClientsRef = cJson.data || [];
+            } catch (e) {
+                window._kanbanClientsRef = [];
+            }
+        }
         // Client role: fetch only their orders; others: fetch all
         const url = isClient && clientId ? `/api/reports/client-orders/${clientId}` : '/api/orders';
         const res = await fetch(url);
@@ -642,6 +707,10 @@ export const render = () => {
 
 
         data.forEach(order => {
+            // Verify loyalty status directly from clients reference
+            const _clientRef = (window._kanbanClientsRef || []).find(c => c.id == order.client_id);
+            const isLoyalty = _clientRef ? _clientRef.loyalty_status : false;
+
             // Skip orders not in visible statuses for client
             if (isClient && !visibleStatuses.includes(order.status)) return;
 
@@ -668,7 +737,11 @@ export const render = () => {
             if (['aguardando_aceite', 'producao'].includes(order.status) && order.deadline_type && (order.deadline_type === '1D' || order.deadline_type.toUpperCase().includes('1 DIA'))) {
                 if (!notifiedUrgentOrders.has(order.id)) {
                     notifiedUrgentOrders.add(order.id);
-                    showToastAlert(`🚀 O pedido #${getOrderNum(order)} de ${order.client_name} tem prazo reduzido de 1 DIA! Acelere a entrega.`, 'blue');
+                    if (isLoyalty) {
+                        showToastAlert(`⭐ O pedido #${getOrderNum(order)} de ${order.client_name} é de cliente fidelidade e tem prazo reduzido de 1 DIA!`, 'gold');
+                    } else {
+                        showToastAlert(`🚀 O pedido #${getOrderNum(order)} de ${order.client_name} tem prazo reduzido de 1 DIA! Acelere a entrega.`, 'blue');
+                    }
                 }
             }
 
@@ -677,6 +750,40 @@ export const render = () => {
                 const card = document.createElement('div');
                 card.className = `card status-${order.status}`;
                 card.dataset.orderId = order.id;
+
+                // Golden styling for loyalty orders — progressively more gold per column, EXCEPT finalizado (stays green)
+                if (isLoyalty && order.status !== 'finalizado') {
+                    const _goldStages = {
+                        aguardando_aceite: {
+                            border: '2px solid rgba(245,158,11,0.5)',
+                            borderLeft: '5px solid #fbbf24',
+                            bg: 'linear-gradient(150deg,#fffbeb 0%,#fefce8 100%)',
+                            shadow: '0 4px 18px rgba(245,158,11,0.18), 0 1px 4px rgba(0,0,0,0.05)',
+                            radius: '12px'
+                        },
+                        producao: {
+                            border: '2px solid rgba(245,158,11,0.7)',
+                            borderLeft: '6px solid #f59e0b',
+                            bg: 'linear-gradient(150deg,#fef3c7 0%,#fffbeb 100%)',
+                            shadow: '0 6px 24px rgba(245,158,11,0.28), 0 2px 8px rgba(0,0,0,0.06)',
+                            radius: '13px'
+                        },
+                        em_balcao: {
+                            border: '2px solid rgba(217,119,6,0.8)',
+                            borderLeft: '7px solid #d97706',
+                            bg: 'linear-gradient(150deg,#fde68a 0%,#fef3c7 60%,#fffbeb 100%)',
+                            shadow: '0 8px 30px rgba(217,119,6,0.38), 0 2px 10px rgba(0,0,0,0.07)',
+                            radius: '14px'
+                        }
+                    };
+                    const _gs = _goldStages[order.status] || _goldStages.producao;
+                    card.style.border = _gs.border;
+                    card.style.borderLeft = _gs.borderLeft;
+                    card.style.background = _gs.bg;
+                    card.style.boxShadow = _gs.shadow;
+                    card.style.borderRadius = _gs.radius;
+                }
+
 
                 // Enable drag-and-drop only for producao role on producao/finalizado columns
                 const isDraggableCol = (order.status === 'producao' || order.status === 'finalizado');
@@ -710,11 +817,23 @@ export const render = () => {
                         card.style.borderLeftColor = 'red';
                         badge = `<span class="card-badge" style="background:#fecaca; color:#b91c1c; font-weight:700; padding:4px 8px; border-radius:6px;">🚨 Atrasado</span>`;
                     } else {
+                        const _clientRef = (window._kanbanClientsRef || []).find(c => c.id == order.client_id);
+                        const loyaltyTier = _clientRef ? (_clientRef.loyalty_tier || 'bronze') : 'bronze';
+                        
                         const dt = order.deadline_type || '';
-                        if (dt === '1D' || dt.toLowerCase().includes('1 dia') || dt.toLowerCase().includes('urgente')) {
-                            card.style.borderLeftColor = '#3b82f6';
-                            card.style.boxShadow = '0 0 8px rgba(59, 130, 246, 0.3)';
-                            badge = `<span class="card-badge" style="background:linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%); color:#fff; font-weight:bold; letter-spacing:0.5px; border:none; padding:4px 10px; border-radius:6px;">🚀 MÁX PRIORIDADE (1D)</span>`;
+                        if (loyaltyTier === 'ouro') {
+                            card.style.borderLeftColor = '#f59e0b';
+                            card.style.boxShadow = '0 0 15px rgba(245, 158, 11, 0.5)';
+                            badge = `<span class="card-badge" style="background:linear-gradient(135deg, #f59e0b 0%, #b45309 100%); color:#fff; font-weight:900; letter-spacing:0.5px; border:none; padding:4px 10px; border-radius:6px; animation: pulse 2s infinite;">🏆 PRIORIDADE MÁXIMA</span>`;
+                        } else if (dt === '1D' || dt.toLowerCase().includes('1 dia') || dt.toLowerCase().includes('urgente')) {
+                            if (isLoyalty) {
+                                // Loyalty Prata/Bronze: keep gold border, no badge needed
+                                badge = '';
+                            } else {
+                                card.style.borderLeftColor = '#3b82f6';
+                                card.style.boxShadow = '0 0 8px rgba(59, 130, 246, 0.3)';
+                                badge = `<span class="card-badge" style="background:linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%); color:#fff; font-weight:bold; letter-spacing:0.5px; border:none; padding:4px 10px; border-radius:6px;">🚀 MÁX PRIORIDADE (1D)</span>`;
+                            }
                         } else {
                             badge = `<span class="card-badge" style="background:#eff6ff; color:#1d4ed8; font-weight:700; padding:4px 8px; border-radius:6px; border:1px solid #bfdbfe;">⏱️ ${dt}</span>`;
                         }
@@ -743,13 +862,14 @@ export const render = () => {
                 }
 
                 card.innerHTML = `
+                    ${isLoyalty ? `<div style="background:linear-gradient(90deg,#f59e0b,#d97706); color:#fff; font-size:0.72rem; font-weight:900; letter-spacing:0.08em; padding:4px 10px; border-radius:6px 6px 0 0; margin:-12px -12px 8px -12px; text-align:center;">⭐ FIDELIDADE — ATENDIMENTO PRIORITÁRIO</div>` : ""}
                     <div class="card-header" style="justify-content:space-between;"><span>#${getOrderNum(order)}</span> <span>Lançado: ${window.parseDBDate(order.created_at).toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' })} ${window.parseDBDate(order.created_at).toLocaleTimeString('pt-BR', { timeZone: 'America/Sao_Paulo', hour: '2-digit', minute: '2-digit' })}</span></div>
-                    ${order.deadline_at ? `<div style="font-size:0.8rem; color:#059669; padding:2px 0 4px 0; font-weight:600; border-bottom:1px solid #eee; margin-bottom:4px;">📅 Entrega: ${window.parseDBDate(order.deadline_at).toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' })} ${window.parseDBDate(order.deadline_at).toLocaleTimeString('pt-BR', { timeZone: 'America/Sao_Paulo', hour: '2-digit', minute: '2-digit' })}</div>` : ''}
+                    ${order.deadline_at ? `<div style="font-size:0.8rem; color:${isLoyalty ? '#d97706' : '#059669'}; padding:2px 0 4px 0; font-weight:600; border-bottom:1px solid #eee; margin-bottom:4px;">📅 Entrega: ${window.parseDBDate(order.deadline_at).toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' })} ${window.parseDBDate(order.deadline_at).toLocaleTimeString('pt-BR', { timeZone: 'America/Sao_Paulo', hour: '2-digit', minute: '2-digit' })}</div>` : ''}
                     <div class="card-title">${order.client_name || 'Cliente?'} ${order.is_internal ? '<span style="background:#dbeafe; color:#1d4ed8; padding:1px 6px; border-radius:10px; font-size:0.7rem; font-weight:600; margin-left:4px;">🏢 Interno</span>' : ''}</div>
                     <div class="card-detail" style="font-size:0.85rem; color:#555; white-space:pre-wrap;">${order.product_name || 'Produto?'}</div>
                     <div style="display:flex; gap:0.5rem; flex-wrap:wrap; margin-top:4px;">
-                        ${order.status === 'producao' && order.total_estimated_time ? (order.has_terceirizado ? `<div style="font-size:0.8rem; color:#1d4ed8; font-weight:600;">📅 ${order.total_estimated_time} dia${order.total_estimated_time == 1 ? '' : 's'} úteis</div>` : `<div style="font-size:0.8rem; color:#7c3aed; font-weight:600;">⏱️ ${formatDuration(order.total_estimated_time)}</div>`) : ''}
-                        ${order.ai_estimated_time ? `<div style="font-size:0.8rem; color:#059669; font-weight:700; background:#f0fdf4; padding:1px 6px; border-radius:6px; border:1px solid #bbf7d0;">⏱️ Est. Produção: ${formatDuration(order.ai_estimated_time)}</div>` : ''}
+                        ${order.status === 'producao' && order.total_estimated_time ? (order.has_terceirizado ? `<div style="font-size:0.8rem; color:#1d4ed8; font-weight:600;">📅 ${order.total_estimated_time} dia${order.total_estimated_time == 1 ? '' : 's'} úteis</div>` : `<div style="font-size:0.8rem; color:${isLoyalty ? '#b45309' : '#7c3aed'}; font-weight:600;">⏱️ ${formatDuration(order.total_estimated_time)}</div>`) : ''}
+                        ${order.ai_estimated_time ? `<div style="font-size:0.8rem; color:${isLoyalty ? '#b45309' : '#059669'}; font-weight:700; background:${isLoyalty ? '#fef3c7' : '#f0fdf4'}; padding:1px 6px; border-radius:6px; border:1px solid ${isLoyalty ? '#fde68a' : '#bbf7d0'};">⏱️ Est. Produção: ${formatDuration(order.ai_estimated_time)}</div>` : ''}
                     </div>
                     ${pieHtml}
                     <div class="card-footer">
@@ -757,6 +877,7 @@ export const render = () => {
                         ${badge}
                     </div>
                     ${order.moved_by_name ? `<div class="card-moved-by" style="font-size:0.75rem; color:#6b7280; padding:3px 6px; background:#f8fafc; border-top:1px solid #e5e7eb; border-radius:0 0 6px 6px; margin-top:2px;">📦 Movido por: <b>${order.moved_by_name.split(' ')[0]}</b></div>` : ''}
+                    ${isLoyalty ? `<div style="margin:6px -12px -12px -12px; padding:5px 10px; background:linear-gradient(90deg,#f59e0b,#d97706); border-radius:0 0 12px 12px; font-size:0.72rem; font-weight:900; color:#fff; letter-spacing:0.06em; text-align:center;">⭐ PRAZO: 1 DIA — PRIORITÁRIO</div>` : ''}
                 `;
                 col.appendChild(card);
 
@@ -1100,7 +1221,21 @@ export const render = () => {
             `;
         }
 
+        // Style modal golden border for loyalty orders
+        const _detailModal = container.querySelector('#detail-modal');
+        const _detailModalInner = _detailModal && _detailModal.querySelector('.modal');
+        if (_detailModalInner) {
+            if (order.is_priority) {
+                _detailModalInner.style.borderTop = '4px solid #f59e0b';
+                _detailModalInner.style.boxShadow = '0 20px 60px rgba(245,158,11,0.25), 0 4px 20px rgba(0,0,0,0.1)';
+            } else {
+                _detailModalInner.style.borderTop = '';
+                _detailModalInner.style.boxShadow = '';
+            }
+        }
+
         content.innerHTML = `
+            ${order.is_priority ? `<div style="background:linear-gradient(90deg,#f59e0b,#d97706); color:#fff; font-size:0.8rem; font-weight:900; letter-spacing:0.08em; padding:8px 16px; border-radius:8px; margin-bottom:1.25rem; display:flex; align-items:center; gap:8px;">⭐ CLIENTE FIDELIDADE — ATENDIMENTO PRIORITÁRIO — PRAZO: 1 DIA</div>` : ""}
             <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:1.5rem; gap: 1rem; flex-wrap: wrap;">
                 <div style="flex:1;">
                      <div style="font-size:0.8rem; font-weight:800; color:#94a3b8; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:0.25rem;">👤 Cliente</div>
@@ -1692,8 +1827,26 @@ export const render = () => {
 
         const isCostMode = isInternalMode();
         const discountSelect = container.querySelector('#order-discount');
-        const discountPct = discountSelect && !isCostMode ? parseFloat(discountSelect.value || 0) : 0;
-        const discountValue = total * (discountPct / 100);
+
+        // Check if selected client is loyalty
+        const selectedClientId = container.querySelector('#client-select') && container.querySelector('#client-select').value;
+        const clientData = window._kanbanClientsRef ? window._kanbanClientsRef.find(c => c.id == selectedClientId) : null;
+        const isLoyaltyClient = !!(clientData && clientData.loyalty_status);
+        const loyaltyTier = clientData ? (clientData.loyalty_tier || 'bronze') : 'bronze';
+
+        let discountPct = 0;
+        let loyaltyDiscountValue = 0;
+        let loyaltyPct = 0.05;
+        if (loyaltyTier === 'prata') loyaltyPct = 0.10;
+        if (loyaltyTier === 'ouro') loyaltyPct = 0.15;
+
+        if (isLoyaltyClient && !isCostMode) {
+            loyaltyDiscountValue = Math.round(total * loyaltyPct * 100) / 100;
+        } else if (discountSelect && !isCostMode) {
+            discountPct = parseFloat(discountSelect.value || 0);
+        }
+
+        const discountValue = isLoyaltyClient ? loyaltyDiscountValue : total * (discountPct / 100);
         const finalTotal = total - discountValue;
 
         totalInput.dataset.baseTotal = total.toFixed(2);
@@ -1703,6 +1856,8 @@ export const render = () => {
         if (total > 0) {
             if (isCostMode) {
                 autoText = `💰 Custo total: R$ ${finalTotal.toFixed(2)}`;
+            } else if (isLoyaltyClient) {
+                autoText = `💰 Bruto: R$ ${total.toFixed(2).replace('.',',')} - Desconto Fidelidade (${Math.round(loyaltyPct*100)}%): - R$ ${loyaltyDiscountValue.toFixed(2).replace('.',',')}`;
             } else {
                 autoText = `Sugestão: R$ ${total.toFixed(2)}`;
                 if (discountPct > 0) {
@@ -2307,16 +2462,8 @@ export const render = () => {
             payload.total_value = parseFloat((originalValue * 0.85).toFixed(2));
             payload.discount_value = parseFloat((originalValue - payload.total_value).toFixed(2));
         } else {
-            const discountElement = container.querySelector('#order-discount');
-            if (discountElement && parseFloat(discountElement.value) > 0) {
-                // Se foi configurado desconto e o usuário não digitou um valor completamente diferente do calculado...
-                // Usaremos a diferença
-                payload.discount_value = parseFloat((originalValue - finalValue).toFixed(2));
-                if (payload.discount_value < 0) payload.discount_value = 0;
-            } else {
-                payload.discount_value = parseFloat((originalValue - finalValue).toFixed(2));
-                if (payload.discount_value < 0) payload.discount_value = 0;
-            }
+            payload.discount_value = parseFloat((originalValue - finalValue).toFixed(2));
+            if (payload.discount_value < 0) payload.discount_value = 0;
             payload.total_value = finalValue;
         }
 
@@ -2348,6 +2495,16 @@ export const render = () => {
 
                 orderModal.classList.remove('open');
                 e.target.reset();
+
+                // Loyalty golden toast
+                const _loyaltyClient = (window._kanbanClientsRef || []).find(c => c.id == (container.querySelector('#client-select') || {}).value);
+                if (_loyaltyClient && _loyaltyClient.loyalty_status) {
+                    const _toast = document.createElement('div');
+                    _toast.style.cssText = 'position:fixed; top:24px; left:50%; transform:translateX(-50%); z-index:99999; background:linear-gradient(135deg,#f59e0b,#d97706); color:#fff; padding:16px 28px; border-radius:14px; font-size:1rem; font-weight:800; box-shadow:0 8px 32px rgba(245,158,11,0.45); display:flex; align-items:center; gap:10px; letter-spacing:0.02em; animation: fadeInDown 0.3s ease;';
+                    _toast.innerHTML = '<span style="font-size:1.4rem;">⭐</span> <div><div style="font-size:1.05rem;">Pedido FIDELIDADE criado com prioridade!</div><div style="font-size:0.82rem;opacity:0.9;font-weight:600;margin-top:2px;">Atendimento prioritário — Prazo: 1 Dia — Desconto de 5% aplicado</div></div>';
+                    document.body.appendChild(_toast);
+                    setTimeout(() => { _toast.style.opacity = '0'; _toast.style.transition = 'opacity 0.4s'; setTimeout(() => _toast.remove(), 400); }, 5000);
+                }
 
                 // Auto Copy Summary
                 const clientName = container.querySelector('#client-search')?.value || 'Cliente';

@@ -26,6 +26,11 @@ router.put('/clients/:id', clientController.updateClient);
 router.delete('/clients/:id', clientController.deleteClient);
 router.post('/clients/:id/toggle-access', clientController.toggleClientAccess);
 router.post('/clients/:id/reset-access', clientController.resetClientAccess);
+router.post('/clients/:id/sync-access-name', clientController.syncAccessName);
+router.get('/clients/:id/access-credentials', clientController.getClientAccess);
+router.get('/clients/:id/credit-movements', clientController.getCreditMovements);
+router.post('/clients/:id/credit', clientController.addCreditTransaction);
+router.delete('/clients/movements/:id', clientController.deleteCreditMovement);
 
 // Products
 router.get('/products', productController.getAllProducts);
@@ -62,6 +67,8 @@ router.delete('/orders/:id', orderController.deleteOrder);
 // Comments
 router.get('/orders/:id/comments', orderController.getComments);
 router.post('/orders/:id/comments', orderController.addComment);
+
+router.post('/clients/:id/ack-tier', clientController.ackTierNotification);
 
 // Reports
 router.get('/reports/sales', orderController.getSalesReport);

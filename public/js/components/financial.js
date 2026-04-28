@@ -25,6 +25,10 @@ export const render = (user) => {
             <input type="number" id="filter-min" placeholder="Valor mín" step="0.01" min="0" style="width:100px; padding:0.5rem; border:1px solid var(--border); border-radius:6px; font-size:0.9rem;">
             <input type="number" id="filter-max" placeholder="Valor máx" step="0.01" min="0" style="width:100px; padding:0.5rem; border:1px solid var(--border); border-radius:6px; font-size:0.9rem;">
             <button class="btn btn-secondary" id="btn-clear-filter" style="width:auto; padding:0.5rem 0.75rem; font-size:0.85rem;">Limpar</button>
+            <div style="display:flex; align-items:center; gap:0.6rem; background:#fff7ed; padding:0.5rem 1rem; border-radius:8px; border:1px solid #fde68a; cursor:pointer;" onclick="const cb = document.getElementById('filter-fidelidade'); cb.checked = !cb.checked; cb.dispatchEvent(new Event('change'));">
+                <input type="checkbox" id="filter-fidelidade" style="width:18px; height:18px; cursor:pointer; pointer-events:none;">
+                <label style="margin:0; cursor:pointer; font-weight:800; color:#b45309; font-size:0.9rem; user-select:none;">Apenas Fidelidade</label>
+            </div>
         </div>
 
         <div id="fin-monthly-container"></div>
@@ -84,12 +88,10 @@ export const render = (user) => {
         const filteredReserved = allReserved.filter(r => applyToAll(r, r => r.total_value, false));
         const filteredMaterials = allMaterialCosts.filter(m => applyToAll(m, m => m.cost_amount, false));
         const filteredDispatch = allDispatchCosts.filter(d => applyToAll(d, d => d.amount, true));
-
-        // Aplicamos a renderização à visão unificada
-        renderUnifiedData(filteredSales, filteredReserved, filteredMaterials, filteredDispatch);
+        renderUnifiedData(filteredSales, filteredReserved, filteredMaterials, filteredDispatch, container.querySelector('#filter-fidelidade').checked);
     };
 
-    const renderUnifiedData = (sales, reserved, materials, dispatch) => {
+    const renderUnifiedData = (sales, reserved, materials, dispatch, isFidelidadeView = false) => {
         let launched = 0;
         let totalDescontos = 0;
         let totalGeralFiltered = 0;

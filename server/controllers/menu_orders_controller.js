@@ -51,10 +51,16 @@ const create = (req, res) => {
         function (err) {
             if (err) return res.status(500).json({ error: err.message });
             db.get(
-                `SELECT mo.*, u.name AS created_by_name, u.role AS created_by_role, c.name as client_name
-                 FROM menu_orders mo 
+                `SELECT mo.*, u.name AS created_by_name, u.role AS created_by_role,
+                        c.name AS client_name, c.core_discount,
+                        p.price AS product_price,
+                        o.total_value AS launched_total,
+                        o.discount_value AS launched_discount
+                 FROM menu_orders mo
                  LEFT JOIN users u ON mo.created_by = u.id
                  LEFT JOIN clients c ON mo.client_id = c.id
+                 LEFT JOIN products p ON (CASE WHEN mo.print_type = 'frente_e_verso' THEN 94 ELSE 54 END) = p.id
+                 LEFT JOIN orders o ON mo.order_id = o.id
                  WHERE mo.id = ?`,
                 [this.lastID],
                 (err2, row) => {

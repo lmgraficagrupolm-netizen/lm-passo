@@ -44,82 +44,132 @@ export const render = () => {
 
         <!-- Modal -->
         <div class="modal-overlay" id="client-modal">
-            <div class="modal">
+            <div class="modal" style="max-width: 650px; width: 95%;">
                 <div class="modal-header">
-                    <h3 id="client-modal-title">Novo Cliente</h3>
-                    <button class="modal-close">&times;</button>
+                    <h3 id="client-modal-title" style="font-size: 1.5rem; font-weight: 900; color: #1e293b;">Novo Cliente</h3>
+                    <button class="modal-close" style="background:none; border:none; font-size:1.5rem; cursor:pointer; color:#94a3b8;">&times;</button>
                 </div>
-                <form id="client-form">
+                <form id="client-form" style="padding: 1rem 0;">
                     <input type="hidden" name="id" id="client-id">
-                    <div class="form-group">
-                        <label>Nome</label>
-                        <input type="text" name="name" id="client-name" required>
-                    </div>
-                    <div class="form-group">
-                        <label>Telefone</label>
-                        <input type="text" name="phone" id="client-phone" placeholder="(XX) XXXXX-XXXX" required>
-                    </div>
-                    <div class="form-group">
-                        <label>Origem</label>
-                        <select name="origin" id="client-origin">
-                            <option value="Site">Site</option>
-                            <option value="Whatsapp">Whatsapp</option>
-                            <option value="Balcão">Balcão</option>
-                            <option value="Indicação">Indicação</option>
-                            <option value="CORE">CORE</option>
-                        </select>
-                    </div>
-                    <div class="form-group" style="display:flex; align-items:center; gap:0.75rem; padding:0.6rem 0.75rem; background:#f5f3ff; border-radius:8px; border:1px solid #e0d4f5;">
-                        <input type="checkbox" id="client-discount" name="core_discount" style="width:18px; height:18px; cursor:pointer;">
-                        <label for="client-discount" style="margin:0; cursor:pointer; font-weight:600; color:#7c3aed;">🏷️ Desconto CORE 15%</label>
-                    </div>
-                    <div class="form-group" style="display:flex; align-items:center; gap:0.75rem; padding:0.6rem 0.75rem; background:#eff6ff; border-radius:8px; border:1px solid #bfdbfe;">
-                        <input type="checkbox" id="client-extended-toggle" style="width:18px; height:18px; cursor:pointer;">
-                        <label for="client-extended-toggle" style="margin:0; cursor:pointer; font-weight:600; color:#1d4ed8;">📋 Dados Completos (CPF, Endereço, etc.)</label>
-                    </div>
-                    <div id="client-extended-fields" style="display:none; border:1px solid #e0e7ff; border-radius:8px; padding:0.75rem; background:#f8faff; margin-top:0.25rem;">
-                        <div class="form-group" style="margin-bottom:0.5rem">
-                            <label style="font-size:0.85rem; font-weight:600; color:#374151;">CPF / CNPJ</label>
-                            <input type="text" name="cpf" id="client-cpf" placeholder="000.000.000-00" style="width:100%; padding:0.4rem 0.5rem; border:1px solid #d1d5db; border-radius:6px;">
+                    
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.5rem;">
+                        <div class="form-group">
+                            <label style="font-weight: 700; color: #475569; font-size: 0.85rem;">Nome Completo</label>
+                            <input type="text" name="name" id="client-name" required style="width:100%; padding:0.6rem; border:1.5px solid #e2e8f0; border-radius:10px;">
                         </div>
-                        <div class="form-group" style="margin-bottom:0.5rem">
-                            <label style="font-size:0.85rem; font-weight:600; color:#374151;">Endereço</label>
-                            <input type="text" name="address" id="client-address" placeholder="Rua, número, complemento" style="width:100%; padding:0.4rem 0.5rem; border:1px solid #d1d5db; border-radius:6px;">
-                        </div>
-                        <div style="display:flex; gap:0.5rem;">
-                            <div class="form-group" style="flex:2; margin-bottom:0.5rem">
-                                <label style="font-size:0.85rem; font-weight:600; color:#374151;">Cidade</label>
-                                <input type="text" name="city" id="client-city" placeholder="Cidade" style="width:100%; padding:0.4rem 0.5rem; border:1px solid #d1d5db; border-radius:6px;">
-                            </div>
-                            <div class="form-group" style="flex:1; margin-bottom:0.5rem">
-                                <label style="font-size:0.85rem; font-weight:600; color:#374151;">Estado</label>
-                                <input type="text" name="state" id="client-state" placeholder="UF" maxlength="2" style="width:100%; padding:0.4rem 0.5rem; border:1px solid #d1d5db; border-radius:6px; text-transform:uppercase;">
-                            </div>
-                        </div>
-                        <div class="form-group" style="margin-bottom:0">
-                            <label style="font-size:0.85rem; font-weight:600; color:#374151;">CEP</label>
-                            <input type="text" name="zip_code" id="client-zip" placeholder="00000-000" style="width:100%; padding:0.4rem 0.5rem; border:1px solid #d1d5db; border-radius:6px;">
+                        <div class="form-group">
+                            <label style="font-weight: 700; color: #475569; font-size: 0.85rem;">Telefone / WhatsApp</label>
+                            <input type="text" name="phone" id="client-phone" placeholder="(XX) XXXXX-XXXX" required style="width:100%; padding:0.6rem; border:1.5px solid #e2e8f0; border-radius:10px;">
                         </div>
                     </div>
 
-                    <!-- Financial Access Toggle (edit only) -->
-                    <div id="access-section" style="display:none; margin-top:0.25rem;">
-                        <div class="form-group" style="display:flex; align-items:center; gap:0.75rem; padding:0.6rem 0.75rem; background:#f0fdf4; border-radius:8px; border:1px solid #86efac;">
-                            <input type="checkbox" id="client-access-toggle" style="width:18px; height:18px; cursor:pointer;">
-                            <label for="client-access-toggle" style="margin:0; cursor:pointer; font-weight:600; color:#065f46;">🔐 Acesso Financeiro (Portal do Cliente)</label>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.5rem;">
+                        <div class="form-group">
+                            <label style="font-weight: 700; color: #475569; font-size: 0.85rem;">Origem do Cliente</label>
+                            <select name="origin" id="client-origin" style="width:100%; padding:0.6rem; border:1.5px solid #e2e8f0; border-radius:10px;">
+                                <option value="Site">Site</option>
+                                <option value="Whatsapp">Whatsapp</option>
+                                <option value="Balcão">Balcão</option>
+                                <option value="Indicação">Indicação</option>
+                                <option value="CORE">CORE</option>
+                            </select>
                         </div>
-                        <div id="access-info" style="display:none; margin-top:0.5rem; padding:0.75rem; background:#f0fdf4; border-radius:8px; border:1px solid #86efac;">
-                        <div style="font-size:0.85rem; color:#065f46; font-weight:600; margin-bottom:0.4rem;">✅ Acesso ativo</div>
-                        <div style="font-size:0.85rem; color:#374151; margin-bottom:0.5rem;">Usuário: <b id="access-username-display">-</b></div>
-                        <button type="button" id="btn-reset-access" style="background:#eff6ff; color:#1d4ed8; border:1px solid #bfdbfe; padding:0.35rem 0.75rem; border-radius:6px; font-size:0.8rem; font-weight:600; cursor:pointer;">🔁 Reenviar / Resetar Acesso</button>
-                    </div>
+                        <div class="form-group" style="display:flex; align-items:center; gap:0.75rem; padding:0.5rem 1rem; background:#f5f3ff; border-radius:10px; border:1.5px solid #e0d4f5; margin-top:1.3rem;">
+                            <input type="checkbox" id="client-discount" name="core_discount" style="width:18px; height:18px; cursor:pointer;">
+                            <label for="client-discount" style="margin:0; cursor:pointer; font-weight:700; color:#7c3aed; font-size:0.85rem;">🏷️ Desconto CORE 15%</label>
+                        </div>
                     </div>
 
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-top:1rem">
-                        <button type="button" class="btn" id="btn-delete-client" style="background:#fee2e2; color:#b91c1c; border:1px solid #fca5a5; display:none;">🗑️ Excluir Cliente</button>
-                        <div style="display:flex; gap:0.5rem; margin-left:auto">
-                            <button type="button" class="btn btn-secondary modal-close-btn">Cancelar</button>
-                            <button type="submit" class="btn btn-primary">Salvar</button>
+                    <div style="margin-bottom: 1.5rem;">
+                        <div style="display:flex; align-items:center; gap:0.75rem; padding:0.6rem 1rem; background:#eff6ff; border-radius:10px; border:1.5px solid #bfdbfe; cursor:pointer;" onclick="const cb = document.getElementById('client-extended-toggle'); cb.checked = !cb.checked; cb.dispatchEvent(new Event('change'));">
+                            <input type="checkbox" id="client-extended-toggle" style="width:18px; height:18px; cursor:pointer; pointer-events:none;">
+                            <label style="margin:0; cursor:pointer; font-weight:700; color:#1d4ed8; font-size:0.85rem;">📋 Dados Completos (CPF, Endereço, etc.)</label>
+                        </div>
+                        
+                        <div id="client-extended-fields" style="display:none; margin-top:0.75rem; padding:1.25rem; background:#f8fafc; border:1.5px solid #e2e8f0; border-radius:12px;">
+                            <div style="display:grid; grid-template-columns: 1fr 1.5fr; gap:1rem; margin-bottom:1rem;">
+                                <div class="form-group">
+                                    <label style="font-weight:700; font-size:0.8rem; color:#64748b;">CPF / CNPJ</label>
+                                    <input type="text" name="cpf" id="client-cpf" placeholder="000.000.000-00" style="width:100%; padding:0.5rem; border:1px solid #cbd5e1; border-radius:8px;">
+                                </div>
+                                <div class="form-group">
+                                    <label style="font-weight:700; font-size:0.8rem; color:#64748b;">CEP (Busca Automática)</label>
+                                    <input type="text" name="zip_code" id="client-zip" placeholder="00000-000" style="width:100%; padding:0.5rem; border:1px solid #cbd5e1; border-radius:8px;">
+                                </div>
+                            </div>
+                            <div class="form-group" style="margin-bottom:1rem;">
+                                <label style="font-weight:700; font-size:0.8rem; color:#64748b;">Endereço</label>
+                                <input type="text" name="address" id="client-address" style="width:100%; padding:0.5rem; border:1px solid #cbd5e1; border-radius:8px;">
+                            </div>
+                            <div style="display:grid; grid-template-columns: 2fr 1fr; gap:1rem;">
+                                <div class="form-group">
+                                    <label style="font-weight:700; font-size:0.8rem; color:#64748b;">Cidade</label>
+                                    <input type="text" name="city" id="client-city" style="width:100%; padding:0.5rem; border:1px solid #cbd5e1; border-radius:8px;">
+                                </div>
+                                <div class="form-group">
+                                    <label style="font-weight:700; font-size:0.8rem; color:#64748b;">Estado</label>
+                                    <input type="text" name="state" id="client-state" maxlength="2" style="width:100%; padding:0.5rem; border:1px solid #cbd5e1; border-radius:8px; text-transform:uppercase;">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Financial & Loyalty Section -->
+                    <div style="background:#fffbeb; border:2px solid #fcd34d; border-radius:14px; padding:1.25rem; margin-bottom:1.5rem;">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+                            <div style="display:flex; align-items:center; gap:0.75rem;">
+                                <input type="checkbox" id="client-loyalty-toggle" name="loyalty_status" style="width:20px; height:20px; cursor:pointer;">
+                                <label for="client-loyalty-toggle" style="margin:0; cursor:pointer; font-weight:900; color:#92400e; font-size:1rem;">⭐ CONTA FIDELIDADE</label>
+                            </div>
+                            <div id="loyalty-tier-badge" style="display:none; padding:4px 12px; border-radius:20px; font-weight:900; font-size:0.7rem; border:2px solid;"></div>
+                        </div>
+
+                        <div id="client-loyalty-fields" style="display:none; border-top:1px solid #fde68a; padding-top:1rem;">
+                            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:1.25rem; margin-bottom:1.25rem;">
+                                <div class="form-group">
+                                    <label style="font-weight:800; color:#b45309; font-size:0.85rem; display:block; margin-bottom:0.4rem;">💰 Saldo Atual (R$)</label>
+                                    <input type="number" name="credit_balance" id="client-credit-balance-input" step="0.01" style="width:100%; padding:0.75rem; border:2px solid #fcd34d; border-radius:10px; font-weight:900; font-size:1.1rem; color:#92400e; background:white;">
+                                    <button type="button" id="btn-delete-loyalty" style="background:none; border:none; color:#ef4444; font-size:0.75rem; font-weight:800; cursor:pointer; padding:0.5rem 0; text-decoration:underline;" onmouseover="this.style.color='#b91c1c'" onmouseout="this.style.color='#ef4444'">🗑️ APAGAR CONTA FIDELIDADE</button>
+                                </div>
+                                <div class="form-group">
+                                    <label style="font-weight:800; color:#b45309; font-size:0.85rem; display:block; margin-bottom:0.4rem;">💳 Limite / Faturamento</label>
+                                    <div style="display:flex; gap:0.5rem;">
+                                        <input type="number" id="client-credit-limit" name="credit_limit" placeholder="Limite" style="flex:1.5; padding:0.6rem; border:1px solid #fde68a; border-radius:8px;">
+                                        <input type="number" id="client-billing-date" name="billing_date" placeholder="Dia" min="1" max="31" style="flex:1; padding:0.6rem; border:1px solid #fde68a; border-radius:8px;">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div id="loyalty-statement-section" style="display:none; background:white; border:1px solid #fde68a; border-radius:12px; overflow:hidden;">
+                                <div style="background:#fef3c7; padding:0.6rem 1rem; font-weight:900; color:#92400e; font-size:0.75rem; display:flex; justify-content:space-between;">
+                                    <span>HISTÓRICO RECENTE</span>
+                                    <span id="client-credit-balance-display">R$ 0,00</span>
+                                </div>
+                                <div id="credit-movements-list" style="max-height:180px; overflow-y:auto;"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Portal Access Toggle -->
+                    <div id="access-section" style="display:none; margin-bottom:1.5rem;">
+                        <div style="display:flex; align-items:center; gap:0.75rem; padding:0.6rem 1rem; background:#f0fdf4; border-radius:10px; border:1.5px solid #86efac; cursor:pointer;" onclick="const cb = document.getElementById('client-access-toggle'); cb.checked = !cb.checked; cb.dispatchEvent(new Event('change'));">
+                            <input type="checkbox" id="client-access-toggle" style="width:18px; height:18px; cursor:pointer; pointer-events:none;">
+                            <label style="margin:0; cursor:pointer; font-weight:700; color:#065f46; font-size:0.85rem;">🔐 Acesso ao Portal (Financeiro Cliente)</label>
+                        </div>
+                        <div id="access-info" style="display:none; margin-top:0.75rem; padding:1rem; background:#f0fdf4; border:1.5px solid #bbf7d0; border-radius:12px; display:flex; justify-content:space-between; align-items:center;">
+                            <div>
+                                <div style="font-size:0.75rem; color:#065f46; font-weight:800; text-transform:uppercase;">Usuário Ativo</div>
+                                <div id="access-username-display" style="font-weight:900; color:#1e293b;">-</div>
+                            </div>
+                            <button type="button" id="btn-reset-access" style="background:white; color:#16a34a; border:1.5px solid #16a34a; padding:0.4rem 0.8rem; border-radius:8px; font-size:0.75rem; font-weight:800; cursor:pointer;">🔁 RESETAR SENHA</button>
+                        </div>
+                    </div>
+
+                    <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid #e2e8f0; padding-top:1.5rem; margin-top:0.5rem;">
+                        <button type="button" class="btn" id="btn-delete-client" style="background:#fee2e2; color:#b91c1c; border:1.5px solid #fca5a5; font-weight:800; display:none; padding:0.7rem 1.2rem; border-radius:10px;">🗑️ EXCLUIR CLIENTE</button>
+                        <div style="display:flex; gap:0.75rem; margin-left:auto;">
+                            <button type="button" class="btn btn-secondary modal-close-btn" style="padding:0.7rem 1.5rem; border-radius:10px; font-weight:700;">Cancelar</button>
+                            <button type="submit" class="btn btn-primary" style="padding:0.7rem 2rem; border-radius:10px; font-weight:800; background:linear-gradient(135deg, var(--primary), #4c1d95); border:none; box-shadow:0 4px 12px rgba(139, 92, 246, 0.3);">SALVAR ALTERAÇÕES</button>
                         </div>
                     </div>
                 </form>
@@ -192,7 +242,15 @@ export const render = () => {
                         ${c.origin || '-'}
                     </span>
                 </td>
-                <td>${c.core_discount ? '<span style="background:#fef2f2; color:#ef4444; padding:6px 12px; border-radius:8px; font-size:0.8rem; font-weight:800; border:1px solid #fecaca; box-shadow:0 2px 5px rgba(239, 68, 68, 0.1);">🤑 15% OFF</span>' : '<span style="color:#cbd5e1; font-weight:bold;">—</span>'}</td>
+                <td>${c.core_discount ? '<span style="background:#fef2f2; color:#ef4444; padding:6px 12px; border-radius:8px; font-size:0.8rem; font-weight:800; border:1px solid #fecaca; box-shadow:0 2px 5px rgba(239, 68, 68, 0.1);">🤑 15% OFF</span>' : ''}
+                    ${(() => {
+                        if (!c.loyalty_status) return '';
+                        const tier = c.loyalty_tier || 'bronze';
+                        if (tier === 'ouro') return '<span style="background:linear-gradient(135deg, #f59e0b, #b45309); color:white; padding:4px 8px; border-radius:8px; font-size:0.7rem; font-weight:900; display:block; margin-top:4px;">🏆 VIP OURO</span>';
+                        if (tier === 'prata') return '<span style="background:linear-gradient(135deg, #94a3b8, #64748b); color:white; padding:4px 8px; border-radius:8px; font-size:0.7rem; font-weight:900; display:block; margin-top:4px;">🥈 PRATA</span>';
+                        return '<span style="background:#fff7ed; color:#b45309; border:1px solid #fde68a; padding:4px 8px; border-radius:8px; font-size:0.7rem; font-weight:900; display:block; margin-top:4px;">🥉 BRONZE</span>';
+                    })()}
+                </td>
                 <td>${c.has_access
                     ? '<span style="background:#f0fdf4; color:#16a34a; padding:6px 12px; border-radius:8px; font-size:0.8rem; font-weight:800; border:1px solid #bbf7d0; box-shadow:0 2px 5px rgba(22, 163, 74, 0.1);">🔐 ATIVO</span>'
                     : '<span style="color:#cbd5e1; font-weight:bold;">—</span>'
@@ -243,6 +301,64 @@ export const render = () => {
     const extendedFields = container.querySelector('#client-extended-fields');
     extendedToggle.onchange = () => {
         extendedFields.style.display = extendedToggle.checked ? 'block' : 'none';
+    };
+
+    // Loyalty toggle
+    const loyaltyToggle = container.querySelector('#client-loyalty-toggle');
+    const loyaltyFields = container.querySelector('#client-loyalty-fields');
+    loyaltyToggle.onchange = () => {
+        loyaltyFields.style.display = loyaltyToggle.checked ? 'block' : 'none';
+    };
+
+    const loadCreditStatement = async (clientId) => {
+        const listEl = container.querySelector('#credit-movements-list');
+        listEl.innerHTML = '<div style="padding:1rem; text-align:center; color:#94a3b8; font-size:0.85rem;">Carregando...</div>';
+        try {
+            const res = await fetch(`/api/clients/${clientId}/credit-movements`);
+            const { data } = await res.json();
+            if (!data || data.length === 0) {
+                listEl.innerHTML = '<div style="padding:1rem; text-align:center; color:#94a3b8;">Nenhuma compra registrada.</div>';
+                return;
+            }
+            listEl.innerHTML = data.map(m => {
+                const isCredit = m.type === 'payment_credit';
+                const color = isCredit ? '#10b981' : '#ef4444';
+                const sign  = isCredit ? '+' : '-';
+                const date  = new Date(m.created_at).toLocaleDateString('pt-BR');
+                return `
+                    <div style="padding:0.75rem; border-bottom:1px solid #f1f5f9; display:flex; justify-content:space-between; align-items:center;">
+                        <div style="display:flex; flex-direction:column; gap:0.2rem;">
+                            <span style="font-weight:700; color:#334155; font-size:0.85rem;">${m.description || 'Lançamento'}</span>
+                            <span style="font-size:0.7rem; color:#94a3b8; font-weight:600;">${date}</span>
+                        </div>
+                        <div style="display:flex; align-items:center; gap:0.75rem;">
+                            <span style="font-weight:900; color:${color}; font-size:0.9rem;">${sign} R$ ${parseFloat(m.amount).toFixed(2).replace('.', ',')}</span>
+                            <button class="btn-delete-movement" data-id="${m.id}" style="background:none; border:none; color:#cbd5e1; cursor:pointer; padding:0.2rem; font-size:0.9rem;" title="Apagar transação" onmouseover="this.style.color='#ef4444'" onmouseout="this.style.color='#cbd5e1'">🗑️</button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            listEl.querySelectorAll('.btn-delete-movement').forEach(btn => {
+                btn.onclick = async () => {
+                    if (!confirm('Deseja realmente apagar este lançamento? O saldo será recalculado.')) return;
+                    try {
+                        const res = await fetch(`/api/clients/movements/${btn.dataset.id}`, { method: 'DELETE' });
+                        if (res.ok) {
+                            loadCreditStatement(clientId);
+                            // Refresh balance display
+                            const clientRes = await fetch('/api/clients');
+                            const { data: clients } = await clientRes.json();
+                            const updatedClient = clients.find(c => c.id == clientId);
+                            if (updatedClient) {
+                                container.querySelector('#client-credit-balance-display').textContent = `R$ ${parseFloat(updatedClient.credit_balance || 0).toFixed(2).replace('.', ',')}`;
+                                container.querySelector('#client-credit-balance-input').value = updatedClient.credit_balance;
+                            }
+                        }
+                    } catch (e) { alert('Erro ao apagar: ' + e.message); }
+                };
+            });
+        } catch (e) { console.error(e); }
     };
 
     // ── CEP auto-fill via ViaCEP ──────────────────────────────────────────
@@ -420,6 +536,10 @@ export const render = () => {
         extendedFields.style.display = 'none';
         container.querySelector('#access-section').style.display = 'none';
         container.querySelector('#client-modal-title').textContent = 'Novo Cliente';
+        loyaltyToggle.checked = false;
+        loyaltyFields.style.display = 'none';
+        container.querySelector('#loyalty-tier-badge').style.display = 'none';
+        container.querySelector('#loyalty-statement-section').style.display = 'none';
         deleteBtn.style.display = 'none';
         modal.classList.add('open');
     };
@@ -453,6 +573,41 @@ export const render = () => {
             accessInfo.style.display = 'none';
         }
 
+        // Loyalty setup
+        loyaltyToggle.checked = !!client.loyalty_status;
+        loyaltyFields.style.display = client.loyalty_status ? 'block' : 'none';
+        container.querySelector('#client-credit-limit').value = client.credit_limit || 0;
+        container.querySelector('#client-billing-date').value = client.billing_date || 1;
+        container.querySelector('#client-credit-balance-input').value = client.credit_balance || 0;
+
+        const tierBadge = container.querySelector('#loyalty-tier-badge');
+        const statementSection = container.querySelector('#loyalty-statement-section');
+        
+        if (client.loyalty_status) {
+            statementSection.style.display = 'block';
+            container.querySelector('#client-credit-balance-display').textContent = `R$ ${parseFloat(client.credit_balance || 0).toFixed(2).replace('.', ',')}`;
+            loadCreditStatement(client.id);
+
+            const tier = client.loyalty_tier || 'bronze';
+            tierBadge.style.display = 'block';
+            if (tier === 'ouro') {
+                tierBadge.innerHTML = '🏆 PARCEIRO VIP OURO (15% OFF)';
+                tierBadge.style.borderColor = '#f59e0b';
+                tierBadge.style.color = '#b45309';
+            } else if (tier === 'prata') {
+                tierBadge.innerHTML = '🥈 CLIENTE PRATA (10% OFF)';
+                tierBadge.style.borderColor = '#94a3b8';
+                tierBadge.style.color = '#475569';
+            } else {
+                tierBadge.innerHTML = '🥉 CLIENTE BRONZE (5% OFF)';
+                tierBadge.style.borderColor = '#d97706';
+                tierBadge.style.color = '#92400e';
+            }
+        } else {
+            tierBadge.style.display = 'none';
+            statementSection.style.display = 'none';
+        }
+
         container.querySelector('#client-modal-title').textContent = 'Editar Cliente';
         deleteBtn.style.display = 'inline-block';
         deleteBtn.dataset.id = client.id;
@@ -464,6 +619,27 @@ export const render = () => {
     container.querySelector('#btn-new-client').onclick = openNewModal;
     container.querySelector('.modal-close').onclick = closeModal;
     container.querySelector('.modal-close-btn').onclick = closeModal;
+
+    const deleteLoyaltyBtn = container.querySelector('#btn-delete-loyalty');
+    deleteLoyaltyBtn.onclick = async () => {
+        if (!currentEditClient) return;
+        if (!confirm('Deseja apagar a conta fidelidade? O saldo será zerado e o acesso revogado.')) return;
+        try {
+            const res = await fetch(`/api/clients/${currentEditClient.id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    loyalty_status: 0,
+                    loyalty_tier: 'bronze',
+                    credit_balance: 0,
+                    credit_limit: 0,
+                    has_access: 0,
+                    access_username: null
+                })
+            });
+            if (res.ok) { closeModal(); loadClients(); }
+        } catch (e) { alert('Erro: ' + e.message); }
+    };
 
     // Delete client
     deleteBtn.onclick = async () => {

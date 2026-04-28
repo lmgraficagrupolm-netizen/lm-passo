@@ -1,13 +1,14 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-BR" translate="no">
 
 <head>
     <meta charset="UTF-8">
+    <meta name="google" content="notranslate">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="theme-color" content="#7c3aed">
     <title>LM | PASSO - Gestão de Pedidos</title>
     <link rel="manifest" href="/manifest.json">
-    <link rel="stylesheet" href="css/main.css?v=2026-04-14-1755">
+    <link rel="stylesheet" href="css/main.css?v=2026-04-24-RESTORE-1">
     <!-- Ionicons (local) -->
     <script type="module" src="/libs/ionicons/ionicons.esm.js"></script>
     <script nomodule src="/libs/ionicons/ionicons.js"></script>
@@ -61,6 +62,16 @@
         script.type = 'module';
         script.src = 'js/app.js?v=' + Date.now();
         document.body.appendChild(script);
+    </script>
+    <script>
+        // Fail-safe: if app is still loading after 5s, it might be a cache/network issue
+        setTimeout(() => {
+            const app = document.getElementById('app');
+            if (app && app.textContent.includes('Carregando aplicação...')) {
+                console.warn('App stuck on loading, attempting cache-bust reload...');
+                location.href = location.href.split('?')[0] + '?v=' + Date.now();
+            }
+        }, 5000);
     </script>
 </body>
 

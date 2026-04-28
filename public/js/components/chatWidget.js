@@ -848,6 +848,31 @@ export const initChatWidget = (user, parentContainer) => {
         input.focus();
     };
 
+    // ── Som de Notificação (Nativo) ───────────────────────
+    const playNotificationSound = () => {
+        try {
+            const AudioCtx = window.AudioContext || window.webkitAudioContext;
+            if (!AudioCtx) return;
+            const ctx = new AudioCtx();
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(800, ctx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(1200, ctx.currentTime + 0.08);
+            
+            gain.gain.setValueAtTime(0, ctx.currentTime);
+            gain.gain.linearRampToValueAtTime(0.2, ctx.currentTime + 0.02);
+            gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.1);
+            
+            osc.start(ctx.currentTime);
+            osc.stop(ctx.currentTime + 0.1);
+        } catch (e) { console.warn('Audio play failed', e); }
+    };
+
     // ── Helpers ───────────────────────────────────────────
     const scrollToBottom = () => { body.scrollTop = body.scrollHeight; };
 
@@ -1275,6 +1300,7 @@ export const initChatWidget = (user, parentContainer) => {
                 }
                 showToast(data.user_name, data.user_role, data.message, data.author_avatar);
                 showNativeNotification(data.user_name, data.message, data.author_avatar);
+                playNotificationSound();
             }
         } else if (data.type === 'delete') {
             const wrapToRemove = body.querySelector(`.chat-bubble-wrap[data-msg-id="${data.id}"]`);

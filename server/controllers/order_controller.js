@@ -53,7 +53,10 @@ exports.getAllOrders = (req, res) => {
     // Simple verification (in production we would use the token user info directly)
     // If role is Vendedor, maybe see only their own? For now, open or filter if requested.
 
-    sql += " ORDER BY CASE WHEN o.status = 'finalizado' THEN COALESCE(o.moved_at, o.created_at) ELSE o.created_at END DESC";
+    sql += ` ORDER BY 
+        CASE WHEN o.status = 'finalizado' THEN COALESCE(o.moved_at, o.created_at) ELSE NULL END DESC,
+        CASE WHEN o.status != 'finalizado' THEN o.is_priority ELSE 0 END DESC,
+        CASE WHEN o.status != 'finalizado' THEN o.created_at ELSE NULL END DESC`;
 
     db.all(sql, [], (err, rows) => {
         if (err) return res.status(500).json({ error: err.message });
@@ -153,24 +156,35 @@ exports.createOrder = (req, res) => {
                     return res.status(500).json({ error: errors.join(', ') });
                 }
 
-                const hasTerceirizado = readyItems.some(i => i.is_terceirizado);
-                const deadline_days = hasTerceirizado ? 5 : (deadline_option === '1D' ? 1 : 3);
-                const effective_deadline_option = hasTerceirizado ? '5D' : deadline_option;
-                const deadline_at = calculateDeadline(deadline_days);
                 const summaryStr = productsSummary.join(', ');
                 const finalTotal = total_value || 0;
-                const finalDiscount = discount_value || 0;
+                // Loyalty discount overrides any manual discount — 5% on gross total
+                let finalDiscount = discount_value || 0;
+                let loyaltyDiscount = 0;
+                let isPriority = 0;
                 const finalInternal = is_internal ? 1 : 0;
                 const finalEventName = event_name || '';
 
-                // === ESTIMATIVA DE PRODUÇÃO (LOCAL) ===
-                const estData = calculateProductionTime(readyItems);
-                const aiMinutes = estData.minutes;
-                const aiDescription = estData.breakdown;
+                const proceedWithOrder = (loyaltyOverride = false) => {
+                    if (loyaltyOverride) {
+                        // Trust frontend payload for discount_value and total_value (which is already Net)
+                        loyaltyDiscount = finalDiscount; 
+                        isPriority = 1;
+                    }
+                    const totalToPay = finalTotal;
 
-                const sqlOrder = `INSERT INTO orders (client_id, description, total_value, discount_value, payment_method, created_by, status, deadline_type, deadline_at, products_summary, is_internal, is_terceirizado, event_name, payment_code, ai_estimated_time, production_notes) VALUES (?, ?, ?, ?, ?, ?, 'aguardando_aceite', ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+                    const hasTerceirizado = readyItems.some(i => i.is_terceirizado);
+                    const deadline_days = hasTerceirizado ? 5 : (deadline_option === '1D' ? 1 : 3);
+                    const effective_deadline_option = hasTerceirizado ? '5D' : deadline_option;
+                    const deadline_at = calculateDeadline(deadline_days);
 
-                db.run(sqlOrder, [client_id, description, finalTotal, finalDiscount, payment_method, created_by, effective_deadline_option, deadline_at, summaryStr, finalInternal, hasTerceirizado ? 1 : 0, finalEventName, payment_code || '', aiMinutes, aiDescription], function (err) {
+                    const estData = calculateProductionTime(readyItems);
+                    const aiMinutes = estData.minutes;
+                    const aiDescription = estData.breakdown;
+
+                    const sqlOrder = `INSERT INTO orders (client_id, description, total_value, discount_value, loyalty_discount, payment_method, created_by, status, deadline_type, deadline_at, products_summary, is_internal, is_terceirizado, event_name, payment_code, ai_estimated_time, production_notes, is_priority) VALUES (?, ?, ?, ?, ?, ?, ?, 'aguardando_aceite', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+
+                    db.run(sqlOrder, [client_id, description, finalTotal, finalDiscount, loyaltyDiscount, payment_method, created_by, effective_deadline_option, deadline_at, summaryStr, finalInternal, hasTerceirizado ? 1 : 0, finalEventName, payment_code || '', aiMinutes, aiDescription, isPriority], function (err) {
                         if (err) {
                             db.run("ROLLBACK");
                             return res.status(500).json({ error: err.message });
@@ -229,14 +243,47 @@ exports.createOrder = (req, res) => {
                                                 });
                                             });
                                         } else {
-                                            db.run("COMMIT");
-                                            res.json({ message: 'Pedido criado com sucesso', group_id: orderId, is_terceirizado: hasTerceirizado });
+                                            if (payment_method === 'Fidelidade') {
+                                                db.run("INSERT INTO client_credit_movements (client_id, amount, type, order_id, description, created_by) VALUES (?, ?, 'order_debit', ?, ?, ?)",
+                                                    [client_id, totalToPay, orderId, `Pedido #${orderId}`, created_by], () => {
+                                                        db.run("UPDATE clients SET credit_balance = credit_balance - ? WHERE id = ?", [totalToPay, client_id], () => {
+                                                            db.run("COMMIT");
+                                                            res.json({ message: 'Pedido criado com sucesso', group_id: orderId, is_terceirizado: hasTerceirizado });
+                                                        });
+                                                    }
+                                                );
+                                            } else {
+                                                db.run("COMMIT");
+                                                res.json({ message: 'Pedido criado com sucesso', group_id: orderId, is_terceirizado: hasTerceirizado });
+                                            }
                                         }
                                     });
                                 }
                             });
                         });
                 });
+                }; // end proceedWithOrder
+
+                if (payment_method === 'Fidelidade' && !finalInternal) {
+                    db.get("SELECT credit_balance, credit_limit, loyalty_status FROM clients WHERE id = ?", [client_id], (err, row) => {
+                        if (err) { db.run("ROLLBACK"); return res.status(500).json({ error: err.message }); }
+                        if (!row || !row.loyalty_status) { db.run("ROLLBACK"); return res.status(400).json({ error: "Cliente não possui Fidelidade ativada." }); }
+                        const loyaltyDisc = Math.round((total_value || 0) * 0.05 * 100) / 100;
+                        const totalToPay = (total_value || 0) - loyaltyDisc;
+                        if (row.credit_balance - totalToPay < -row.credit_limit) {
+                            db.run("ROLLBACK");
+                            return res.status(400).json({ error: `Limite de crédito excedido. Saldo atual: R$ ${row.credit_balance.toFixed(2)}, Limite: R$ ${row.credit_limit.toFixed(2)}` });
+                        }
+                        proceedWithOrder(true); // loyalty client — apply 5% discount + priority
+                    });
+                } else if (!finalInternal && client_id) {
+                    // Check if client is loyalty even on other payment methods
+                    db.get("SELECT loyalty_status FROM clients WHERE id = ?", [client_id], (err, row) => {
+                        proceedWithOrder(!!(row && row.loyalty_status));
+                    });
+                } else {
+                    proceedWithOrder(false);
+                }
             }
         };
 

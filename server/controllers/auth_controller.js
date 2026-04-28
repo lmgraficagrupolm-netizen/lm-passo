@@ -8,7 +8,12 @@ const SECRET_KEY = 'lm-passo-secret-key-change-me'; // Em produção usar .env
 exports.login = (req, res) => {
     const { username, password } = req.body;
 
-    db.get("SELECT * FROM users WHERE username = ?", [username], (err, user) => {
+    db.get(`
+        SELECT u.*, c.loyalty_status
+        FROM users u
+        LEFT JOIN clients c ON c.id = u.client_id
+        WHERE u.username = ?
+    `, [username], (err, user) => {
         if (err) return res.status(500).json({ error: 'Erro no servidor' });
         if (!user) return res.status(401).json({ error: 'Usuário não encontrado' });
 
@@ -19,7 +24,18 @@ exports.login = (req, res) => {
             expiresIn: 86400 // 24 hours
         });
 
-        res.status(200).send({ auth: true, token: token, user: { id: user.id, username: user.username, role: user.role, name: user.name, client_id: user.client_id || null } });
+        res.status(200).send({
+            auth: true,
+            token: token,
+            user: {
+                id: user.id,
+                username: user.username,
+                role: user.role,
+                name: user.name,
+                client_id: user.client_id || null,
+                loyalty_status: user.loyalty_status ? true : false
+            }
+        });
     });
 };
 

@@ -3,21 +3,8 @@ const express = require('express');
 const cors = require('cors');
 const compression = require('compression');
 const path = require('path');
+const os = require('os');
 const fs = require('fs');
-
-// Ensure DB directory exists (for Railway/Render persistent volume)
-let dbPath = process.env.DB_PATH || path.join(process.cwd(), 'database.sqlite');
-try {
-    const dbDir = path.dirname(dbPath);
-    if (!fs.existsSync(dbDir)) {
-        fs.mkdirSync(dbDir, { recursive: true });
-    }
-} catch (e) {
-    console.error('⚠️ Aviso: Sem permissão para criar pasta do banco em', process.env.DB_PATH);
-    console.error('⚠️ Usando banco de dados local temporário no diretório atual.');
-    dbPath = path.join(process.cwd(), 'database.sqlite');
-    process.env.DB_PATH = dbPath; // Atualiza para o resto do sistema usar o local
-}
 
 const db = require('./server/database/db');
 
@@ -25,10 +12,8 @@ const db = require('./server/database/db');
 const logError = (err) => {
     const msg = err && err.message ? err.message : String(err);
     const stack = err && err.stack ? err.stack : 'Sem stack trace';
-    
     console.error('\n❌ CRITICAL ERROR:', msg);
     if (err && err.stack) console.error(stack);
-    
     try {
         const errorLogPath = path.join(process.cwd(), 'error_log.txt');
         const errorMessage = `[${new Date().toISOString()}] ERROR: ${msg}\nSTACK: ${stack}\n\n`;
@@ -42,7 +27,7 @@ process.on('uncaughtException', (err) => {
     process.exit(1);
 });
 
-process.on('unhandledRejection', (reason, promise) => {
+process.on('unhandledRejection', (reason) => {
     logError(reason);
     process.exit(1);
 });
@@ -63,11 +48,12 @@ app.use(express.static(diskPublic));
 // ── Rotas da API ─────────────────────────────────────────────────────────────
 const apiRoutes = require('./server/routes/api.routes');
 const authRoutes = require('./server/routes/auth.routes');
-const diagRoutes = require('./server/routes/diag.routes');
 
 app.use('/api', apiRoutes);
 app.use('/api/auth', authRoutes);
-app.use('/api/diag', diagRoutes);
+
+// Rota de saúde para o monitor de reinício
+app.get('/api/health', (req, res) => res.json({ status: 'ok', uptime: process.uptime() }));
 
 // Rota para o frontend (SPA Fallback)
 app.get(/^(.*)$/, (req, res) => {
@@ -79,8 +65,7 @@ app.get(/^(.*)$/, (req, res) => {
 
 // Helper para pegar o IP da rede local
 function getNetworkIP() {
-    const { networkInterfaces } = require('os');
-    const nets = networkInterfaces();
+    const nets = os.networkInterfaces();
     for (const name of Object.keys(nets)) {
         for (const net of nets[name]) {
             if (net.family === 'IPv4' && !net.internal) {
@@ -91,36 +76,22 @@ function getNetworkIP() {
     return 'localhost';
 }
 
-// ── Inicialização com Restauração do Firebase ────────────────────────────────
-const { restoreFromFirebase } = require('./server/utils/firebaseImport');
+// ── Inicialização do Servidor ─────────────────────────────────────────────────
+app.listen(PORT, '0.0.0.0', () => {
+    const localIp = getNetworkIP();
+    console.log(`\n======================================================`);
+    console.log(`✅ LM PASSO rodando em http://localhost:${PORT}`);
+    console.log(`🌐 Rede local:       http://${localIp}:${PORT}`);
+    console.log(`======================================================\n`);
+    console.log('💡 Para acesso externo via ngrok: ngrok http ' + PORT);
+    console.log('');
+});
 
-async function startServer() {
-    try {
-        console.log('🚀 Iniciando sistema...');
-        
-        // 1. Garante que o banco de dados tem dados (Restaura do Firebase se for um servidor temporário recém-ligado)
-        await restoreFromFirebase();
-
-        // 2. Inicia o servidor Express
-        app.listen(PORT, '0.0.0.0', () => {
-            console.log(`\n======================================================`);
-            console.log(`✅ Servidor em execução em http://localhost:${PORT}`);
-            console.log(`🌐 Acesso na rede: http://${getNetworkIP()}:${PORT}`);
-            console.log(`======================================================\n`);
-        });
-
-        // ── Auto-Backup Firebase em Tempo Real (Sync Queue) ──────────────────────
-        try {
-            const { startWorker } = require('./server/utils/firebaseSync');
-            startWorker();
-        } catch (err) {
-            console.error('Falha ao iniciar o worker do Firebase:', err.message);
-        }
-
-    } catch (err) {
-        logError(err);
-        process.exit(1);
-    }
+// ── Firebase Sync Worker (opcional - roda em background) ─────────────────────
+try {
+    const { startWorker } = require('./server/utils/firebaseSync');
+    startWorker();
+    console.log('🔥 Firebase Sync ativo (backup em tempo real)');
+} catch (err) {
+    console.log('ℹ️  Firebase Sync desativado (sem credenciais configuradas)');
 }
-
-startServer();

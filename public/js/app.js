@@ -1,5 +1,20 @@
 console.log('App.js initialized');
 
+window.onerror = function(msg, url, line, col, error) {
+    const errorMsg = `Error: ${msg}\nLine: ${line}\nURL: ${url}`;
+    console.error(errorMsg);
+    const app = document.getElementById('app');
+    if (app) {
+        app.innerHTML = `<div style="padding:2rem; background:#fee2e2; color:#b91c1c; border:2px solid #fca5a5; border-radius:12px; margin:1rem; font-family:sans-serif;">
+            <h3 style="margin-top:0">🚨 Erro de Sistema</h3>
+            <p>Ocorreu um erro que impediu o carregamento da tela.</p>
+            <pre style="background:white; padding:1rem; border-radius:8px; overflow:auto; font-size:0.85rem;">${errorMsg}</pre>
+            <button onclick="location.reload()" style="background:#b91c1c; color:white; border:none; padding:0.75rem 1.5rem; border-radius:8px; font-weight:bold; cursor:pointer; margin-top:1rem;">Recarregar Sistema</button>
+        </div>`;
+    }
+    return false;
+};
+
 window.copyTextToClipboard = async (text) => {
     if (navigator.clipboard && navigator.clipboard.writeText) {
         return navigator.clipboard.writeText(text);
@@ -41,7 +56,7 @@ if (savedToken && savedUser) {
         state.user  = JSON.parse(savedUser);
         // Restore last visited view (or default by role)
         if (state.user.role === 'cliente') {
-            state.currentView = 'client_financial';
+            state.currentView = state.user.loyalty_status ? 'client_loyalty' : 'client_financial';
         } else {
             state.currentView = localStorage.getItem('lastView') || 'kanban';
         }
@@ -103,6 +118,8 @@ const loadView = (view, container) => {
         case 'chat': modulePath = './components/chatWidget.js'; break;
         case 'client_portal': modulePath = './components/client_portal.js'; break;
         case 'client_financial': modulePath = './components/client_financial.js'; break;
+        case 'client_loyalty': modulePath = './components/client_loyalty.js'; break;
+        case 'client_points': modulePath = './components/client_points.js'; break;
         default:
             // Unknown view — fall back to kanban and clear bad lastView
             modulePath = './components/kanban.js';
@@ -110,10 +127,10 @@ const loadView = (view, container) => {
             break;
     }
 
-    import(modulePath + '?v=40-' + Date.now()).then(module => {
+    import(modulePath + '?v=51-' + Date.now()).then(module => {
         container.innerHTML = '';
         // Pass user to financial view for role-based controls
-        const viewArg = (view === 'financial') ? state.user : undefined;
+        const viewArg = ['financial', 'clients'].includes(view) ? state.user : undefined;
         container.appendChild(module.render(viewArg));
     }).catch(err => {
         console.error("Error loading view:", err);
@@ -127,9 +144,9 @@ const loginHandler = (data) => {
     state.user = data.user;
     localStorage.setItem('token', data.token);
     localStorage.setItem('user', JSON.stringify(data.user));
-    // Client role always goes to portal; others use last view or kanban
+    // Client role always goes to loyalty portal if fidelity; else financial
     if (data.user.role === 'cliente') {
-        state.currentView = 'client_financial';
+        state.currentView = data.user.loyalty_status ? 'client_loyalty' : 'client_financial';
     } else {
         state.currentView = localStorage.getItem('lastView') || 'kanban';
     }
