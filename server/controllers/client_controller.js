@@ -14,6 +14,7 @@ exports.getAllClients = (req, res) => {
         SELECT c.*, 
                u.id as access_user_id, 
                u.username as access_username,
+               u.plain_password as access_password,
                COALESCE(SUM(o.total_value), 0) as L90_spent,
                COUNT(o.id) as L90_orders
         FROM clients c

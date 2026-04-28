@@ -157,9 +157,15 @@ export const render = () => {
                             <label style="margin:0; cursor:pointer; font-weight:700; color:#065f46; font-size:0.85rem;">🔐 Acesso ao Portal (Financeiro Cliente)</label>
                         </div>
                         <div id="access-info" style="display:none; margin-top:0.75rem; padding:1rem; background:#f0fdf4; border:1.5px solid #bbf7d0; border-radius:12px; display:flex; justify-content:space-between; align-items:center;">
-                            <div>
-                                <div style="font-size:0.75rem; color:#065f46; font-weight:800; text-transform:uppercase;">Usuário Ativo</div>
-                                <div id="access-username-display" style="font-weight:900; color:#1e293b;">-</div>
+                            <div style="display:flex; gap:2rem;">
+                                <div>
+                                    <div style="font-size:0.75rem; color:#065f46; font-weight:800; text-transform:uppercase;">Usuário Ativo</div>
+                                    <div id="access-username-display" style="font-weight:900; color:#1e293b;">-</div>
+                                </div>
+                                <div id="access-password-container" style="display:none;">
+                                    <div style="font-size:0.75rem; color:#065f46; font-weight:800; text-transform:uppercase;">Senha</div>
+                                    <div id="access-password-display" style="font-weight:900; color:#1e293b; font-family:monospace;">-</div>
+                                </div>
                             </div>
                             <button type="button" id="btn-reset-access" style="background:white; color:#16a34a; border:1.5px solid #16a34a; padding:0.4rem 0.8rem; border-radius:8px; font-size:0.75rem; font-weight:800; cursor:pointer;">🔁 RESETAR SENHA</button>
                         </div>
@@ -184,7 +190,7 @@ export const render = () => {
                     <button class="modal-close" id="cred-close">&times;</button>
                 </div>
                 <div style="padding:0.5rem 0;">
-                    <p style="font-size:0.9rem; color:#475569; margin-bottom:1rem;">Anote as credenciais abaixo. A senha não poderá ser visualizada novamente.</p>
+                    <p style="font-size:0.9rem; color:#475569; margin-bottom:1rem;">Anote as credenciais abaixo. A senha poderá ser consultada posteriormente por gerentes ou supervisores.</p>
                     <div style="background:#f0fdf4; border:2px solid #86efac; border-radius:10px; padding:1rem; margin-bottom:1rem;">
                         <div style="margin-bottom:0.75rem;">
                             <div style="font-size:0.8rem; color:#6b7280; margin-bottom:2px;">👤 Login</div>
@@ -449,10 +455,21 @@ export const render = () => {
                     credModal.classList.add('open');
 
                     // Update access info
-                    container.querySelector('#access-info').style.display = 'block';
+                    container.querySelector('#access-info').style.display = 'flex';
                     container.querySelector('#access-username-display').textContent = json.username;
                     currentEditClient.has_access = true;
                     currentEditClient.access_username = json.username;
+                    currentEditClient.access_password = json.password; // update local data
+
+                    const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
+                    const canSeePassword = ['master', 'gerente', 'supervisor'].includes(currentUser.role);
+                    const pwdContainer = container.querySelector('#access-password-container');
+                    if (pwdContainer) {
+                        if (canSeePassword) {
+                            pwdContainer.style.display = 'block';
+                            container.querySelector('#access-password-display').textContent = json.password;
+                        }
+                    }
                 } else {
                     alert('Erro: ' + (json.error || 'Falha ao criar acesso'));
                     accessToggle.checked = false;
@@ -519,6 +536,8 @@ export const render = () => {
             const json = await res.json();
             if (res.ok) {
                 showCredentials(json);
+                currentEditClient.access_password = json.password;
+                container.querySelector('#access-password-display').textContent = json.password;
             } else {
                 alert('Erro: ' + (json.error || 'Falha ao resetar acesso'));
             }
@@ -567,8 +586,20 @@ export const render = () => {
         accessToggle.checked = client.has_access ? true : false;
         const accessInfo = container.querySelector('#access-info');
         if (client.has_access) {
-            accessInfo.style.display = 'block';
+            accessInfo.style.display = 'flex';
             container.querySelector('#access-username-display').textContent = client.access_username || '-';
+            
+            const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
+            const canSeePassword = ['master', 'gerente', 'supervisor'].includes(currentUser.role);
+            const pwdContainer = container.querySelector('#access-password-container');
+            if (pwdContainer) {
+                if (canSeePassword && client.access_password) {
+                    pwdContainer.style.display = 'block';
+                    container.querySelector('#access-password-display').textContent = client.access_password;
+                } else {
+                    pwdContainer.style.display = 'none';
+                }
+            }
         } else {
             accessInfo.style.display = 'none';
         }
