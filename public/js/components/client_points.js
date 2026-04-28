@@ -7,7 +7,7 @@ export const render = () => {
         <!-- Header -->
         <div style="margin-bottom:2rem;">
             <div style="display:flex; align-items:center; gap:1rem; flex-wrap:wrap;">
-                <div style="width:52px; height:52px; background:linear-gradient(135deg,#b45309,#f59e0b); border-radius:14px; display:flex; align-items:center; justify-content:center; font-size:1.6rem; box-shadow:0 6px 20px rgba(180,83,9,0.35); flex-shrink:0;">⭐</div>
+                <div id="cp-header-icon" style="width:52px; height:52px; background:linear-gradient(135deg,#b45309,#f59e0b); border-radius:14px; display:flex; align-items:center; justify-content:center; font-size:1.6rem; box-shadow:0 6px 20px rgba(180,83,9,0.35); flex-shrink:0;">⭐</div>
                 <div style="flex:1;">
                     <h2 style="font-size:1.75rem; font-weight:900; background:linear-gradient(135deg,#92400e,#f59e0b); -webkit-background-clip:text; -webkit-text-fill-color:transparent; margin:0; letter-spacing:-0.03em;">Minha Pontuação (Últimos 90 dias)</h2>
                     <p style="color:#64748b; margin:0; font-size:0.9rem; font-weight:500;">Acompanhe seu progresso e suba de nível para obter mais descontos e benefícios.</p>
@@ -105,18 +105,29 @@ export const render = () => {
             // Tier UI
             const tName = container.querySelector('#cp-tier-name');
             const tDesc = container.querySelector('#cp-tier-desc');
+            const hIcon = container.querySelector('#cp-header-icon');
             
             if (tier === 'ouro') {
                 tName.innerHTML = 'VIP OURO 🏆';
                 tDesc.innerHTML = '15% de desconto e Prioridade Máxima.';
+                hIcon.innerHTML = '🏆';
+                hIcon.style.background = 'linear-gradient(135deg, #f59e0b, #b45309)';
+                hIcon.style.boxShadow = '0 6px 20px rgba(245, 158, 11, 0.4)';
             } else if (tier === 'prata') {
                 tName.innerHTML = 'PRATA 🥈';
                 tName.style.background = 'linear-gradient(to right, #94a3b8, #64748b)';
                 tDesc.innerHTML = '10% de desconto e Prazo de 1 Dia.';
+                hIcon.innerHTML = '🥈';
+                hIcon.style.background = 'linear-gradient(135deg, #94a3b8, #64748b)';
+                hIcon.style.boxShadow = '0 6px 20px rgba(148, 163, 184, 0.4)';
             } else {
                 tName.innerHTML = 'BRONZE 🥉';
                 tName.style.background = 'linear-gradient(to right, #b45309, #92400e)';
                 tDesc.innerHTML = '5% de desconto em todos os serviços.';
+                hIcon.innerHTML = '🥉';
+                hIcon.style.background = 'linear-gradient(135deg, #fff7ed, #fde68a)';
+                hIcon.style.border = '1px solid #fcd34d';
+                hIcon.style.boxShadow = 'none';
             }
 
             // Progress logic

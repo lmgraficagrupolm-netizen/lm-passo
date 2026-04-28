@@ -15,11 +15,13 @@ exports.getAllClients = (req, res) => {
                u.id as access_user_id, 
                u.username as access_username,
                u.plain_password as access_password,
-               COALESCE(SUM(o.total_value), 0) as L90_spent,
-               COUNT(o.id) as L90_orders
+               COALESCE(SUM(m.amount), 0) as L90_spent,
+               COUNT(m.id) as L90_orders
         FROM clients c
         LEFT JOIN users u ON u.client_id = c.id AND u.role = 'cliente'
-        LEFT JOIN orders o ON o.client_id = c.id AND o.created_at >= datetime('now', '-90 days') AND o.status != 'cancelado'
+        LEFT JOIN client_credit_movements m ON m.client_id = c.id 
+             AND m.type = 'order_debit' 
+             AND m.created_at >= datetime('now', '-90 days')
         GROUP BY c.id
         ORDER BY c.name ASC
     `;
