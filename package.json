@@ -7,7 +7,8 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node server.js",
-    "build": "echo \"No build required for Render\""
+    "build": "echo \"No build required for Render\"",
+    "migrate": "node scripts/migrate_to_firestore.js"
   },
   "pkg": {
     "assets": [
@@ -37,8 +38,7 @@
     "firebase-admin": "^13.7.0",
     "jsonwebtoken": "^9.0.3",
     "multer": "^2.0.2",
-    "nodemon": "^3.1.11",
-    "sqlite3": "5.1.6"
+    "nodemon": "^3.1.11"
   },
   "devDependencies": {
     "pkg": "^5.8.1"
