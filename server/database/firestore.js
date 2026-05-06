@@ -108,18 +108,21 @@ async function run(sql, params = [], callback) {
             data.created_at = data.created_at || new Date().toISOString();
 
             await db.collection(table).doc(String(newId)).set(data);
+            getQueries().invalidateCache(table);
             cb.call({ lastID: newId, changes: 1 }, null);
         }
 
         // ── UPDATE ──────────────────────────────────────────────────────────
         else if (q.startsWith('UPDATE')) {
             const changes = await handleUpdate(sql, params);
+            getQueries().invalidateCache(extractTable(sql, 'UPDATE'));
             cb.call({ lastID: null, changes }, null);
         }
 
         // ── DELETE ──────────────────────────────────────────────────────────
         else if (q.startsWith('DELETE')) {
             const changes = await handleDelete(sql, params);
+            getQueries().invalidateCache(extractTable(sql, 'DELETE'));
             cb.call({ lastID: null, changes }, null);
         }
 
@@ -305,10 +308,11 @@ async function resolveWhereIds(table, whereClause, params, firestoreDb) {
         return snap.docs.map(d => d.id);
     }
 
-    // Fallback: buscar todos e filtrar em memória (para WHERE complexos)
-    console.warn(`[Firestore] WHERE complexo, buscando todos: "${clause}"`);
-    const snap = await firestoreDb.collection(table).get();
-    return snap.docs.map(d => d.id);
+    // Fallback: buscar todos com cache (para WHERE complexos)
+    console.warn(`[Firestore] WHERE complexo, usando cache: "${clause.substring(0, 60)}"`);
+    const { getCachedCollection: getCC } = require('./firestoreQueries');
+    const allDocs = await (async () => { const snap = await firestoreDb.collection(table).get(); return snap.docs.map(d => d.id); })();
+    return allDocs;
 }
 
 // ── Parsers de SQL ────────────────────────────────────────────────────────────

@@ -3,6 +3,29 @@
  * Traduz os SELECTs complexos dos controllers para chamadas Firestore.
  */
 
+// Cache em memória para coleções de lookup (JOINs) — TTL de 30 segundos
+// Isso evita ler a coleção completa em cada request e reduz drasticamente leituras
+const _cache = new Map();
+const CACHE_TTL_MS = 30 * 1000; // 30 segundos
+
+async function getCachedCollection(tableName, db) {
+    const now = Date.now();
+    const cached = _cache.get(tableName);
+    if (cached && (now - cached.ts) < CACHE_TTL_MS) {
+        return cached.data;
+    }
+    const snap = await db.collection(tableName).get();
+    const data = {};
+    snap.docs.forEach(d => { data[d.id] = { id: parseInt(d.id), ...d.data() }; });
+    _cache.set(tableName, { ts: now, data });
+    return data;
+}
+
+// Invalida cache de uma coleção (chamar após writes)
+function invalidateCache(tableName) {
+    _cache.delete(tableName);
+}
+
 async function handleGet(sql, params, db) {
     const s = sql.trim();
     const up = s.toUpperCase();
@@ -140,14 +163,9 @@ async function applyJoins(rows, sql, db) {
     }
 
     for (const join of joins) {
-        const snap = await db.collection(join.table).get();
-        const lookupMap = {};
-        snap.docs.forEach(d => {
-            const data = { id: parseInt(d.id), ...d.data() };
-            // Indexar pelo campo PK (geralmente 'id')
-            const pkVal = join.pkIsId === 'id' ? d.id : data[join.pkIsId];
-            lookupMap[String(pkVal)] = data;
-        });
+        // Usa cache para evitar múltiplas leituras da mesma coleção
+        const lookupMap = await getCachedCollection(join.table, db);
+
 
         rows = rows.map(row => {
             const fkVal = row[join.fkField];
@@ -361,4 +379,4 @@ function applySimpleWhere(q, sql, params) {
     return q.where(field, opMap[op] || '==', params[0]);
 }
 
-module.exports = { handleGet, handleAll };
+module.exports = { handleGet, handleAll, invalidateCache };
