@@ -13,9 +13,19 @@ if (useLocal) {
     try {
         const sqlite3 = require('sqlite3').verbose();
         const path = require('path');
-        const dbPath = path.resolve(process.cwd(), 'database.sqlite');
+        const fs = require('fs');
+
+        const volumePath = process.env.RAILWAY_VOLUME_MOUNT_PATH;
+        let dbPath = path.resolve(process.cwd(), 'database.sqlite');
+        
+        if (volumePath) {
+            dbPath = path.join(volumePath, 'database.sqlite');
+            console.log(`🗄️  Modo RAILWAY: usando SQLite no volume (${dbPath})`);
+        } else {
+            console.log('🗄️  Modo LOCAL: usando SQLite (database.sqlite)');
+        }
+
         const db = new sqlite3.Database(dbPath);
-        console.log('🗄️  Modo LOCAL: usando SQLite (database.sqlite)');
         module.exports = db;
     } catch (e) {
         console.log('⚠️  SQLite indisponível, usando Firebase...');
