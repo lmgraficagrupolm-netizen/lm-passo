@@ -19,6 +19,10 @@ if (useLocal) {
         let dbPath = path.resolve(process.cwd(), 'database.sqlite');
         
         if (volumePath) {
+            // Garante que o diretório do volume existe
+            if (!fs.existsSync(volumePath)) {
+                fs.mkdirSync(volumePath, { recursive: true });
+            }
             dbPath = path.join(volumePath, 'database.sqlite');
             console.log(`🗄️  Modo RAILWAY: usando SQLite no volume (${dbPath})`);
         } else {
@@ -26,6 +30,11 @@ if (useLocal) {
         }
 
         const db = new sqlite3.Database(dbPath);
+        
+        // Inicializa tabelas automaticamente (caso banco seja novo)
+        const { initDatabase } = require('./initDb');
+        initDatabase(db).catch(e => console.error('Erro na inicialização do banco:', e.message));
+        
         module.exports = db;
     } catch (e) {
         console.log('⚠️  SQLite indisponível, usando Firebase...');
