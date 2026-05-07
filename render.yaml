@@ -3,7 +3,7 @@ services:
     name: lm-passo
     env: node
     plan: free
-    buildCommand: npm ci --omit=dev
+    buildCommand: npm install --production
     startCommand: node server.js
     healthCheckPath: /api/health
     envVars:
