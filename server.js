@@ -113,22 +113,30 @@ app.listen(PORT, '0.0.0.0', () => {
 });
 
 // ── Firebase Sync Worker (opcional - roda em background) ─────────────────────
-try {
-    const { startWorker } = require('./server/utils/firebaseSync');
-    startWorker();
-    console.log('🔥 Firebase Sync ativo (backup em tempo real)');
-} catch (err) {
-    console.log('ℹ️  Firebase Sync desativado (sem credenciais configuradas)');
+// Só ativa se houver credenciais do Firebase configuradas
+if (process.env.FIREBASE_CREDENTIALS || process.env.FIREBASE_PROJECT_ID) {
+    try {
+        const { startWorker } = require('./server/utils/firebaseSync');
+        startWorker();
+        console.log('🔥 Firebase Sync ativo (backup em tempo real)');
+    } catch (err) {
+        console.log('ℹ️  Firebase Sync indisponível:', err.message);
+    }
+} else {
+    console.log('ℹ️  Modo SQLite puro — Firebase Sync desativado');
 }
 
-// ── Keep-Alive: evita o "sleep" do Render free tier ──────────────────────────
+// ── Keep-Alive: evita o "sleep" do Render/Railway free tier ──────────────────
 if (process.env.NODE_ENV === 'production') {
     const https = require('https');
-    const RENDER_URL = process.env.RENDER_EXTERNAL_URL || 'https://lm-passo.onrender.com';
+    // Suporta Railway (RAILWAY_PUBLIC_DOMAIN) e Render (RENDER_EXTERNAL_URL)
+    const PROD_URL = process.env.RAILWAY_PUBLIC_DOMAIN
+        ? `https://${process.env.RAILWAY_PUBLIC_DOMAIN}`
+        : (process.env.RENDER_EXTERNAL_URL || 'https://lm-passo.onrender.com');
     const PING_INTERVAL = 10 * 60 * 1000; // 10 minutos
 
     const keepAlive = () => {
-        const url = `${RENDER_URL}/api/health`;
+        const url = `${PROD_URL}/api/health`;
         https.get(url, (res) => {
             console.log(`[Keep-Alive] Ping OK - ${new Date().toLocaleTimeString('pt-BR')} - Status: ${res.statusCode}`);
         }).on('error', (err) => {
@@ -144,7 +152,8 @@ if (process.env.NODE_ENV === 'production') {
 }
 
 // ── Backup Automático Firebase → Local ───────────────────────────────────────
-if (process.env.USE_SQLITE !== 'true' && process.env.NODE_ENV !== 'production') {
+// Só roda em modo Firebase (sem SQLite local) e fora da produção
+if (process.env.USE_SQLITE !== 'true' && !process.env.RAILWAY_ENVIRONMENT && process.env.NODE_ENV !== 'production') {
     const BACKUP_INTERVAL = 4 * 60 * 60 * 1000; // 4 horas
 
     const doBackup = async () => {
