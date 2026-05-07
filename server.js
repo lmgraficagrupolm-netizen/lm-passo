@@ -97,8 +97,6 @@ try {
 }
 
 // ── Keep-Alive: evita o "sleep" do Render free tier ──────────────────────────
-// O Render dorme após 15 min sem tráfego. Este ping interno a cada 10 min
-// mantém o servidor acordado 24h, eliminando o cold start de 1-2 minutos.
 if (process.env.NODE_ENV === 'production') {
     const https = require('https');
     const RENDER_URL = process.env.RENDER_EXTERNAL_URL || 'https://lm-passo.onrender.com';
@@ -113,10 +111,32 @@ if (process.env.NODE_ENV === 'production') {
         });
     };
 
-    // Aguarda 1 minuto após inicializar antes de começar os pings
     setTimeout(() => {
         keepAlive();
         setInterval(keepAlive, PING_INTERVAL);
         console.log('⏰ Keep-Alive ativado — ping a cada 10 min para manter o servidor acordado');
     }, 60 * 1000);
+}
+
+// ── Backup Automático Firebase → Local ───────────────────────────────────────
+// Quando o app está em modo Firebase (USE_SQLITE=false), faz cópias locais
+// automáticas dos dados para garantir backup sempre atualizado.
+if (process.env.USE_SQLITE !== 'true' && process.env.NODE_ENV !== 'production') {
+    const BACKUP_INTERVAL = 4 * 60 * 60 * 1000; // 4 horas
+
+    const doBackup = async () => {
+        try {
+            const { runBackup } = require('./scripts/backup_firebase_to_sqlite');
+            await runBackup();
+        } catch (e) {
+            console.log('⚠️  Backup automático falhou:', e.message);
+        }
+    };
+
+    // Primeiro backup após 30 segundos do servidor inicializar
+    setTimeout(() => {
+        doBackup();
+        setInterval(doBackup, BACKUP_INTERVAL);
+        console.log('💾 Backup automático ativado — cópia local do Firebase a cada 4h');
+    }, 30 * 1000);
 }
