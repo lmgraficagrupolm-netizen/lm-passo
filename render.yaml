@@ -6,6 +6,10 @@ services:
     buildCommand: npm ci --omit=dev
     startCommand: node server.js
     healthCheckPath: /api/health
+    buildFilter:
+      paths:
+        - package.json
+        - package-lock.json
     envVars:
       - key: NODE_ENV
         value: production

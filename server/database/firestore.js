@@ -14,39 +14,50 @@
 const admin = require('firebase-admin');
 const path = require('path');
 
-// ── Inicializar Firebase Admin ────────────────────────────────────────────────
-let db;
-try {
-    // Prioridade 1: variável de ambiente FIREBASE_CREDENTIALS (JSON string) — para Render.com
-    if (process.env.FIREBASE_CREDENTIALS) {
-        const creds = JSON.parse(process.env.FIREBASE_CREDENTIALS);
-        if (!admin.apps.length) {
-            admin.initializeApp({
-                credential: admin.credential.cert(creds),
-                storageBucket: `${creds.project_id}.appspot.com`
-            });
-        }
-        console.log('🔥 Firebase: Inicializado via variável de ambiente.');
-    }
-    // Prioridade 2: arquivo local firebase-credentials.json — para desenvolvimento
-    else {
-        const credsPath = path.resolve(process.cwd(), 'firebase-credentials.json');
-        const creds = require(credsPath);
-        if (!admin.apps.length) {
-            admin.initializeApp({
-                credential: admin.credential.cert(creds),
-                storageBucket: `${creds.project_id}.appspot.com`
-            });
-        }
-        console.log('🔥 Firebase: Inicializado via arquivo local.');
-    }
-    db = admin.firestore();
-    db.settings({ ignoreUndefinedProperties: true });
-    console.log('✅ Firestore conectado com sucesso!');
-} catch (err) {
-    console.error('❌ ERRO ao inicializar Firebase:', err.message);
-    process.exit(1);
+// ── Inicializar Firebase Admin (não-bloqueante) ───────────────────────────────
+let db = null;
+let _dbReady = false;
+const _pendingQueue = [];
+
+// Retorna uma promise que resolve quando o db estiver pronto
+function waitForDb() {
+    if (_dbReady) return Promise.resolve(db);
+    return new Promise(resolve => _pendingQueue.push(resolve));
 }
+
+function _flushQueue() {
+    _dbReady = true;
+    while (_pendingQueue.length) _pendingQueue.shift()(db);
+}
+
+// Inicializa em background sem bloquear o startup do servidor
+(async () => {
+    try {
+        let creds;
+        if (process.env.FIREBASE_CREDENTIALS) {
+            creds = JSON.parse(process.env.FIREBASE_CREDENTIALS);
+            if (!admin.apps.length) {
+                admin.initializeApp({ credential: admin.credential.cert(creds) });
+            }
+            console.log('🔥 Firebase: Inicializado via variável de ambiente.');
+        } else {
+            const credsPath = path.resolve(process.cwd(), 'firebase-credentials.json');
+            creds = require(credsPath);
+            if (!admin.apps.length) {
+                admin.initializeApp({ credential: admin.credential.cert(creds) });
+            }
+            console.log('🔥 Firebase: Inicializado via arquivo local.');
+        }
+        db = admin.firestore();
+        db.settings({ ignoreUndefinedProperties: true });
+        _flushQueue();
+        console.log('✅ Firestore conectado com sucesso!');
+    } catch (err) {
+        console.error('❌ ERRO ao inicializar Firebase:', err.message);
+        process.exit(1);
+    }
+})();
+
 
 // ── Contador de IDs Atômico ───────────────────────────────────────────────────
 // Firestore não tem auto-increment. Usamos um documento "_counters" para isso.
@@ -93,6 +104,7 @@ async function run(sql, params = [], callback) {
     const cb = callback || (() => {});
 
     try {
+        await waitForDb(); // aguarda Firebase estar pronto
         const q = sql.trim().toUpperCase();
 
         // ── INSERT ──────────────────────────────────────────────────────────
@@ -154,9 +166,9 @@ async function get(sql, params = [], callback) {
     const cb = callback || (() => {});
 
     try {
-        // Delegar para queries especializadas se necessário
+        const _db = await waitForDb(); // aguarda Firebase estar pronto
         const queries = getQueries();
-        const result = await queries.handleGet(sql, params, db);
+        const result = await queries.handleGet(sql, params, _db);
         cb(null, result);
     } catch (err) {
         console.error('[Firestore] Erro em get():', err.message, '\nSQL:', sql.substring(0, 100));
@@ -173,8 +185,9 @@ async function all(sql, params = [], callback) {
     const cb = callback || (() => {});
 
     try {
+        const _db = await waitForDb(); // aguarda Firebase estar pronto
         const queries = getQueries();
-        const results = await queries.handleAll(sql, params, db);
+        const results = await queries.handleAll(sql, params, _db);
         cb(null, results);
     } catch (err) {
         console.error('[Firestore] Erro em all():', err.message, '\nSQL:', sql.substring(0, 100));
