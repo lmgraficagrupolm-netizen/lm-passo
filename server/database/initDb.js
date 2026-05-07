@@ -274,13 +274,18 @@ CREATE TABLE IF NOT EXISTS client_credit_movement (
 `;
 
 /**
- * Cria as tabelas necessárias e garante que o usuário master existe.
+ * Cria as tabelas necessárias, aplica seed de dados se banco estiver vazio,
+ * e garante que o usuário master existe.
  * @param {object} db - Instância do banco de dados SQLite
  * @returns {Promise}
  */
 function initDatabase(db) {
     return new Promise((resolve, reject) => {
         db.serialize(() => {
+            // Habilita WAL mode para melhor performance
+            db.run('PRAGMA journal_mode=WAL;');
+            db.run('PRAGMA foreign_keys=ON;');
+
             // Cria todas as tabelas
             SCHEMA.trim().split(';').forEach(stmt => {
                 const s = stmt.trim();
@@ -293,21 +298,55 @@ function initDatabase(db) {
                 }
             });
 
-            // Garante que usuário master existe
-            const bcrypt = require('bcryptjs');
-            const masterPassword = bcrypt.hashSync('master123', 10);
-            
-            db.run(
-                `INSERT OR IGNORE INTO users (username, password, role, name, plain_password) VALUES (?, ?, ?, ?, ?)`,
-                ['master', masterPassword, 'master', 'Master', 'master123'],
-                (err) => {
-                    if (err) console.error('Erro ao criar usuário master:', err.message);
-                    else console.log('✅ Banco de dados inicializado com sucesso');
+            // Verifica se há usuários (banco novo = sem usuários)
+            db.get('SELECT COUNT(*) as count FROM users', [], (err, row) => {
+                const isEmpty = !err && row && row.count === 0;
+                
+                if (isEmpty) {
+                    console.log('Banco vazio detectado — aplicando dados iniciais...');
+                    
+                    // Tenta carregar o seed de dados
+                    const path = require('path');
+                    const fs = require('fs');
+                    const seedPath = path.join(__dirname, '../../scripts/seed_data.sql');
+                    
+                    if (fs.existsSync(seedPath)) {
+                        const seedSql = fs.readFileSync(seedPath, 'utf8');
+                        const statements = seedSql.split('\n').filter(function(l) { return l.trim() && !l.startsWith('--'); });
+                        
+                        statements.forEach(function(stmt) {
+                            if (stmt.trim()) {
+                                db.run(stmt, function(err) {
+                                    // Silencia erros de UNIQUE constraint (dados duplicados)
+                                });
+                            }
+                        });
+                        
+                        db.get('SELECT COUNT(*) as c FROM users', [], function(e2, r2) {
+                            console.log('Seed aplicado — ' + (r2 ? r2.c : '?') + ' usuarios carregados');
+                            resolve();
+                        });
+                    } else {
+                        // Sem seed: cria apenas o usuário master
+                        const bcrypt = require('bcryptjs');
+                        const masterPassword = bcrypt.hashSync('master123', 10);
+                        db.run(
+                            'INSERT OR IGNORE INTO users (username, password, role, name, plain_password) VALUES (?, ?, ?, ?, ?)',
+                            ['master', masterPassword, 'master', 'Master', 'master123'],
+                            function(err) {
+                                if (!err) console.log('Usuario master criado');
+                                resolve();
+                            }
+                        );
+                    }
+                } else {
+                    console.log('Banco de dados carregado (' + (row ? row.count : '?') + ' usuarios)');
                     resolve();
                 }
-            );
+            });
         });
     });
 }
+
 
 module.exports = { initDatabase };
