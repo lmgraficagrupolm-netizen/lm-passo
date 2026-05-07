@@ -55,6 +55,20 @@ app.use('/api/auth', authRoutes);
 // Rota de saúde para o monitor de reinício
 app.get('/api/health', (req, res) => res.json({ status: 'ok', uptime: process.uptime() }));
 
+// Rota de diagnóstico do banco (temporária)
+app.get('/api/dbtest', async (req, res) => {
+    try {
+        const db = require('./server/database/db');
+        db.get('SELECT * FROM users WHERE username = ?', ['gerente'], (err, row) => {
+            if (err) return res.json({ ok: false, error: err.message, stack: err.stack?.substring(0, 300) });
+            if (!row) return res.json({ ok: false, error: 'Usuario gerente nao encontrado no Firebase' });
+            res.json({ ok: true, username: row.username, role: row.role, hasPassword: !!row.password });
+        });
+    } catch (e) {
+        res.json({ ok: false, error: e.message });
+    }
+});
+
 // Rota para o frontend (SPA Fallback)
 app.get(/^(.*)$/, (req, res) => {
     if (req.path.startsWith('/api')) {
