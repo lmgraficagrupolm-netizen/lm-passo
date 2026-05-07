@@ -153,7 +153,7 @@ if (process.env.NODE_ENV === 'production') {
 
 // ── Backup Automático Firebase → Local ───────────────────────────────────────
 // Só roda em modo Firebase (sem SQLite local) e fora da produção
-if (process.env.USE_SQLITE !== 'true' && !process.env.RAILWAY_ENVIRONMENT && process.env.NODE_ENV !== 'production') {
+if (process.env.USE_SQLITE !== 'true' && !process.env.RAILWAY_ENVIRONMENT_NAME && !process.env.RAILWAY_SERVICE_ID && process.env.NODE_ENV !== 'production') {
     const BACKUP_INTERVAL = 4 * 60 * 60 * 1000; // 4 horas
 
     const doBackup = async () => {
