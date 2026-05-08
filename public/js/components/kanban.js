@@ -664,7 +664,7 @@ export const render = () => {
     const loadOrders = async () => {
         if (!window._kanbanClientsRef) {
             try {
-                const cRes = await fetch('/api/clients');
+                const cRes = await fetch('/api/clients?t=' + Date.now());
                 const cJson = await cRes.json();
                 window._kanbanClientsRef = cJson.data || [];
             } catch (e) {
@@ -673,7 +673,7 @@ export const render = () => {
         }
         // Client role: fetch only their orders; others: fetch all
         const url = isClient && clientId ? `/api/reports/client-orders/${clientId}` : '/api/orders';
-        const res = await fetch(url);
+        const res = await fetch(url + (url.includes('?') ? '&' : '?') + 't=' + Date.now());
         const { data } = await res.json();
 
         // For client/producao, show only relevant columns
