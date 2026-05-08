@@ -1631,17 +1631,16 @@ export const render = () => {
             dispatchRadios.forEach(r => {
                 r.addEventListener('change', () => {
                     if (!r.value) {
-                        optionsContainer.style.display = 'none';
+                        if (optionsContainer) optionsContainer.style.display = 'none';
                     } else {
-                        optionsContainer.style.display = 'flex';
-                        amountWrapper.style.display = 'flex';
-                        otherWrapper.style.display = r.value === 'OUTRO' ? 'flex' : 'none';
-                        
-                        // Default value for UNIDA but allowing edit
-                        if (r.value === 'UNIDA') amountInput.value = '55.00';
-                        else amountInput.value = '';
+                        if (optionsContainer) optionsContainer.style.display = 'flex';
+                        if (amountWrapper) amountWrapper.style.display = 'flex';
+                        if (otherWrapper) otherWrapper.style.display = r.value === 'OUTRO' ? 'flex' : 'none';
+                        if (amountInput) {
+                            if (r.value === 'UNIDA') amountInput.value = '55.00';
+                            else amountInput.value = '';
+                        }
                     }
-
                     content.querySelectorAll('input[name="dispatch_carrier"]').forEach(rb => {
                         const lbl = rb.closest('label');
                         if (lbl) lbl.style.borderColor = (rb.checked && rb.value) ? '#f59e0b' : '#e5e7eb';
@@ -1649,41 +1648,58 @@ export const render = () => {
                 });
             });
 
-            content.querySelector('#conclude-form').onsubmit = async (e) => {
-                e.preventDefault();
-                const formData = new FormData();
-                const fileField = content.querySelector('#pickup-photo');
-                if (fileField && fileField.files[0]) formData.append('pickup_photo', fileField.files[0]);
+            const concludeForm = content.querySelector('#conclude-form');
+            if (!concludeForm) {
+                console.error('[CONCLUDE] #conclude-form not found in modal!');
+            } else {
+                concludeForm.addEventListener('submit', async (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
 
-                const selectedCarrier = content.querySelector('input[name="dispatch_carrier"]:checked');
-                if (selectedCarrier && selectedCarrier.value) {
-                    const carrierName = selectedCarrier.value === 'OUTRO' ? (content.querySelector('#dispatch-other-name').value || 'OUTRO') : selectedCarrier.value;
-                    formData.append('carrier', carrierName);
-                    const dispatchAmt = parseFloat(amountInput.value || '0');
-                    formData.append('dispatch_amount', dispatchAmt);
-                }
+                    const submitBtn = concludeForm.querySelector('button[type="submit"]');
+                    if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = '⏳ Finalizando...'; }
 
-                // Append a dummy field to prevent multer/busboy "Unexpected end of form" crash on empty FormData
-                formData.append('_prevent_empty', '1');
+                    const formData = new FormData();
+                    const fileField = content.querySelector('#pickup-photo');
+                    if (fileField && fileField.files[0]) formData.append('pickup_photo', fileField.files[0]);
 
-                try {
-                    const res = await fetch('/api/orders/' + order.id + '/conclude', {
-                        method: 'POST',
-                        body: formData
-                    });
-                    
-                    if (!res.ok) {
-                        const errText = await res.text();
-                        alert('Erro ao finalizar: ' + errText);
-                        return;
+                    const selectedCarrier = content.querySelector('input[name="dispatch_carrier"]:checked');
+                    if (selectedCarrier && selectedCarrier.value) {
+                        const carrierName = selectedCarrier.value === 'OUTRO'
+                            ? (content.querySelector('#dispatch-other-name')?.value || 'OUTRO')
+                            : selectedCarrier.value;
+                        formData.append('carrier', carrierName);
+                        const dispatchAmt = parseFloat(amountInput?.value || '0');
+                        formData.append('dispatch_amount', dispatchAmt);
                     }
 
-                    modal.classList.remove('open');
-                    loadOrders();
-                } catch (err) {
-                    alert('Erro de conexão ao finalizar: ' + err.message);
-                }
-            };
+                    // Required: prevent multer "Unexpected end of form" on empty FormData
+                    formData.append('_prevent_empty', '1');
+
+                    try {
+                        const res = await fetch('/api/orders/' + order.id + '/conclude', {
+                            method: 'POST',
+                            body: formData
+                        });
+
+                        if (!res.ok) {
+                            const errText = await res.text();
+                            alert('Erro ao finalizar pedido (servidor): ' + errText);
+                            if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = '📦 Finalizar Pedido'; }
+                            return;
+                        }
+
+                        const json = await res.json();
+                        console.log('[CONCLUDE] Success:', json);
+                        modal.classList.remove('open');
+                        await loadOrders();
+                    } catch (err) {
+                        console.error('[CONCLUDE] Fetch error:', err);
+                        alert('Erro de conexão ao finalizar: ' + err.message);
+                        if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = '📦 Finalizar Pedido'; }
+                    }
+                });
+            }
         }
 
         // Archive button (for finalized orders)
