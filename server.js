@@ -41,6 +41,16 @@ app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
 app.use(compression());
 
+// Proibir cache de arquivos JS no navegador — garante que celulares sempre carregam versão atualizada
+app.use((req, res, next) => {
+    if (req.path.endsWith('.js')) {
+        res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+        res.setHeader('Pragma', 'no-cache');
+        res.setHeader('Expires', '0');
+    }
+    next();
+});
+
 // Servir arquivos estáticos (Frontend)
 const diskPublic = path.join(process.cwd(), 'public');
 app.use(express.static(diskPublic));
