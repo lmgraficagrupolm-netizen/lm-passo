@@ -1,9 +1,0 @@
-[variables]
-NODE_ENV = "production"
-PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD = "1"
-
-[phases.install]
-cmds = ["npm install --omit=dev --prefer-offline --no-audit --no-fund"]
-
-[start]
-cmd = "node server.js"
