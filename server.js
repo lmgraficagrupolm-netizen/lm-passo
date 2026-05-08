@@ -53,6 +53,24 @@ if (volumePath) {
     if (!fs.existsSync(volumeUploads)) {
         fs.mkdirSync(volumeUploads, { recursive: true });
     }
+    
+    // Sincroniza arquivos locais para o volume
+    const localUploads = path.join(process.cwd(), 'public/uploads');
+    if (fs.existsSync(localUploads)) {
+        try {
+            const files = fs.readdirSync(localUploads);
+            for (const file of files) {
+                const src = path.join(localUploads, file);
+                const dest = path.join(volumeUploads, file);
+                if (!fs.existsSync(dest) && fs.statSync(src).isFile()) {
+                    fs.copyFileSync(src, dest);
+                }
+            }
+        } catch (err) {
+            console.error('Erro ao sincronizar imagens do catálogo:', err.message);
+        }
+    }
+
     app.use('/uploads', express.static(volumeUploads));
 }
 

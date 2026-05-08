@@ -46,7 +46,7 @@ async function callGraphQL(token, query) {
 
 async function main() {
     const token = getToken();
-    const deployId = 'dc630879-a43f-49d8-ba80-9f7869b8c482';
+    const deployId = 'eb656013-5e44-4ebf-b28e-ad8f3db9fdd0';
     
     // Tenta pegar os logs via buildLogs ou deploymentLogs
     const queries = [
