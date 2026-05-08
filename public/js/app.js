@@ -128,7 +128,7 @@ const loadView = (view, container) => {
             break;
     }
 
-    import(modulePath + '?v=51-' + Date.now()).then(module => {
+    import(modulePath + '?v=99-' + Date.now()).then(module => {
         container.innerHTML = '';
         // Pass user to financial view for role-based controls
         const viewArg = ['financial', 'clients', 'budget'].includes(view) ? state.user : undefined;
