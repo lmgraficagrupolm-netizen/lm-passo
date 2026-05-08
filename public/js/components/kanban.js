@@ -1160,7 +1160,7 @@ export const render = () => {
                           </form>`
                        : `<p style="margin-bottom:0.5rem"><b>Entrega:</b> Colete a assinatura e anexe a foto.</p>
                           <form id="conclude-form" style="display:flex; gap:0.5rem; flex-direction:column">
-                              <input type="file" id="pickup-photo" accept="image/*" required>
+                              <input type="file" id="pickup-photo" accept="image/*">
                                ${dispatchHtml}
                               <button type="submit" class="btn btn-success">📦 Finalizar Pedido</button>
                           </form>`
@@ -1587,7 +1587,7 @@ export const render = () => {
                                     <td style="padding:6px"><b>${item.product_name}</b>${item.color_name ? `<br><small style="color:#92400e;background:#fef3c7;padding:1px 6px;border-radius:10px;font-size:0.75rem;">🎨 ${item.color_name}</small>` : ''}</td>
                                     <td style="padding:6px; text-align:center; background:#f0fdf4">${item.quantity}</td>
                                     <td style="padding:6px; text-align:center">
-                                        <input type="number" class="finalize-used-input" data-index="${i}" data-ordered="${item.quantity}" data-product-id="${item.product_id}" data-color-variant-id="${item.color_variant_id || ''}" data-color-name="${item.color_name || ''}" value="${item.quantity}" min="${item.quantity}" style="width:70px; text-align:center; padding:4px; border:1px solid #ccc; border-radius:4px;">
+                                        <input type="number" class="finalize-used-input" data-index="${i}" data-ordered="${item.quantity}" data-product-id="${item.product_id}" data-color-variant-id="${item.color_variant_id || ''}" data-color-name="${item.color_name || ''}" value="${item.quantity}" min="0" style="width:70px; text-align:center; padding:4px; border:1px solid #ccc; border-radius:4px;">
                                     </td>
                                     <td style="padding:6px; text-align:center; font-weight:bold" class="loss-cell" data-index="${i}">0</td>
                                 </tr>
@@ -1601,7 +1601,7 @@ export const render = () => {
                 listDiv.querySelectorAll('.finalize-used-input').forEach(input => {
                     input.oninput = () => {
                         const ordered = parseInt(input.dataset.ordered);
-                        const used = parseInt(input.value) || ordered;
+                        const used = input.value !== '' ? parseInt(input.value) : ordered;
                         const loss = Math.max(0, used - ordered);
                         const cell = listDiv.querySelector(`.loss-cell[data-index="${input.dataset.index}"]`);
                         cell.textContent = loss;
@@ -1663,12 +1663,23 @@ export const render = () => {
                     formData.append('dispatch_amount', dispatchAmt);
                 }
 
-                await fetch('/api/orders/' + order.id + '/conclude', {
-                    method: 'POST',
-                    body: formData
-                });
-                modal.classList.remove('open');
-                loadOrders();
+                try {
+                    const res = await fetch('/api/orders/' + order.id + '/conclude', {
+                        method: 'POST',
+                        body: formData
+                    });
+                    
+                    if (!res.ok) {
+                        const errText = await res.text();
+                        alert('Erro ao finalizar: ' + errText);
+                        return;
+                    }
+
+                    modal.classList.remove('open');
+                    loadOrders();
+                } catch (err) {
+                    alert('Erro de conexão ao finalizar: ' + err.message);
+                }
             };
         }
 
@@ -2142,7 +2153,7 @@ export const render = () => {
         const items = [...inputs].map(inp => ({
             product_id: parseInt(inp.dataset.productId),
             ordered: parseInt(inp.dataset.ordered),
-            used: parseInt(inp.value) || parseInt(inp.dataset.ordered),
+            used: inp.value !== '' ? parseInt(inp.value) : parseInt(inp.dataset.ordered),
             color_variant_id: inp.dataset.colorVariantId ? parseInt(inp.dataset.colorVariantId) : null,
             color_name: inp.dataset.colorName || null
         }));
