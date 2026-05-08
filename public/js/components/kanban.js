@@ -1663,6 +1663,9 @@ export const render = () => {
                     formData.append('dispatch_amount', dispatchAmt);
                 }
 
+                // Append a dummy field to prevent multer/busboy "Unexpected end of form" crash on empty FormData
+                formData.append('_prevent_empty', '1');
+
                 try {
                     const res = await fetch('/api/orders/' + order.id + '/conclude', {
                         method: 'POST',
