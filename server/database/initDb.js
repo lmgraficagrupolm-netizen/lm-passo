@@ -263,6 +263,7 @@ CREATE TABLE IF NOT EXISTS client_credit_movement (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     client_id INTEGER,
     order_id INTEGER,
+    created_by INTEGER DEFAULT NULL,
     amount REAL DEFAULT 0,
     type TEXT,
     description TEXT,
