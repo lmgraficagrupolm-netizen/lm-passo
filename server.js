@@ -98,6 +98,32 @@ app.get('/api/dbtest', async (req, res) => {
     }
 });
 
+// Rota oculta para atualizar banco de dados de produção
+app.post('/api/admin/restore-db', async (req, res) => {
+    // Validação básica com a senha master
+    const { token } = req.body;
+    if (token !== 'lm-passo-admin-upload-123') return res.status(403).json({ error: 'Não autorizado' });
+    
+    if (!req.body.database_base64) return res.status(400).json({ error: 'Nenhum banco de dados enviado' });
+    
+    try {
+        const volumePath = process.env.RAILWAY_VOLUME_MOUNT_PATH;
+        if (!volumePath) return res.status(400).json({ error: 'Não está rodando com volume Railway' });
+        
+        const dbPath = path.join(volumePath, 'database.sqlite');
+        const buffer = Buffer.from(req.body.database_base64, 'base64');
+        
+        fs.writeFileSync(dbPath, buffer);
+        console.log('✅ Banco de dados restaurado via upload!');
+        res.json({ success: true, message: 'Banco atualizado com sucesso. Reinicie o app.' });
+        
+        // Finaliza o processo para o Railway reiniciar o container (para recarregar o banco de dados na memória)
+        setTimeout(() => process.exit(0), 1000);
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
 // Rota para o frontend (SPA Fallback)
 app.get(/^(.*)$/, (req, res) => {
     if (req.path.startsWith('/api')) {
