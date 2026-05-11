@@ -1710,70 +1710,9 @@ export const render = () => {
                         concludeBtn.textContent = '📦 Finalizar Pedido';
                     }
                 };
-            }
-
-
-                    const formData = new FormData();
-                    const fileField = content.querySelector('#pickup-photo');
-                    if (fileField && fileField.files[0]) formData.append('pickup_photo', fileField.files[0]);
-
-                    const selectedCarrier = content.querySelector('input[name="dispatch_carrier"]:checked');
-                    if (selectedCarrier && selectedCarrier.value) {
-                        const carrierName = selectedCarrier.value === 'OUTRO'
-                            ? (content.querySelector('#dispatch-other-name')?.value || 'OUTRO')
-                            : selectedCarrier.value;
-                        formData.append('carrier', carrierName);
-                        const dispatchAmt = parseFloat(amountInput?.value || '0');
-                        formData.append('dispatch_amount', dispatchAmt);
-                    }
-
-                    // Required: prevent multer "Unexpected end of form" on empty FormData
-                    formData.append('_prevent_empty', '1');
-
-                    try {
-                        const res = await fetch('/api/orders/' + order.id + '/conclude', {
-                            method: 'POST',
-                            body: formData
-                        });
-
-                        if (!res.ok) {
-                            const errText = await res.text();
-                            alert('Erro ao finalizar pedido (servidor): ' + errText);
-                            concludeBtn.disabled = false;
-                            concludeBtn.textContent = '📦 Finalizar Pedido';
-                            return;
-                        }
-
-                        const json = await res.json();
-                        console.log('[CONCLUDE] Success:', json);
-                        modal.classList.remove('open');
-                        
-                        // Optimistic Update
-                        const cardEl = container.querySelector(`.card[data-order-id="${order.id}"]`);
-                        if (cardEl) {
-                            const targetCol = container.querySelector(`#col-finalizado .column-content`);
-                            if (targetCol) targetCol.appendChild(cardEl);
-                            cardEl.className = cardEl.className.replace(/status-\w+/, 'status-finalizado');
-                            cardEl.draggable = isProducao;
-                            cardEl.style.cursor = isProducao ? 'grab' : 'default';
-                            const badge = cardEl.querySelector('.card-badge');
-                            if (badge) {
-                                badge.textContent = 'Finalizado';
-                                badge.style.background = '#f0fdf4';
-                                badge.style.color = '#16a34a';
-                            }
-                        }
-
-                        loadOrders();
-                    } catch (err) {
-                        console.error('[CONCLUDE] Fetch error:', err);
-                        alert('Erro de conexão ao finalizar: ' + err.message);
-                        concludeBtn.disabled = false;
-                        concludeBtn.textContent = '📦 Finalizar Pedido';
-                    }
-                };
-            }
         }
+
+
 
         // Archive button (for finalized orders)
         const archiveBtn = content.querySelector('.btn-archive');
