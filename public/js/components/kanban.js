@@ -712,6 +712,30 @@ export const render = () => {
         const res = await fetch(url + (url.includes('?') ? '&' : '?') + 't=' + Date.now());
         const { data } = await res.json();
 
+        let newOrderDetails = null;
+        if (!isInitialLoad) {
+            data.forEach(order => {
+                if (!knownOrderIds.has(order.id) && ['aguardando_aceite', 'producao', 'em_balcao'].includes(order.status)) {
+                    newOrderDetails = order;
+                }
+            });
+        }
+        
+        data.forEach(order => knownOrderIds.add(order.id));
+
+        if (newOrderDetails && 'Notification' in window && Notification.permission === 'granted') {
+            const notif = new Notification(`📦 Novo Pedido #${newOrderDetails.id}`, {
+                body: `Cliente: ${newOrderDetails.client_name || 'Desconhecido'}\nLançado no quadro Kanban.`,
+                icon: '/logo.png',
+                tag: 'kanban-new-order',
+                renotify: true
+            });
+            notif.onclick = () => { window.focus(); notif.close(); };
+            playNotificationSound();
+        }
+
+        isInitialLoad = false;
+
         // For client/producao, show only relevant columns
         const visibleStatuses = isClient ? ['producao', 'em_balcao']
             : isProducao ? ['aguardando_aceite', 'producao', 'em_balcao', 'finalizado']
