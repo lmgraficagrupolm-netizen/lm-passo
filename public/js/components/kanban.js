@@ -1649,12 +1649,15 @@ export const render = () => {
             });
 
             const concludeBtn = content.querySelector('#conclude-btn');
+            console.log('[CONCLUDE DEBUG] concludeBtn encontrado:', concludeBtn);
             if (!concludeBtn) {
                 console.error('[CONCLUDE] #conclude-btn not found in modal!');
+                alert('[DEBUG] Botão #conclude-btn NÃO encontrado no modal! Reporte este erro.');
             } else {
                 concludeBtn.onclick = async (e) => {
                     e.preventDefault();
                     e.stopPropagation();
+                    console.log('[CONCLUDE] Botão clicado! Order ID:', order.id);
 
                     concludeBtn.disabled = true;
                     concludeBtn.textContent = '⏳ Finalizando...';
