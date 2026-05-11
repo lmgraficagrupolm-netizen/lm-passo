@@ -1710,9 +1710,8 @@ export const render = () => {
                         concludeBtn.textContent = '📦 Finalizar Pedido';
                     }
                 };
+            }
         }
-
-
 
         // Archive button (for finalized orders)
         const archiveBtn = content.querySelector('.btn-archive');
