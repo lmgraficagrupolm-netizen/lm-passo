@@ -8,6 +8,42 @@ export const render = () => {
 
     let notifiedLateOrders = new Set();
     let notifiedUrgentOrders = new Set();
+    let knownOrderIds = new Set();
+    let isInitialLoad = true;
+
+    // Pedir permissão de notificação assim que carregar o Kanban
+    if ('Notification' in window && Notification.permission === 'default') {
+        Notification.requestPermission();
+    }
+
+    let audioCtx = null;
+    const playNotificationSound = async () => {
+        try {
+            const AudioCtx = window.AudioContext || window.webkitAudioContext;
+            if (!AudioCtx) return;
+            if (!audioCtx) audioCtx = new AudioCtx();
+            if (audioCtx.state === 'suspended') await audioCtx.resume();
+
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            
+            // Som premium (A5)
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(880, audioCtx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(440, audioCtx.currentTime + 0.15);
+            
+            gain.gain.setValueAtTime(0, audioCtx.currentTime);
+            gain.gain.linearRampToValueAtTime(0.15, audioCtx.currentTime + 0.01);
+            gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.2);
+            
+            osc.start(audioCtx.currentTime);
+            osc.stop(audioCtx.currentTime + 0.2);
+        } catch (e) { console.warn('Audio play failed', e); }
+    };
+
     const showToastAlert = (msg, type = 'red') => {
         const toast = document.createElement('div');
         let bgStyle = 'background:linear-gradient(135deg, #ef4444 0%, #b91c1c 100%); border:1px solid #991b1b; box-shadow:0 10px 25px -5px rgba(220, 38, 38, 0.5), 0 8px 10px -6px rgba(220, 38, 38, 0.2);';
