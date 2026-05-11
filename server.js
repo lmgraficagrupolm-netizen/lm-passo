@@ -108,6 +108,22 @@ app.get('/api/dbtest', async (req, res) => {
     }
 });
 
+// Rota de emergência para atualizar kanban.js diretamente no Railway (hotfix sem redeploy)
+app.post('/api/admin/update-kanban', async (req, res) => {
+    const { token, kanban_base64 } = req.body;
+    if (token !== 'lm-passo-admin-upload-123') return res.status(403).json({ error: 'Não autorizado' });
+    if (!kanban_base64) return res.status(400).json({ error: 'Nenhum conteúdo enviado' });
+    try {
+        const kanbanPath = path.join(process.cwd(), 'public/js/components/kanban.js');
+        const content = Buffer.from(kanban_base64, 'base64').toString('utf8');
+        fs.writeFileSync(kanbanPath, content);
+        console.log('✅ kanban.js atualizado via hotfix! Tamanho:', content.length, 'chars');
+        res.json({ success: true, message: 'kanban.js atualizado com sucesso!', size: content.length });
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
 // Rota oculta para atualizar banco de dados de produção
 app.post('/api/admin/restore-db', async (req, res) => {
     // Validação básica com a senha master
