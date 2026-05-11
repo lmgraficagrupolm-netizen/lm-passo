@@ -65,6 +65,7 @@ router.put('/orders/:id/reject', orderController.rejectOrder);
 router.put('/orders/:id/finalize', orderController.finalizeOrder);
 router.put('/orders/:id/move-status', orderController.moveOrderStatus);
 router.post('/orders/:id/conclude', upload.single('pickup_photo'), orderController.concludeOrder);
+router.put('/orders/:id/conclude-simple', orderController.concludeSimple);
 router.get('/orders/archived', orderController.getArchivedOrders);
 router.put('/orders/:id/archive', orderController.archiveOrder);
 router.delete('/orders/:id', orderController.deleteOrder);

@@ -1649,18 +1649,69 @@ export const render = () => {
             });
 
             const concludeBtn = content.querySelector('#conclude-btn');
-            console.log('[CONCLUDE DEBUG] concludeBtn encontrado:', concludeBtn);
+            console.log('[CONCLUDE DEBUG] concludeBtn:', concludeBtn, 'Order:', order.id);
             if (!concludeBtn) {
-                console.error('[CONCLUDE] #conclude-btn not found in modal!');
-                alert('[DEBUG] Botão #conclude-btn NÃO encontrado no modal! Reporte este erro.');
+                console.error('[CONCLUDE] #conclude-btn nao encontrado!');
             } else {
                 concludeBtn.onclick = async (e) => {
                     e.preventDefault();
                     e.stopPropagation();
-                    console.log('[CONCLUDE] Botão clicado! Order ID:', order.id);
+                    console.log('[CONCLUDE] Clicado! Order ID:', order.id);
 
                     concludeBtn.disabled = true;
                     concludeBtn.textContent = '⏳ Finalizando...';
+
+                    const selectedCarrier = content.querySelector('input[name="dispatch_carrier"]:checked');
+                    const carrierName = selectedCarrier && selectedCarrier.value
+                        ? (selectedCarrier.value === 'OUTRO'
+                            ? (content.querySelector('#dispatch-other-name')?.value || 'OUTRO')
+                            : selectedCarrier.value)
+                        : null;
+                    const dispatchAmt = parseFloat(content.querySelector('#dispatch-amount')?.value || '0');
+
+                    try {
+                        const res = await fetch('/api/orders/' + order.id + '/conclude-simple', {
+                            method: 'PUT',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ carrier: carrierName, dispatch_amount: dispatchAmt || 0 })
+                        });
+
+                        if (!res.ok) {
+                            const errText = await res.text();
+                            alert('Erro ao finalizar pedido: ' + errText);
+                            concludeBtn.disabled = false;
+                            concludeBtn.textContent = '📦 Finalizar Pedido';
+                            return;
+                        }
+
+                        const json = await res.json();
+                        console.log('[CONCLUDE] Sucesso:', json);
+                        modal.classList.remove('open');
+
+                        // Atualização imediata do card no board
+                        const cardEl = container.querySelector('.card[data-order-id="' + order.id + '"]');
+                        if (cardEl) {
+                            const targetCol = container.querySelector('#col-finalizado .column-content');
+                            if (targetCol) targetCol.appendChild(cardEl);
+                            cardEl.className = cardEl.className.replace(/status-\w+/, 'status-finalizado');
+                            const badge = cardEl.querySelector('.card-badge');
+                            if (badge) {
+                                badge.textContent = 'Finalizado';
+                                badge.style.background = '#f0fdf4';
+                                badge.style.color = '#16a34a';
+                            }
+                        }
+
+                        loadOrders();
+                    } catch (err) {
+                        console.error('[CONCLUDE] Erro:', err);
+                        alert('Erro de conexao: ' + err.message);
+                        concludeBtn.disabled = false;
+                        concludeBtn.textContent = '📦 Finalizar Pedido';
+                    }
+                };
+            }
+
 
                     const formData = new FormData();
                     const fileField = content.querySelector('#pickup-photo');
