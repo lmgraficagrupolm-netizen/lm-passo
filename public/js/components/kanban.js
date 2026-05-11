@@ -1652,7 +1652,7 @@ export const render = () => {
             if (!concludeForm) {
                 console.error('[CONCLUDE] #conclude-form not found in modal!');
             } else {
-                concludeForm.addEventListener('submit', async (e) => {
+                concludeForm.onsubmit = async (e) => {
                     e.preventDefault();
                     e.stopPropagation();
 
@@ -1692,13 +1692,30 @@ export const render = () => {
                         const json = await res.json();
                         console.log('[CONCLUDE] Success:', json);
                         modal.classList.remove('open');
-                        await loadOrders();
+                        
+                        // Optimistic Update
+                        const cardEl = container.querySelector(`.card[data-order-id="${order.id}"]`);
+                        if (cardEl) {
+                            const targetCol = container.querySelector(`#col-finalizado .column-content`);
+                            if (targetCol) targetCol.appendChild(cardEl);
+                            cardEl.className = cardEl.className.replace(/status-\w+/, 'status-finalizado');
+                            cardEl.draggable = isProducao;
+                            cardEl.style.cursor = isProducao ? 'grab' : 'default';
+                            const badge = cardEl.querySelector('.card-badge');
+                            if (badge) {
+                                badge.textContent = 'Finalizado';
+                                badge.style.background = '#f0fdf4';
+                                badge.style.color = '#16a34a';
+                            }
+                        }
+
+                        loadOrders();
                     } catch (err) {
                         console.error('[CONCLUDE] Fetch error:', err);
                         alert('Erro de conexão ao finalizar: ' + err.message);
                         if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = '📦 Finalizar Pedido'; }
                     }
-                });
+                };
             }
         }
 
@@ -2195,6 +2212,23 @@ export const render = () => {
 
             finalizeModal.classList.remove('open');
             printLabel(currentFinalizeOrder);
+            
+            // Optimistic Update
+            const cardEl = container.querySelector(`.card[data-order-id="${currentFinalizeOrder.id}"]`);
+            if (cardEl) {
+                const targetCol = container.querySelector(`#col-em_balcao .column-content`);
+                if (targetCol) targetCol.appendChild(cardEl);
+                cardEl.className = cardEl.className.replace(/status-\w+/, 'status-em_balcao');
+                cardEl.draggable = false;
+                cardEl.style.cursor = 'default';
+                const badge = cardEl.querySelector('.card-badge');
+                if (badge) {
+                     badge.textContent = 'Em Balcão';
+                     badge.style.background = '#ffedd5';
+                     badge.style.color = '#c2410c';
+                }
+            }
+            
             loadOrders();
         } catch (err) {
             alert('Erro de conexão: ' + err.message);
