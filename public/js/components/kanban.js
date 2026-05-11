@@ -1154,16 +1154,16 @@ export const render = () => {
                        ? `<div style="padding:0.6rem 0.75rem; background:#eff6ff; border:1px solid #bfdbfe; border-radius:6px; margin-bottom:0.75rem; font-size:0.9rem; color:#1d4ed8;">
                               🏢 Serviço interno — assinatura não necessária
                           </div>
-                          <form id="conclude-form" style="display:flex; gap:0.5rem; flex-direction:column">
+                          <div id="conclude-form" style="display:flex; gap:0.5rem; flex-direction:column">
                                ${dispatchHtml}
-                              <button type="submit" class="btn btn-success">📦 Finalizar Pedido</button>
-                          </form>`
+                              <button type="button" id="conclude-btn" class="btn btn-success">📦 Finalizar Pedido</button>
+                          </div>`
                        : `<p style="margin-bottom:0.5rem"><b>Entrega:</b> Colete a assinatura e anexe a foto.</p>
-                          <form id="conclude-form" style="display:flex; gap:0.5rem; flex-direction:column">
+                          <div id="conclude-form" style="display:flex; gap:0.5rem; flex-direction:column">
                               <input type="file" id="pickup-photo" accept="image/*">
                                ${dispatchHtml}
-                              <button type="submit" class="btn btn-success">📦 Finalizar Pedido</button>
-                          </form>`
+                              <button type="button" id="conclude-btn" class="btn btn-success">📦 Finalizar Pedido</button>
+                          </div>`
                    }
                </div>
             `;
@@ -1648,16 +1648,16 @@ export const render = () => {
                 });
             });
 
-            const concludeForm = content.querySelector('#conclude-form');
-            if (!concludeForm) {
-                console.error('[CONCLUDE] #conclude-form not found in modal!');
+            const concludeBtn = content.querySelector('#conclude-btn');
+            if (!concludeBtn) {
+                console.error('[CONCLUDE] #conclude-btn not found in modal!');
             } else {
-                concludeForm.onsubmit = async (e) => {
+                concludeBtn.onclick = async (e) => {
                     e.preventDefault();
                     e.stopPropagation();
 
-                    const submitBtn = concludeForm.querySelector('button[type="submit"]');
-                    if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = '⏳ Finalizando...'; }
+                    concludeBtn.disabled = true;
+                    concludeBtn.textContent = '⏳ Finalizando...';
 
                     const formData = new FormData();
                     const fileField = content.querySelector('#pickup-photo');
@@ -1685,7 +1685,8 @@ export const render = () => {
                         if (!res.ok) {
                             const errText = await res.text();
                             alert('Erro ao finalizar pedido (servidor): ' + errText);
-                            if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = '📦 Finalizar Pedido'; }
+                            concludeBtn.disabled = false;
+                            concludeBtn.textContent = '📦 Finalizar Pedido';
                             return;
                         }
 
@@ -1713,7 +1714,8 @@ export const render = () => {
                     } catch (err) {
                         console.error('[CONCLUDE] Fetch error:', err);
                         alert('Erro de conexão ao finalizar: ' + err.message);
-                        if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = '📦 Finalizar Pedido'; }
+                        concludeBtn.disabled = false;
+                        concludeBtn.textContent = '📦 Finalizar Pedido';
                     }
                 };
             }
