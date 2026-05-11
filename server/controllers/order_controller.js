@@ -456,6 +456,28 @@ exports.concludeOrder = (req, res) => {
     });
 };
 
+// Simple JSON conclude (sem upload de foto) — usado pelo front-end como fallback confiável
+exports.concludeSimple = (req, res) => {
+    const { carrier, dispatch_amount } = req.body || {};
+    const orderId = req.params.id;
+
+    db.run("UPDATE orders SET status = 'finalizado' WHERE id = ?", [orderId], function (err) {
+        if (err) return res.status(500).json({ error: err.message });
+        if (this.changes === 0) return res.status(404).json({ error: 'Pedido não encontrado' });
+
+        if (carrier && dispatch_amount && parseFloat(dispatch_amount) > 0) {
+            db.run(
+                "INSERT INTO dispatch_costs (order_id, carrier, amount) VALUES (?, ?, ?)",
+                [orderId, carrier, parseFloat(dispatch_amount)],
+                (err2) => { if (err2) console.error('Erro despacho:', err2.message); }
+            );
+        }
+
+        console.log(`[CONCLUDE-SIMPLE] Pedido #${orderId} finalizado com sucesso`);
+        res.json({ message: 'Pedido finalizado com sucesso', id: orderId });
+    });
+};
+
 // Dispatch Costs Report — grouped by month for the financial view
 exports.getDispatchCosts = (req, res) => {
     const sql = `
