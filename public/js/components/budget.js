@@ -301,6 +301,48 @@ export const render = () => {
     </div> <!-- /bud-section-nota -->
     `;
 
+    // ── Persistência localStorage ────────────────────────────────────────────
+    const STORAGE_KEY = 'lm_budget_draft';
+
+    const saveState = () => {
+        const state = {
+            tab: container.querySelector('#bud-tab-orc').classList.contains('active') ? 'orc' : 'nota',
+            orc: {
+                name:    container.querySelector('#bud-client-name').value,
+                cnpj:    container.querySelector('#bud-client-cnpj').value,
+                cep:     container.querySelector('#bud-client-cep').value,
+                street:  container.querySelector('#bud-client-street').value,
+                num:     container.querySelector('#bud-client-num').value,
+                bairro:  container.querySelector('#bud-client-bairro').value,
+                city:    container.querySelector('#bud-client-city').value,
+                uf:      container.querySelector('#bud-client-uf').value,
+                delivery:container.querySelector('#bud-delivery').value,
+                payment: container.querySelector('#bud-payment').value,
+                payCard: container.querySelector('#bud-pay-card').checked,
+                payPix:  container.querySelector('#bud-pay-pix').checked,
+                payCash: container.querySelector('#bud-pay-cash').checked,
+                installments: container.querySelector('#bud-installments').value,
+            },
+            nota: {
+                name:   container.querySelector('#nota-client-name').value,
+                cnpj:   container.querySelector('#nota-client-cnpj').value,
+                cep:    container.querySelector('#nota-client-cep').value,
+                street: container.querySelector('#nota-client-street').value,
+                num:    container.querySelector('#nota-client-num').value,
+                bairro: container.querySelector('#nota-client-bairro').value,
+                city:   container.querySelector('#nota-client-city').value,
+                uf:     container.querySelector('#nota-client-uf').value,
+                desc:   container.querySelector('#nota-desc').value,
+                value:  container.querySelector('#nota-value').value,
+                date:   container.querySelector('#nota-date').value,
+            },
+            items: [...items],
+        };
+        try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch(e) {}
+    };
+
+    const clearState = () => { try { localStorage.removeItem(STORAGE_KEY); } catch(e) {} };
+
     // ── Estado ──────────────────────────────────────────────────────────────
     const items = [];
 
@@ -312,10 +354,12 @@ export const render = () => {
     tabOrc.addEventListener('click', () => {
         tabOrc.classList.add('active'); tabNota.classList.remove('active');
         secOrc.style.display = ''; secNota.style.display = 'none';
+        saveState();
     });
     tabNota.addEventListener('click', () => {
         tabNota.classList.add('active'); tabOrc.classList.remove('active');
         secNota.style.display = ''; secOrc.style.display = 'none';
+        saveState();
     });
 
     // ── Cartao: mostrar/ocultar parcelas ──────────────────────────────────
@@ -323,6 +367,7 @@ export const render = () => {
     const installmentsWrap   = container.querySelector('#bud-installments-wrap');
     cardCheckbox.addEventListener('change', () => {
         installmentsWrap.style.display = cardCheckbox.checked ? 'flex' : 'none';
+        saveState();
     });
 
     const fmt = (v) => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
@@ -355,6 +400,7 @@ export const render = () => {
                 items.splice(parseInt(btn.dataset.idx), 1);
                 rebuildTable();
                 updateTotal();
+                saveState();
             });
         });
         updateTotal();
@@ -406,6 +452,7 @@ export const render = () => {
         if (!desc) { container.querySelector('#bud-item-desc').focus(); return; }
         items.push({ desc, qty, price });
         rebuildTable();
+        saveState();
         container.querySelector('#bud-item-desc').value = '';
         container.querySelector('#bud-item-qty').value = '1';
         container.querySelector('#bud-item-price').value = '';
@@ -416,6 +463,10 @@ export const render = () => {
     container.querySelector('#bud-item-price').addEventListener('keydown', e => {
         if (e.key === 'Enter') container.querySelector('#bud-btn-add').click();
     });
+
+    // Auto-salva ao digitar em qualquer campo do formulário
+    container.addEventListener('input', saveState);
+    container.addEventListener('change', saveState);
 
     // ── Gerar PDF ───────────────────────────────────────────────────────────
     container.querySelector('#bud-btn-pdf').addEventListener('click', () => {
@@ -594,7 +645,8 @@ export const render = () => {
 </body>
 </html>`;
 
-        // Abre o PDF em nova janela para impressão
+        // Limpa o rascunho salvo ao concluir e abre o PDF
+        clearState();
         const win = window.open('', '_blank');
         win.document.write(html);
         win.document.close();
@@ -763,6 +815,7 @@ export const render = () => {
 </body>
 </html>`;
 
+        clearState();
         const win = window.open('', '_blank');
         win.document.write(html);
         win.document.close();
@@ -790,6 +843,64 @@ UF: `;
 
     container.querySelector('#bud-btn-copy-client').addEventListener('click', (e) => copyClientDataTemplate(e.currentTarget));
     container.querySelector('#nota-btn-copy-client').addEventListener('click', (e) => copyClientDataTemplate(e.currentTarget));
+
+    // ── Restaurar rascunho salvo do localStorage ─────────────────────────────
+    const restoreState = () => {
+        let saved;
+        try { saved = JSON.parse(localStorage.getItem(STORAGE_KEY)); } catch(e) {}
+        if (!saved) return;
+
+        // Restaurar aba ativa
+        if (saved.tab === 'nota') {
+            tabNota.classList.add('active'); tabOrc.classList.remove('active');
+            secNota.style.display = ''; secOrc.style.display = 'none';
+        }
+
+        // Restaurar campos do Orçamento
+        if (saved.orc) {
+            const o = saved.orc;
+            const set = (id, val) => { const el = container.querySelector(id); if (el && val !== undefined) el.value = val; };
+            set('#bud-client-name',    o.name);
+            set('#bud-client-cnpj',    o.cnpj);
+            set('#bud-client-cep',     o.cep);
+            set('#bud-client-street',  o.street);
+            set('#bud-client-num',     o.num);
+            set('#bud-client-bairro',  o.bairro);
+            set('#bud-client-city',    o.city);
+            set('#bud-client-uf',      o.uf);
+            set('#bud-delivery',       o.delivery);
+            set('#bud-payment',        o.payment);
+            set('#bud-installments',   o.installments);
+            if (o.payCard) { cardCheckbox.checked = true; installmentsWrap.style.display = 'flex'; }
+            if (o.payPix)  container.querySelector('#bud-pay-pix').checked  = true;
+            if (o.payCash) container.querySelector('#bud-pay-cash').checked = true;
+        }
+
+        // Restaurar campos da Nota
+        if (saved.nota) {
+            const n = saved.nota;
+            const set = (id, val) => { const el = container.querySelector(id); if (el && val !== undefined) el.value = val; };
+            set('#nota-client-name',   n.name);
+            set('#nota-client-cnpj',   n.cnpj);
+            set('#nota-client-cep',    n.cep);
+            set('#nota-client-street', n.street);
+            set('#nota-client-num',    n.num);
+            set('#nota-client-bairro', n.bairro);
+            set('#nota-client-city',   n.city);
+            set('#nota-client-uf',     n.uf);
+            set('#nota-desc',          n.desc);
+            set('#nota-value',         n.value);
+            if (n.date) set('#nota-date', n.date);
+        }
+
+        // Restaurar itens do Orçamento
+        if (Array.isArray(saved.items) && saved.items.length > 0) {
+            saved.items.forEach(item => items.push(item));
+            rebuildTable();
+        }
+    };
+
+    restoreState();
 
     return container;
 };
