@@ -50,6 +50,8 @@ export const render = () => {
         .bud-tabs { display:flex; gap:0.5rem; background:rgba(255,255,255,0.6); backdrop-filter:blur(8px); border:1px solid rgba(139,92,246,0.15); border-radius:14px; padding:5px; margin-bottom:1.75rem; width:fit-content; }
         .bud-tab { padding:0.55rem 1.4rem; border:none; border-radius:10px; font-size:0.85rem; font-weight:700; cursor:pointer; transition:all 0.25s; background:transparent; color:#64748b; letter-spacing:0.03em; }
         .bud-tab.active { background:linear-gradient(135deg, var(--primary,#8b5cf6), #6d28d9); color:#fff; box-shadow:0 4px 12px rgba(139,92,246,0.35); }
+        .btn-copy-data { display:flex; align-items:center; gap:0.4rem; background:rgba(139,92,246,0.1); color:var(--primary,#8b5cf6); border:1px solid rgba(139,92,246,0.2); border-radius:8px; padding:0.4rem 0.8rem; font-size:0.75rem; font-weight:700; cursor:pointer; transition:all 0.2s; text-transform:uppercase; letter-spacing:0.05em; }
+        .btn-copy-data:hover { background:var(--primary,#8b5cf6); color:#fff; }
         /* ── Nota fields ── */
         .nota-desc { width:100%; padding:0.75rem 0.95rem; border:1.5px solid rgba(139,92,246,0.2); border-radius:10px; font-size:0.95rem; font-family:inherit; resize:vertical; min-height:100px; background:rgba(255,255,255,0.8); color:#1e1b4b; transition:all 0.25s; box-sizing:border-box; }
         .nota-desc:focus { outline:none; border-color:var(--primary,#8b5cf6); box-shadow:0 0 0 4px rgba(139,92,246,0.15); background:#fff; }
@@ -72,7 +74,13 @@ export const render = () => {
     <!-- SEÇÃO: Orçamento -->
     <div id="bud-section-orc">
     <div class="budget-card">
-        <div class="budget-section-title">Dados do Cliente</div>
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+            <div class="budget-section-title" style="margin-bottom:0;">Dados do Cliente</div>
+            <button class="btn-copy-data" id="bud-btn-copy-client" title="Copiar modelo para enviar ao cliente">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+                Copiar
+            </button>
+        </div>
         <div class="budget-grid-2" style="margin-bottom:1rem;">
             <div class="budget-field">
                 <label>Nome / Razão Social</label>
@@ -225,7 +233,13 @@ export const render = () => {
 
         <!-- Dados do cliente nota -->
         <div class="budget-card">
-            <div class="budget-section-title">Dados do Cliente</div>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+                <div class="budget-section-title" style="margin-bottom:0;">Dados do Cliente</div>
+                <button class="btn-copy-data" id="nota-btn-copy-client" title="Copiar modelo para enviar ao cliente">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+                    Copiar
+                </button>
+            </div>
             <div class="budget-grid-2" style="margin-bottom:1rem;">
                 <div class="budget-field">
                     <label>Nome / Razão Social</label>
@@ -754,6 +768,28 @@ export const render = () => {
         win.document.close();
         win.onload = () => setTimeout(() => { win.focus(); win.print(); }, 500);
     });
+
+    // ── Botões de Copiar Dados do Cliente ────────────────────────────────────
+    const copyClientDataTemplate = (btn) => {
+        const template = `Olá! Para gerarmos o seu documento, por favor nos envie os seguintes dados:
+
+Nome / Razão Social: 
+CNPJ / CPF: 
+CEP: 
+Logradouro: 
+Número: 
+Bairro: 
+Cidade: 
+UF: `;
+        navigator.clipboard.writeText(template).then(() => {
+            const originalText = btn.innerHTML;
+            btn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg> Copiado!`;
+            setTimeout(() => { btn.innerHTML = originalText; }, 2000);
+        }).catch(err => console.error('Erro ao copiar', err));
+    };
+
+    container.querySelector('#bud-btn-copy-client').addEventListener('click', (e) => copyClientDataTemplate(e.currentTarget));
+    container.querySelector('#nota-btn-copy-client').addEventListener('click', (e) => copyClientDataTemplate(e.currentTarget));
 
     return container;
 };
