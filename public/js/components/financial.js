@@ -233,7 +233,7 @@ export const render = (user) => {
                         <td>${s.client_phone || '-'}</td>
                         <td style="font-size:0.85rem">
                             ${s.products_summary || '-'}
-                            ${s.products_summary ? `<button type="button" onclick="window.copyTextToClipboard('LM | GRÁFICA - ${s.products_summary.replace(/'/g, "\\'")}')" title="Copiar para Financeiro" style="background:none; border:none; cursor:pointer; font-size:0.95rem; margin-left:4px; filter:grayscale(1) opacity(0.5); transition:all 0.2s;" onmouseover="this.style.filter='none'" onmouseout="this.style.filter='grayscale(1) opacity(0.5)'">📋</button>` : ''}
+                            ${s.products_summary ? `<button type="button" onclick="window.copyTextToClipboard('LM | GRÁFICA - ${s.products_summary.replace(/'/g, "\\'")}${s.description ? ' | ' + s.description.replace(/'/g, "\\'") : ''}')" title="Copiar para Financeiro" style="background:none; border:none; cursor:pointer; font-size:0.95rem; margin-left:4px; filter:grayscale(1) opacity(0.5); transition:all 0.2s;" onmouseover="this.style.filter='none'" onmouseout="this.style.filter='grayscale(1) opacity(0.5)'">📋</button>` : ''}
                         </td>
                         <td style="font-size:0.85rem; max-width:200px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${(s.description || '').replace(/"/g, '&quot;')}">${s.description || '-'}</td>
                         <td style="font-weight:bold; color:#7c3aed">R$ ${(s.total_value || 0).toFixed(2)}</td>

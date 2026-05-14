@@ -1,0 +1,7 @@
+backup.zip
+backup-db-only.zip
+database_backup.sqlite
+database.sqlite*
+scripts/
+*.pdf
+*.jfif

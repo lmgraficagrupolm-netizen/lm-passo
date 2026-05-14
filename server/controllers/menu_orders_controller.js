@@ -158,7 +158,7 @@ const launchToCore = (req, res) => {
             const totalValue = grossValue - discountValue;
             
             const description = `Cardápio Lançado - Evento: ${row.event_name}`;
-            const productsSummary = `${row.quantity}x ${product.name}`;
+            const productsSummary = `${row.event_name} - ${row.quantity}x ${product.name}`;
 
             // Create standard order. launched_to_core is 0 so the financial team can confer and launch it.
             db.run(
