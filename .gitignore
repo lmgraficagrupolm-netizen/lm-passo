@@ -1,7 +1,15 @@
 node_modules/
 database.sqlite
+database.sqlite-shm
+database.sqlite-wal
+database_backup.sqlite
 error_log.txt
 *.exe
 public/uploads/
 .env
 firebase-credentials.json
+*.zip
+*.pdf
+*.png
+*.jpg
+*.jpeg
