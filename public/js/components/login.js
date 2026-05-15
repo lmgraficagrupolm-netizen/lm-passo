@@ -71,18 +71,20 @@ export const render = (onLogin) => {
             z-index: 10;
         }
 
-        /* Left: Branding panel — transparent over purple bg */
+        /* Left: Branding panel */
         .lm-brand-panel {
             flex: 1;
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: center;
-            gap: 1.8rem;
-            padding: 5rem;
+            justify-content: flex-start;
+            padding-top: 22vh;
+            gap: 2rem;
+            padding-left: 5rem;
+            padding-right: 5rem;
         }
         .lm-logo-img {
-            width: 110px; height: 110px;
+            width: 160px; height: 160px;
             object-fit: contain;
             filter: brightness(0) invert(1);
             animation: lm-glitch 6s steps(1) infinite;
@@ -277,8 +279,13 @@ export const render = (onLogin) => {
             <!-- Desktop split layout -->
             <div class="lm-layout">
 
-                <!-- LEFT: decorative space (marquee shows through) -->
-                <div class="lm-brand-panel"></div>
+                <!-- LEFT: Branding harmonioso -->
+                <div class="lm-brand-panel">
+                    <img src="/logo.png?v=3" alt="LM Logo" class="lm-logo-img">
+                    <div class="lm-brand-name">LM | PASSO</div>
+                    <div class="lm-brand-divider"></div>
+                    <div class="lm-brand-sub">Sistema de Gestão LM | Gráfica</div>
+                </div>
 
                 <!-- RIGHT: Dark form panel -->
                 <div class="lm-form-panel">
