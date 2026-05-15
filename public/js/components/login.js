@@ -277,17 +277,21 @@ export const render = (onLogin) => {
             <!-- Desktop split layout -->
             <div class="lm-layout">
 
-                <!-- LEFT: Branding -->
-                <div class="lm-brand-panel">
-                    <img src="/logo.png?v=3" alt="LM Logo" class="lm-logo-img">
-                    <div class="lm-brand-name">LM | PASSO</div>
-                    <div class="lm-brand-divider"></div>
-                    <div class="lm-brand-sub">Sistema de Gestão LM | Gráfica</div>
-                </div>
+                <!-- LEFT: decorative space (marquee shows through) -->
+                <div class="lm-brand-panel"></div>
 
                 <!-- RIGHT: Dark form panel -->
                 <div class="lm-form-panel">
                     <div class="lm-form-inner">
+
+                        <!-- Logo + brand info INSIDE the dark panel -->
+                        <div style="display:flex; flex-direction:column; align-items:center; gap:0.8rem; margin-bottom:2.2rem;">
+                            <img src="/logo.png?v=3" alt="LM Logo" class="lm-logo-img" style="width:80px;height:80px;">
+                            <div class="lm-brand-name" style="font-size:2rem;">LM | PASSO</div>
+                            <div class="lm-brand-divider"></div>
+                            <div class="lm-brand-sub">Sistema de Gestão LM | Gráfica</div>
+                        </div>
+
                         <div class="lm-form-title">Bem-vindo</div>
                         <div class="lm-form-desc">Faça login para continuar</div>
 
