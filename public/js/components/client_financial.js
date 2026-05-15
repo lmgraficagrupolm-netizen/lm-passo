@@ -286,102 +286,94 @@ const renderDefault = () => {
     const style = document.createElement('style');
     style.innerHTML = `
         .arena-dashboard-header {
-            background: linear-gradient(135deg, #1e1b4b, #0f172a);
-            border-radius: 24px;
+            background: #ffffff;
+            border-radius: 20px;
             padding: 2.5rem;
-            color: white;
-            margin-bottom: -3rem;
+            color: #0f172a;
+            margin-bottom: 2rem;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.02);
             position: relative;
             overflow: hidden;
-            box-shadow: 0 20px 40px -10px rgba(0,0,0,0.3);
         }
-        .arena-dashboard-header::before {
+        .arena-dashboard-header::after {
             content: '';
             position: absolute;
-            top: -50%; right: -10%;
-            width: 300px; height: 300px;
-            background: radial-gradient(circle, rgba(249, 115, 22, 0.4) 0%, transparent 70%);
-            border-radius: 50%;
-            filter: blur(40px);
-            pointer-events: none;
+            top: 0; left: 0; right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #f97316, #fb923c);
         }
         .arena-card {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.8);
-            border-radius: 20px;
-            box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.08), 0 4px 6px -4px rgba(0, 0, 0, 0.04);
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 16px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.02);
+            transition: all 0.2s ease;
             overflow: hidden;
             position: relative;
         }
         .arena-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 20px 40px -5px rgba(249, 115, 22, 0.15);
-            border-color: rgba(249, 115, 22, 0.3);
+            box-shadow: 0 10px 25px rgba(249, 115, 22, 0.08);
+            border-color: #fdba74;
         }
         .arena-card-main {
-            background: linear-gradient(135deg, #f97316, #ea580c);
-            color: white;
-            border: none;
-            box-shadow: 0 15px 35px -5px rgba(249, 115, 22, 0.4);
+            background: #fffaf5;
+            border: 1px solid #fdba74;
+            color: #0f172a;
         }
         .arena-card-main:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 25px 45px -5px rgba(249, 115, 22, 0.5);
+            box-shadow: 0 12px 30px rgba(249, 115, 22, 0.12);
         }
         .arena-filter-container {
-            background: rgba(255, 255, 255, 0.8);
-            backdrop-filter: blur(16px);
+            background: #ffffff;
             border-radius: 16px;
             padding: 1.25rem;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.04);
-            border: 1px solid rgba(255,255,255,0.6);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.02);
+            border: 1px solid #e2e8f0;
             margin-bottom: 2rem;
             display: flex;
             gap: 1rem;
             flex-wrap: wrap;
-            position: relative;
-            z-index: 10;
         }
         .arena-filter {
             flex: 1;
             min-width: 150px;
-            padding: 0.8rem 1.2rem;
-            border: 1px solid #e2e8f0;
-            border-radius: 12px;
-            font-size: 0.95rem;
-            background: white;
-            color: #1e293b;
+            padding: 0.75rem 1rem;
+            border: 1px solid #cbd5e1;
+            border-radius: 10px;
+            font-size: 0.9rem;
+            background: #f8fafc;
+            color: #334155;
             transition: all 0.2s;
             font-weight: 500;
         }
         .arena-filter:focus {
             outline: none;
             border-color: #f97316;
-            box-shadow: 0 0 0 4px rgba(249, 115, 22, 0.1);
+            background: #ffffff;
+            box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.1);
         }
         .arena-table-container {
-            background: white;
-            border-radius: 20px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.03);
-            border: 1px solid #f1f5f9;
+            background: #ffffff;
+            border-radius: 16px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.03);
+            border: 1px solid #e2e8f0;
             overflow: hidden;
         }
         .arena-table-row {
-            transition: all 0.2s ease;
+            transition: all 0.15s ease;
             border-bottom: 1px solid #f1f5f9;
         }
         .arena-table-row:hover td {
-            background-color: #fff7ed !important;
+            background-color: #fffaf5 !important;
         }
         .arena-pill {
             background: #fff7ed;
-            color: #ea580c;
-            padding: 4px 10px;
-            border-radius: 20px;
-            font-size: 0.75rem;
-            font-weight: 700;
+            color: #c2410c;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 0.7rem;
+            font-weight: 600;
             border: 1px solid #fed7aa;
             display: inline-block;
             margin-top: 4px;
@@ -403,26 +395,26 @@ const renderDefault = () => {
         </div>
 
         <!-- Summary Cards -->
-        <div style="display:grid; grid-template-columns: 1.2fr 1fr 1fr; gap: 1.5rem; padding: 0 1.5rem; position: relative; z-index: 5;">
+        <div style="display:grid; grid-template-columns: 1.2fr 1fr 1fr; gap: 1.5rem; margin-bottom: 3rem;">
             
             <div class="arena-card arena-card-main" style="padding: 2rem; display:flex; flex-direction:column; justify-content:space-between;">
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 1rem;">
-                    <span style="font-size: 1rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; opacity: 0.9;">Valor Faturado</span>
-                    <div style="background: rgba(255,255,255,0.2); width: 45px; height: 45px; border-radius: 12px; display:flex; align-items:center; justify-content:center; font-size: 1.5rem;">
+                    <span style="font-size: 0.95rem; font-weight: 700; color: #ea580c; text-transform: uppercase; letter-spacing: 0.05em;">Valor Faturado</span>
+                    <div style="background: #fff7ed; color: #ea580c; width: 45px; height: 45px; border-radius: 12px; display:flex; align-items:center; justify-content:center; font-size: 1.5rem; border: 1px solid #fed7aa;">
                         <ion-icon name="wallet"></ion-icon>
                     </div>
                 </div>
-                <div id="cf-total-value" style="font-size: 2.8rem; font-weight: 900; letter-spacing: -0.03em;">R$ 0,00</div>
+                <div id="cf-total-value" style="font-size: 2.5rem; font-weight: 800; letter-spacing: -0.03em;">R$ 0,00</div>
             </div>
             
             <div class="arena-card" style="padding: 1.8rem; display:flex; flex-direction:column; justify-content:center;">
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 0.8rem;">
                     <span style="font-size: 0.9rem; color: #64748b; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em;">Total de Pedidos</span>
-                    <div style="background: #fff7ed; color: #f97316; width: 40px; height: 40px; border-radius: 10px; display:flex; align-items:center; justify-content:center; font-size: 1.2rem;">
+                    <div style="background: #f8fafc; color: #3b82f6; width: 40px; height: 40px; border-radius: 10px; display:flex; align-items:center; justify-content:center; font-size: 1.2rem;">
                         <ion-icon name="receipt"></ion-icon>
                     </div>
                 </div>
-                <div id="cf-total-orders" style="font-size: 2.2rem; font-weight: 800; color: #0f172a;">-</div>
+                <div id="cf-total-orders" style="font-size: 2rem; font-weight: 800; color: #0f172a;">-</div>
             </div>
 
             <div class="arena-card" style="padding: 1.8rem; display:flex; flex-direction:column; justify-content:center;">
@@ -432,7 +424,7 @@ const renderDefault = () => {
                         <ion-icon name="pricetag"></ion-icon>
                     </div>
                 </div>
-                <div id="cf-total-discount" style="font-size: 2.2rem; font-weight: 800; color: #ef4444;">R$ 0,00</div>
+                <div id="cf-total-discount" style="font-size: 2rem; font-weight: 800; color: #ef4444;">R$ 0,00</div>
             </div>
 
         </div>
@@ -592,13 +584,14 @@ const renderDefault = () => {
                 const now = new Date();
                 const isCurrentMonth = m.year === now.getFullYear() && m.month === now.getMonth();
                 const closingLabel = isCurrentMonth ? 'Parcial do Mês' : 'Fechamento';
-                const headerBg = isCurrentMonth ? '#f97316' : '#1e293b';
+                const headerBg = isCurrentMonth ? '#fff7ed' : '#f8fafc';
+                const titleColor = isCurrentMonth ? '#ea580c' : '#1e293b';
 
                 return `
                 <div class="arena-table-container">
-                    <div style="display:flex; justify-content:space-between; align-items:center; padding:1.5rem 2rem; background:${headerBg}; color:white;">
-                        <h3 style="margin:0; font-size:1.3rem; font-weight:800; letter-spacing:0.02em;">📅 ${m.label}</h3>
-                        <span style="font-size:0.95rem; font-weight:600; background:rgba(255,255,255,0.15); padding:6px 14px; border-radius:20px;">${m.items.length} pedidos</span>
+                    <div style="display:flex; justify-content:space-between; align-items:center; padding:1.5rem 2rem; background:${headerBg}; border-bottom: 1px solid #e2e8f0;">
+                        <h3 style="margin:0; font-size:1.2rem; font-weight:800; color:${titleColor}; letter-spacing:0.02em;">📅 ${m.label}</h3>
+                        <span style="font-size:0.95rem; font-weight:700; color:#475569; background:rgba(0,0,0,0.05); padding:6px 14px; border-radius:20px;">${m.items.length} pedidos</span>
                     </div>
                     <div style="overflow-x:auto;">
                         <table style="width:100%; border-collapse:collapse; min-width:800px;">
