@@ -93,7 +93,7 @@ export const render = (onLogin) => {
                 #7c3aed 180deg,
                 transparent 240deg
             );
-            animation: lm-border-spin 3s linear infinite;
+            animation: lm-border-spin 8s linear infinite;
             z-index: 0;
         }
         @keyframes lm-border-spin {
