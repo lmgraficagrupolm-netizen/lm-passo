@@ -78,8 +78,18 @@ export const render = (onLogin) => {
             letter-spacing: 0.2em;
             text-transform: uppercase;
             color: rgba(196, 181, 253, 0.07);
-            padding: 0 2.5rem;
+            padding: 0 2rem;
             user-select: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.6rem;
+        }
+        .lm-marquee-logo {
+            width: 14px; height: 14px;
+            object-fit: contain;
+            opacity: 0.07;
+            filter: brightness(0) invert(1);
+            flex-shrink: 0;
         }
         @keyframes lm-scroll {
             from { transform: translateX(0); }
@@ -287,24 +297,7 @@ export const render = (onLogin) => {
             <div class="lm-orb lm-orb-2"></div>
             <div class="lm-orb lm-orb-3"></div>
             <div class="lm-marquee-wrap">
-                <div class="lm-marquee-row">${'<span class="lm-marquee-item">LM | GRÁFICA</span>'.repeat(20)}</div>
-                <div class="lm-marquee-row">${'<span class="lm-marquee-item">LM | GRÁFICA</span>'.repeat(20)}</div>
-                <div class="lm-marquee-row">${'<span class="lm-marquee-item">LM | GRÁFICA</span>'.repeat(20)}</div>
-                <div class="lm-marquee-row">${'<span class="lm-marquee-item">LM | GRÁFICA</span>'.repeat(20)}</div>
-                <div class="lm-marquee-row">${'<span class="lm-marquee-item">LM | GRÁFICA</span>'.repeat(20)}</div>
-                <div class="lm-marquee-row">${'<span class="lm-marquee-item">LM | GRÁFICA</span>'.repeat(20)}</div>
-                <div class="lm-marquee-row">${'<span class="lm-marquee-item">LM | GRÁFICA</span>'.repeat(20)}</div>
-                <div class="lm-marquee-row">${'<span class="lm-marquee-item">LM | GRÁFICA</span>'.repeat(20)}</div>
-                <div class="lm-marquee-row">${'<span class="lm-marquee-item">LM | GRÁFICA</span>'.repeat(20)}</div>
-                <div class="lm-marquee-row">${'<span class="lm-marquee-item">LM | GRÁFICA</span>'.repeat(20)}</div>
-                <div class="lm-marquee-row">${'<span class="lm-marquee-item">LM | GRÁFICA</span>'.repeat(20)}</div>
-                <div class="lm-marquee-row">${'<span class="lm-marquee-item">LM | GRÁFICA</span>'.repeat(20)}</div>
-                <div class="lm-marquee-row">${'<span class="lm-marquee-item">LM | GRÁFICA</span>'.repeat(20)}</div>
-                <div class="lm-marquee-row">${'<span class="lm-marquee-item">LM | GRÁFICA</span>'.repeat(20)}</div>
-                <div class="lm-marquee-row">${'<span class="lm-marquee-item">LM | GRÁFICA</span>'.repeat(20)}</div>
-                <div class="lm-marquee-row">${'<span class="lm-marquee-item">LM | GRÁFICA</span>'.repeat(20)}</div>
-                <div class="lm-marquee-row">${'<span class="lm-marquee-item">LM | GRÁFICA</span>'.repeat(20)}</div>
-                <div class="lm-marquee-row">${'<span class="lm-marquee-item">LM | GRÁFICA</span>'.repeat(20)}</div>
+                ${ Array(18).fill(`<div class="lm-marquee-row">${ Array(20).fill('<span class="lm-marquee-item"><img src="/logo.png?v=3" class="lm-marquee-logo" alt="">LM | GR\u00c1FICA</span>').join('') }</div>`).join('') }
             </div>
 
             <div class="lm-login-card">
