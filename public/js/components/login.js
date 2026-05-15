@@ -4,7 +4,7 @@ export const render = (onLogin) => {
 
     const style = document.createElement('style');
     style.innerHTML = `
-        /* ===== FULL SCREEN DESKTOP LAYOUT ===== */
+        /* ===== FULL SCREEN ===== */
         .lm-bg {
             width: 100vw;
             height: 100vh;
@@ -12,9 +12,11 @@ export const render = (onLogin) => {
             position: relative;
             overflow: hidden;
             display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
-        /* ===== MARQUEE — FILLS ENTIRE 1920x1080 ===== */
+        /* ===== MARQUEE ===== */
         .lm-marquee-wrap {
             position: absolute;
             inset: 0;
@@ -62,29 +64,62 @@ export const render = (onLogin) => {
             to   { transform: translateX(-50%); }
         }
 
-        /* ===== SPLIT DESKTOP LAYOUT ===== */
-        .lm-layout {
-            display: flex;
-            width: 100%;
-            height: 100vh;
+        /* ===== ANIMATED BORDER WRAPPER ===== */
+        .lm-card-wrapper {
             position: relative;
             z-index: 10;
+            border-radius: 28px;
+            padding: 2px;
+            overflow: hidden;
+            width: 100%;
+            max-width: 480px;
+            margin: 1rem;
+            animation: lm-card-in 0.6s cubic-bezier(0.4,0,0.2,1);
+        }
+        @keyframes lm-card-in {
+            from { opacity:0; transform: translateY(20px) scale(0.98); }
+            to   { opacity:1; transform: translateY(0) scale(1); }
+        }
+        /* Spinning conic border */
+        .lm-card-wrapper::before {
+            content: '';
+            position: absolute;
+            inset: -150%;
+            background: conic-gradient(
+                from 0deg,
+                transparent 0deg,
+                #a78bfa 60deg,
+                #c4b5fd 120deg,
+                #7c3aed 180deg,
+                transparent 240deg
+            );
+            animation: lm-border-spin 3s linear infinite;
+            z-index: 0;
+        }
+        @keyframes lm-border-spin {
+            to { transform: rotate(360deg); }
         }
 
-        /* Left: Branding panel */
-        .lm-brand-panel {
-            flex: 1;
+        /* ===== DARK CARD ===== */
+        .lm-login-card {
+            position: relative;
+            z-index: 1;
+            border-radius: 26px;
+            background: rgba(5, 2, 18, 0.92);
+            padding: 3rem 2.8rem;
+            width: 100%;
+        }
+
+        /* ===== LOGO AREA ===== */
+        .lm-logo-wrap {
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: flex-start;
-            padding-top: 22vh;
-            gap: 2rem;
-            padding-left: 5rem;
-            padding-right: 5rem;
+            gap: 0.8rem;
+            margin-bottom: 2rem;
         }
         .lm-logo-img {
-            width: 160px; height: 160px;
+            width: 90px; height: 90px;
             object-fit: contain;
             filter: brightness(0) invert(1);
             animation: lm-glitch 6s steps(1) infinite;
@@ -102,67 +137,50 @@ export const render = (onLogin) => {
             100%{ filter: brightness(0) invert(1); transform: translate(0); }
         }
         .lm-brand-name {
-            font-size: 3.5rem;
+            font-size: 2rem;
             font-weight: 900;
             letter-spacing: 0.08em;
             color: #fff;
-            text-shadow: 0 0 40px rgba(167,139,250,0.4);
+            text-shadow: 0 0 30px rgba(167,139,250,0.3);
             line-height: 1;
         }
-        .lm-brand-sub {
-            font-size: 0.9rem;
-            font-weight: 600;
-            letter-spacing: 0.22em;
-            text-transform: uppercase;
-            color: rgba(196,181,253,0.6);
-            text-align: center;
-        }
         .lm-brand-divider {
-            width: 60px;
-            height: 2px;
+            width: 50px; height: 2px;
             background: linear-gradient(90deg, transparent, rgba(167,139,250,0.5), transparent);
             border-radius: 2px;
         }
+        .lm-brand-sub {
+            font-size: 0.72rem;
+            font-weight: 600;
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
+            color: rgba(196,181,253,0.5);
+            text-align: center;
+        }
 
-        /* Right: Form panel — DARKER than background */
-        .lm-form-panel {
-            width: 520px;
-            flex-shrink: 0;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: rgba(5, 2, 15, 0.65);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border-left: 1px solid rgba(139,92,246,0.15);
-            padding: 4rem 3.5rem;
-        }
-        .lm-form-inner {
-            width: 100%;
-        }
+        /* ===== FORM TITLE ===== */
         .lm-form-title {
-            font-size: 1.6rem;
+            font-size: 1.3rem;
             font-weight: 800;
             color: #fff;
-            margin-bottom: 0.4rem;
+            margin-bottom: 0.3rem;
         }
         .lm-form-desc {
-            font-size: 0.85rem;
-            color: rgba(196,181,253,0.5);
-            margin-bottom: 2.5rem;
-            letter-spacing: 0.02em;
+            font-size: 0.82rem;
+            color: rgba(196,181,253,0.45);
+            margin-bottom: 2rem;
         }
 
-        /* Inputs */
-        .lm-field { margin-bottom: 1.3rem; }
+        /* ===== INPUTS ===== */
+        .lm-field { margin-bottom: 1.2rem; }
         .lm-field label {
             display: block;
-            font-size: 0.75rem;
+            font-size: 0.72rem;
             font-weight: 700;
-            color: rgba(196,181,253,0.6);
+            color: rgba(196,181,253,0.55);
             text-transform: uppercase;
             letter-spacing: 0.1em;
-            margin-bottom: 0.5rem;
+            margin-bottom: 0.4rem;
         }
         .lm-input-wrap { position: relative; }
         .lm-input-icon {
@@ -176,7 +194,7 @@ export const render = (onLogin) => {
         }
         .lm-input {
             width: 100%;
-            padding: 0.95rem 1rem 0.95rem 2.8rem;
+            padding: 0.9rem 1rem 0.9rem 2.8rem;
             background: rgba(255,255,255,0.05);
             border: 1px solid rgba(139,92,246,0.2);
             border-radius: 12px;
@@ -186,7 +204,7 @@ export const render = (onLogin) => {
             transition: all 0.25s ease;
             outline: none;
         }
-        .lm-input::placeholder { color: rgba(196,181,253,0.25); }
+        .lm-input::placeholder { color: rgba(196,181,253,0.22); }
         .lm-input:focus {
             background: rgba(139,92,246,0.08);
             border-color: rgba(139,92,246,0.5);
@@ -194,7 +212,7 @@ export const render = (onLogin) => {
             color: #fff;
         }
 
-        /* Error */
+        /* ===== ERROR ===== */
         .lm-error {
             display: none;
             align-items: center;
@@ -202,25 +220,22 @@ export const render = (onLogin) => {
             background: rgba(239,68,68,0.08);
             border: 1px solid rgba(239,68,68,0.25);
             border-radius: 10px;
-            padding: 0.7rem 1rem;
-            margin-bottom: 1.2rem;
+            padding: 0.65rem 1rem;
+            margin-bottom: 1rem;
             color: #fca5a5;
-            font-size: 0.85rem;
-            font-weight: 500;
+            font-size: 0.83rem;
         }
         .lm-error.visible {
             display: flex;
             animation: lm-shake 0.4s ease;
         }
         @keyframes lm-shake {
-            0%,100% { transform: translateX(0); }
-            20%      { transform: translateX(-6px); }
-            40%      { transform: translateX(6px); }
-            60%      { transform: translateX(-4px); }
-            80%      { transform: translateX(4px); }
+            0%,100%{ transform:translateX(0); }
+            25%     { transform:translateX(-6px); }
+            75%     { transform:translateX(6px); }
         }
 
-        /* Button */
+        /* ===== BUTTON ===== */
         .lm-btn {
             width: 100%;
             padding: 1rem;
@@ -237,7 +252,7 @@ export const render = (onLogin) => {
             overflow: hidden;
             box-shadow: 0 6px 24px rgba(124,58,237,0.35);
             transition: all 0.25s ease;
-            margin-top: 0.5rem;
+            margin-top: 0.4rem;
         }
         .lm-btn:hover:not(:disabled) {
             transform: translateY(-2px);
@@ -255,10 +270,7 @@ export const render = (onLogin) => {
             transform: skewX(-20deg);
             transition: left 0s;
         }
-        .lm-btn:hover::after {
-            left: 160%;
-            transition: left 0.6s ease;
-        }
+        .lm-btn:hover::after { left: 160%; transition: left 0.6s ease; }
         .lm-btn.success {
             background: linear-gradient(135deg, #059669, #047857);
             box-shadow: 0 6px 24px rgba(5,150,105,0.4);
@@ -271,59 +283,45 @@ export const render = (onLogin) => {
 
     container.innerHTML = `
         <div class="lm-bg">
-            <!-- Marquee across full 1920x1080 -->
-            <div class="lm-marquee-wrap">
-                ${ROW.repeat(18)}
-            </div>
+            <div class="lm-marquee-wrap">${ROW.repeat(18)}</div>
 
-            <!-- Desktop split layout -->
-            <div class="lm-layout">
+            <!-- Animated border wrapper -->
+            <div class="lm-card-wrapper">
+                <div class="lm-login-card">
 
-                <!-- LEFT: Branding harmonioso -->
-                <div class="lm-brand-panel">
-                    <img src="/logo.png?v=3" alt="LM Logo" class="lm-logo-img">
-                    <div class="lm-brand-name">LM | PASSO</div>
-                    <div class="lm-brand-divider"></div>
-                    <div class="lm-brand-sub">Sistema de Gestão LM | Gráfica</div>
-                </div>
-
-                <!-- RIGHT: Dark form panel -->
-                <div class="lm-form-panel">
-                    <div class="lm-form-inner">
-
-                        <!-- Logo + brand info INSIDE the dark panel -->
-                        <div style="display:flex; flex-direction:column; align-items:center; gap:0.8rem; margin-bottom:2.2rem;">
-                            <img src="/logo.png?v=3" alt="LM Logo" class="lm-logo-img" style="width:80px;height:80px;">
-                            <div class="lm-brand-name" style="font-size:2rem;">LM | PASSO</div>
-                            <div class="lm-brand-divider"></div>
-                            <div class="lm-brand-sub">Sistema de Gestão LM | Gráfica</div>
-                        </div>
-
-                        <div class="lm-form-title">Bem-vindo</div>
-                        <div class="lm-form-desc">Faça login para continuar</div>
-
-                        <form id="lm-login-form">
-                            <div class="lm-field">
-                                <label>Usuário</label>
-                                <div class="lm-input-wrap">
-                                    <ion-icon name="person-outline" class="lm-input-icon"></ion-icon>
-                                    <input type="text" id="lm-username" class="lm-input" placeholder="Digite seu usuário" autocomplete="username" required>
-                                </div>
-                            </div>
-                            <div class="lm-field">
-                                <label>Senha</label>
-                                <div class="lm-input-wrap">
-                                    <ion-icon name="lock-closed-outline" class="lm-input-icon"></ion-icon>
-                                    <input type="password" id="lm-password" class="lm-input" placeholder="Digite sua senha" autocomplete="current-password" required>
-                                </div>
-                            </div>
-                            <div id="lm-error" class="lm-error">
-                                <ion-icon name="alert-circle"></ion-icon>
-                                <span id="lm-error-text">Usuário ou senha incorretos</span>
-                            </div>
-                            <button type="submit" id="lm-submit" class="lm-btn">Entrar</button>
-                        </form>
+                    <!-- Logo + brand -->
+                    <div class="lm-logo-wrap">
+                        <img src="/logo.png?v=3" alt="LM Logo" class="lm-logo-img">
+                        <div class="lm-brand-name">LM | PASSO</div>
+                        <div class="lm-brand-divider"></div>
+                        <div class="lm-brand-sub">Sistema de Gestão LM | Gráfica</div>
                     </div>
+
+                    <!-- Form -->
+                    <div class="lm-form-title">Bem-vindo</div>
+                    <div class="lm-form-desc">Faça login para continuar</div>
+
+                    <form id="lm-login-form">
+                        <div class="lm-field">
+                            <label>Usuário</label>
+                            <div class="lm-input-wrap">
+                                <ion-icon name="person-outline" class="lm-input-icon"></ion-icon>
+                                <input type="text" id="lm-username" class="lm-input" placeholder="Digite seu usuário" autocomplete="username" required>
+                            </div>
+                        </div>
+                        <div class="lm-field">
+                            <label>Senha</label>
+                            <div class="lm-input-wrap">
+                                <ion-icon name="lock-closed-outline" class="lm-input-icon"></ion-icon>
+                                <input type="password" id="lm-password" class="lm-input" placeholder="Digite sua senha" autocomplete="current-password" required>
+                            </div>
+                        </div>
+                        <div id="lm-error" class="lm-error">
+                            <ion-icon name="alert-circle"></ion-icon>
+                            <span id="lm-error-text">Usuário ou senha incorretos</span>
+                        </div>
+                        <button type="submit" id="lm-submit" class="lm-btn">Entrar</button>
+                    </form>
                 </div>
             </div>
         </div>
