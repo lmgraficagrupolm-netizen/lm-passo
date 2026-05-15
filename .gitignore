@@ -10,6 +10,7 @@ public/uploads/
 firebase-credentials.json
 *.zip
 *.pdf
-*.png
-*.jpg
-*.jpeg
+# Allow logo and public images, block only large uploads
+public/uploads/*.png
+public/uploads/*.jpg
+public/uploads/*.jpeg
