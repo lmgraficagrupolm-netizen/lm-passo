@@ -91,36 +91,17 @@ export const render = (onLogin) => {
             gap: 1.2rem;
             margin-bottom: 2.4rem;
         }
-        /* Logo circle — stays still, centered */
-        .lm-logo-circle {
-            position: relative;
-            width: 88px; height: 88px;
-            border-radius: 50%;
-            background: #1a0e3a;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-shrink: 0;
-            box-shadow: 0 0 28px rgba(124,58,237,0.5);
-        }
-        /* Spinning ring as pseudo-element — behind the circle */
-        .lm-logo-circle::before {
-            content: '';
-            position: absolute;
-            inset: -3px;
-            border-radius: 50%;
-            background: conic-gradient(from 0deg, #7c3aed, #a78bfa, #c4b5fd, #7c3aed);
-            animation: lm-spin 4s linear infinite;
-            z-index: -1;
-        }
-        @keyframes lm-spin {
-            to { transform: rotate(360deg); }
-        }
         .lm-logo-img {
-            width: 54px; height: 54px;
+            width: 90px; height: 90px;
             object-fit: contain;
             display: block;
-        }        .lm-brand-name {
+            filter: brightness(0) invert(1);
+            animation: lm-pulse 2.5s ease-in-out infinite;
+        }
+        @keyframes lm-pulse {
+            0%, 100% { opacity: 1;   filter: brightness(0) invert(1) drop-shadow(0 0 8px rgba(255,255,255,0.4)); }
+            50%       { opacity: 0.6; filter: brightness(0) invert(1) drop-shadow(0 0 0px rgba(255,255,255,0)); }
+        }
             font-size: 1.7rem;
             font-weight: 800;
             letter-spacing: 0.06em;
@@ -271,9 +252,7 @@ export const render = (onLogin) => {
 
             <div class="lm-login-card">
                 <div class="lm-logo-wrap">
-                    <div class="lm-logo-circle">
-                        <img src="/logo.png?v=3" alt="LM Logo" class="lm-logo-img">
-                    </div>
+                    <img src="/logo.png?v=3" alt="LM Logo" class="lm-logo-img">
                     <div class="lm-brand-name">LM | PASSO</div>
                     <div class="lm-brand-sub">Sistema de Gestão</div>
                 </div>
