@@ -22,7 +22,8 @@ export const render = (onLogin) => {
             overflow: hidden;
             display: flex;
             flex-direction: column;
-            justify-content: space-around;
+            gap: 4px;
+            padding: 4px 0;
             pointer-events: none;
             z-index: 0;
         }
@@ -30,31 +31,32 @@ export const render = (onLogin) => {
             display: flex;
             white-space: nowrap;
             width: max-content;
-            animation: lm-scroll 18s linear infinite;
+            flex-shrink: 0;
+            animation: lm-scroll 22s linear infinite;
         }
         .lm-marquee-row:nth-child(even) {
             animation-direction: reverse;
-            animation-duration: 24s;
+            animation-duration: 28s;
         }
         .lm-marquee-row:nth-child(3n) {
-            animation-duration: 20s;
+            animation-duration: 25s;
         }
         .lm-marquee-item {
-            font-size: 0.9rem;
+            font-size: 0.85rem;
             font-weight: 800;
-            letter-spacing: 0.2em;
+            letter-spacing: 0.18em;
             text-transform: uppercase;
-            color: rgba(196, 181, 253, 0.07);
-            padding: 0 2rem;
+            color: rgba(196, 181, 253, 0.08);
+            padding: 0 1.8rem;
             user-select: none;
             display: inline-flex;
             align-items: center;
-            gap: 0.6rem;
+            gap: 0.5rem;
         }
         .lm-marquee-logo {
-            width: 14px; height: 14px;
+            width: 13px; height: 13px;
             object-fit: contain;
-            opacity: 0.07;
+            opacity: 0.08;
             filter: brightness(0) invert(1);
             flex-shrink: 0;
         }
@@ -63,23 +65,23 @@ export const render = (onLogin) => {
             to   { transform: translateX(-50%); }
         }
 
-        /* Card */
+        /* Card — optimized for 1920x1080 */
         .lm-login-card {
             position: relative;
             z-index: 10;
             width: 100%;
-            max-width: 420px;
+            max-width: 480px;
             margin: 1rem;
-            background: rgba(13, 10, 26, 0.5);
-            backdrop-filter: blur(3px);
-            -webkit-backdrop-filter: blur(3px);
-            border: 1px solid rgba(139,92,246,0.3);
-            border-radius: 28px;
-            padding: 2.8rem 2.4rem;
+            background: rgba(13, 10, 26, 0.55);
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
+            border: 1px solid rgba(139,92,246,0.35);
+            border-radius: 32px;
+            padding: 3.2rem 3rem;
             box-shadow:
-                0 0 0 1px rgba(139,92,246,0.08) inset,
-                0 24px 48px -12px rgba(0,0,0,0.4),
-                0 0 60px rgba(124,58,237,0.1);
+                0 0 0 1px rgba(139,92,246,0.1) inset,
+                0 24px 48px -12px rgba(0,0,0,0.5),
+                0 0 80px rgba(124,58,237,0.12);
             animation: lm-card-in 0.6s cubic-bezier(0.4,0,0.2,1);
         }
         @keyframes lm-card-in {
@@ -261,7 +263,7 @@ export const render = (onLogin) => {
     container.innerHTML = `
         <div class="lm-login-bg">
             <div class="lm-marquee-wrap">
-                ${ Array(18).fill(`<div class="lm-marquee-row">${ Array(20).fill('<span class="lm-marquee-item"><img src="/logo.png?v=3" class="lm-marquee-logo" alt="">LM | GR\u00c1FICA</span>').join('') }</div>`).join('') }
+                ${ Array(50).fill(`<div class="lm-marquee-row">${ Array(30).fill('<span class="lm-marquee-item"><img src="/logo.png?v=3" class="lm-marquee-logo" alt="">LM | GR\u00c1FICA</span>').join('') }</div>`).join('') }
             </div>
 
             <div class="lm-login-card">
