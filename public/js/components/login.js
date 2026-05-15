@@ -103,16 +103,16 @@ export const render = (onLogin) => {
             width: 100%;
             max-width: 420px;
             margin: 1rem;
-            background: rgba(255,255,255,0.04);
-            backdrop-filter: blur(24px);
-            -webkit-backdrop-filter: blur(24px);
-            border: 1px solid rgba(139,92,246,0.25);
+            background: rgba(13, 10, 26, 0.5);
+            backdrop-filter: blur(3px);
+            -webkit-backdrop-filter: blur(3px);
+            border: 1px solid rgba(139,92,246,0.3);
             border-radius: 28px;
             padding: 2.8rem 2.4rem;
             box-shadow:
-                0 0 0 1px rgba(255,255,255,0.04) inset,
-                0 32px 64px -12px rgba(0,0,0,0.6),
-                0 0 80px rgba(124,58,237,0.15);
+                0 0 0 1px rgba(139,92,246,0.08) inset,
+                0 24px 48px -12px rgba(0,0,0,0.4),
+                0 0 60px rgba(124,58,237,0.1);
             animation: lm-card-in 0.6s cubic-bezier(0.4,0,0.2,1);
         }
         @keyframes lm-card-in {
