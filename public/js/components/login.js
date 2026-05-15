@@ -91,43 +91,35 @@ export const render = (onLogin) => {
             gap: 1.2rem;
             margin-bottom: 2.4rem;
         }
+        /* Outer ring that spins */
         .lm-logo-ring {
-            position: relative;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            width: 96px; height: 96px;
-        }
-        /* Spinning gradient ring */
-        .lm-logo-ring::before {
-            content: '';
-            position: absolute;
-            inset: -3px;
+            width: 100px; height: 100px;
             border-radius: 50%;
             background: conic-gradient(from 0deg, #7c3aed, #a78bfa, #c4b5fd, #7c3aed);
             animation: lm-spin 4s linear infinite;
-            z-index: 0;
-        }
-        /* Dark purple background circle */
-        .lm-logo-ring::after {
-            content: '';
-            position: absolute;
-            inset: 0;
-            border-radius: 50%;
-            background: #1a0e3a;
-            z-index: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 3px;
+            box-shadow: 0 0 24px rgba(124,58,237,0.4);
         }
         @keyframes lm-spin {
             to { transform: rotate(360deg); }
         }
+        /* Inner dark circle that holds the logo */
+        .lm-logo-circle {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            background: #1a0e3a;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
         .lm-logo-img {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            z-index: 2;
-            width: 64px; height: 64px;
+            width: 62px; height: 62px;
             object-fit: contain;
+            display: block;
         }
         .lm-brand-name {
             font-size: 1.7rem;
@@ -281,7 +273,9 @@ export const render = (onLogin) => {
             <div class="lm-login-card">
                 <div class="lm-logo-wrap">
                     <div class="lm-logo-ring">
-                        <img src="/logo.png?v=3" alt="LM Logo" class="lm-logo-img">
+                        <div class="lm-logo-circle">
+                            <img src="/logo.png?v=3" alt="LM Logo" class="lm-logo-img">
+                        </div>
                     </div>
                     <div class="lm-brand-name">LM | PASSO</div>
                     <div class="lm-brand-sub">Sistema de Gestão</div>
