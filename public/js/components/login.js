@@ -121,12 +121,13 @@ export const render = (onLogin) => {
             background-clip: text;
         }
         .lm-brand-sub {
-            font-size: 0.85rem;
-            color: rgba(196,181,253,0.5);
-            margin-top: -0.8rem;
-            letter-spacing: 0.12em;
+            font-size: 0.75rem;
+            color: rgba(255, 255, 255, 0.85);
+            margin-top: -0.6rem;
+            letter-spacing: 0.1em;
             text-transform: uppercase;
-            font-weight: 500;
+            font-weight: 600;
+            text-align: center;
         }
 
         /* Inputs */
