@@ -96,20 +96,36 @@ export const render = (onLogin) => {
             display: flex;
             align-items: center;
             justify-content: center;
+            width: 96px; height: 96px;
+        }
+        /* Spinning gradient ring */
+        .lm-logo-ring::before {
+            content: '';
+            position: absolute;
+            inset: -3px;
+            border-radius: 50%;
+            background: conic-gradient(from 0deg, #7c3aed, #a78bfa, #c4b5fd, #7c3aed);
+            animation: lm-spin 4s linear infinite;
+            z-index: 0;
+        }
+        /* White halo to separate ring from bg */
+        .lm-logo-ring::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: 50%;
+            background: #1a0e3a;
+            z-index: 1;
+        }
+        @keyframes lm-spin {
+            to { transform: rotate(360deg); }
         }
         .lm-logo-img {
             position: relative;
             z-index: 2;
-            width: 100px; height: 100px;
+            width: 68px; height: 68px;
             object-fit: contain;
-            /* Turn white logo into dark purple #1a0e3a */
-            filter: invert(1) sepia(1) saturate(4) hue-rotate(240deg) brightness(0.25);
-            drop-shadow: 0 0 20px rgba(124,58,237,0.5);
-            animation: lm-logo-pulse 3s ease-in-out infinite;
-        }
-        @keyframes lm-logo-pulse {
-            0%, 100% { filter: invert(1) sepia(1) saturate(4) hue-rotate(240deg) brightness(0.25) drop-shadow(0 0 12px rgba(139,92,246,0.3)); }
-            50%       { filter: invert(1) sepia(1) saturate(4) hue-rotate(240deg) brightness(0.32) drop-shadow(0 0 24px rgba(139,92,246,0.6)); }
+            border-radius: 0;
         }
         .lm-brand-name {
             font-size: 1.7rem;
