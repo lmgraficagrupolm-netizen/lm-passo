@@ -96,11 +96,20 @@ export const render = (onLogin) => {
             object-fit: contain;
             display: block;
             filter: brightness(0) invert(1);
-            animation: lm-pulse 2.5s ease-in-out infinite;
+            animation: lm-glitch 5s steps(1) infinite;
         }
-        @keyframes lm-pulse {
-            0%, 100% { opacity: 1;   filter: brightness(0) invert(1) drop-shadow(0 0 8px rgba(255,255,255,0.4)); }
-            50%       { opacity: 0.6; filter: brightness(0) invert(1) drop-shadow(0 0 0px rgba(255,255,255,0)); }
+        @keyframes lm-glitch {
+            0%  { filter: brightness(0) invert(1); transform: translate(0); }
+            2%  { filter: brightness(0) invert(1) drop-shadow(-2px 0 #a78bfa) drop-shadow(2px 0 #c4b5fd); transform: translate(-2px, 1px); }
+            4%  { filter: brightness(0) invert(1); transform: translate(2px, -1px); }
+            6%  { filter: brightness(0) invert(1) drop-shadow(2px 0 #7c3aed); transform: translate(0); }
+            8%  { filter: brightness(0) invert(1); transform: translate(-1px, 0); opacity: 0.8; }
+            9%  { filter: brightness(0) invert(1); transform: translate(0); opacity: 1; }
+            92% { filter: brightness(0) invert(1); transform: translate(0); }
+            94% { filter: brightness(0) invert(1) drop-shadow(-3px 0 #8b5cf6); transform: translate(-3px, 0); opacity: 0.7; }
+            96% { filter: brightness(0) invert(1); transform: translate(2px, 1px); opacity: 1; }
+            98% { filter: brightness(0) invert(1) drop-shadow(2px 0 #c4b5fd); transform: translate(0); }
+            100%{ filter: brightness(0) invert(1); transform: translate(0); }
         }
         .lm-brand-name {
             font-size: 1.7rem;
