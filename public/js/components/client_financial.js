@@ -394,42 +394,7 @@ const renderDefault = () => {
             </div>
         </div>
 
-        <!-- Summary Cards -->
-        <div style="display:grid; grid-template-columns: 1.2fr 1fr 1fr; gap: 1.5rem; margin-bottom: 3rem;">
-            
-            <div class="arena-card arena-card-main" style="padding: 2rem; display:flex; flex-direction:column; justify-content:space-between;">
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 1rem;">
-                    <span style="font-size: 0.95rem; font-weight: 700; color: #ea580c; text-transform: uppercase; letter-spacing: 0.05em;">Valor Faturado</span>
-                    <div style="background: #fff7ed; color: #ea580c; width: 45px; height: 45px; border-radius: 12px; display:flex; align-items:center; justify-content:center; font-size: 1.5rem; border: 1px solid #fed7aa;">
-                        <ion-icon name="wallet"></ion-icon>
-                    </div>
-                </div>
-                <div id="cf-total-value" style="font-size: 2.5rem; font-weight: 800; letter-spacing: -0.03em;">R$ 0,00</div>
-            </div>
-            
-            <div class="arena-card" style="padding: 1.8rem; display:flex; flex-direction:column; justify-content:center;">
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 0.8rem;">
-                    <span style="font-size: 0.9rem; color: #64748b; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em;">Total de Pedidos</span>
-                    <div style="background: #f8fafc; color: #3b82f6; width: 40px; height: 40px; border-radius: 10px; display:flex; align-items:center; justify-content:center; font-size: 1.2rem;">
-                        <ion-icon name="receipt"></ion-icon>
-                    </div>
-                </div>
-                <div id="cf-total-orders" style="font-size: 2rem; font-weight: 800; color: #0f172a;">-</div>
-            </div>
-
-            <div class="arena-card" style="padding: 1.8rem; display:flex; flex-direction:column; justify-content:center;">
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 0.8rem;">
-                    <span style="font-size: 0.9rem; color: #64748b; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em;">Descontos Aplicados</span>
-                    <div style="background: #fef2f2; color: #ef4444; width: 40px; height: 40px; border-radius: 10px; display:flex; align-items:center; justify-content:center; font-size: 1.2rem;">
-                        <ion-icon name="pricetag"></ion-icon>
-                    </div>
-                </div>
-                <div id="cf-total-discount" style="font-size: 2rem; font-weight: 800; color: #ef4444;">R$ 0,00</div>
-            </div>
-
-        </div>
-
-        <div style="margin-top: 3rem;">
+        <div style="margin-top: 1rem;">
             <!-- Filters -->
             <div class="arena-filter-container">
                 <div style="flex:100%; margin-bottom:0.5rem; font-weight:700; color:#475569; font-size:0.9rem; text-transform:uppercase; letter-spacing:0.05em;"><ion-icon name="funnel"></ion-icon> Filtros de Busca</div>
@@ -589,8 +554,11 @@ const renderDefault = () => {
 
                 return `
                 <div class="arena-table-container">
-                    <div style="display:flex; justify-content:space-between; align-items:center; padding:1.5rem 2rem; background:${headerBg}; border-bottom: 1px solid #e2e8f0;">
-                        <h3 style="margin:0; font-size:1.2rem; font-weight:800; color:${titleColor}; letter-spacing:0.02em;">📅 ${m.label}</h3>
+                    <div onclick="this.nextElementSibling.style.display = this.nextElementSibling.style.display === 'none' ? 'block' : 'none'; const icon = this.querySelector('.collapse-icon'); icon.name = this.nextElementSibling.style.display === 'none' ? 'chevron-down-outline' : 'chevron-up-outline';" style="display:flex; justify-content:space-between; align-items:center; padding:1.5rem 2rem; background:${headerBg}; border-bottom: 1px solid #e2e8f0; cursor:pointer; user-select:none;">
+                        <div style="display:flex; align-items:center; gap:12px;">
+                            <ion-icon class="collapse-icon" name="chevron-up-outline" style="font-size:1.2rem; color:#64748b;"></ion-icon>
+                            <h3 style="margin:0; font-size:1.2rem; font-weight:800; color:${titleColor}; letter-spacing:0.02em;">📅 ${m.label}</h3>
+                        </div>
                         <span style="font-size:0.95rem; font-weight:700; color:#475569; background:rgba(0,0,0,0.05); padding:6px 14px; border-radius:20px;">${m.items.length} pedidos</span>
                     </div>
                     <div style="overflow-x:auto;">
@@ -620,11 +588,6 @@ const renderDefault = () => {
                 </div>`;
             }).join('');
         }
-
-        // Summary cards
-        container.querySelector('#cf-total-orders').textContent = data.length;
-        container.querySelector('#cf-total-value').textContent = formatCurrency(totalGeral);
-        container.querySelector('#cf-total-discount').textContent = formatCurrency(totalDiscount);
     };
 
     const loadFinancial = async () => {

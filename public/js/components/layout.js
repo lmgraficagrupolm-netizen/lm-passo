@@ -6,11 +6,11 @@ export const render = (user, onLogout, onNavigate) => {
     const isArena = user.username === 'cliente_arena' || (user.name && user.name.toLowerCase().includes('arena')) || user.client_id === 7;
 
     if (isArena) {
-        document.documentElement.style.setProperty('--sidebar-bg', '#1a0a00');
-        document.documentElement.style.setProperty('--primary', '#f97316');
-        document.documentElement.style.setProperty('--primary-hover', '#ea580c');
+        document.documentElement.style.setProperty('--sidebar-bg', '#f97316');
+        document.documentElement.style.setProperty('--primary', '#ea580c');
+        document.documentElement.style.setProperty('--primary-hover', '#c2410c');
         document.documentElement.style.setProperty('--bg-color', '#fff7ed');
-        document.documentElement.style.setProperty('--border', 'rgba(249,115,22,0.2)');
+        document.documentElement.style.setProperty('--border', 'rgba(234,88,12,0.2)');
     } else if (user.role === 'producao') {
         document.documentElement.style.setProperty('--sidebar-bg', '#1e3a5f');
         document.documentElement.style.setProperty('--primary', '#3b82f6');
