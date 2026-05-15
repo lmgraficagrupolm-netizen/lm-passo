@@ -2,52 +2,49 @@ export const render = (onLogin) => {
     const container = document.createElement('div');
     container.className = 'login-container';
 
-    // Inject premium login CSS
     const style = document.createElement('style');
     style.innerHTML = `
-        .lm-login-bg {
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+        /* ===== FULL SCREEN DESKTOP LAYOUT ===== */
+        .lm-bg {
+            width: 100vw;
+            height: 100vh;
             background: #2e1065;
             position: relative;
             overflow: hidden;
+            display: flex;
         }
 
-        /* Scrolling text background */
+        /* ===== MARQUEE — FILLS ENTIRE 1920x1080 ===== */
         .lm-marquee-wrap {
             position: absolute;
             inset: 0;
             overflow: hidden;
             display: flex;
             flex-direction: column;
-            gap: 4px;
-            padding: 4px 0;
+            justify-content: space-around;
             pointer-events: none;
             z-index: 0;
         }
         .lm-marquee-row {
             display: flex;
             white-space: nowrap;
-            width: max-content;
             flex-shrink: 0;
-            animation: lm-scroll 40s linear infinite;
+            animation: lm-scroll 45s linear infinite;
         }
         .lm-marquee-row:nth-child(even) {
             animation-direction: reverse;
-            animation-duration: 50s;
+            animation-duration: 55s;
         }
         .lm-marquee-row:nth-child(3n) {
-            animation-duration: 45s;
+            animation-duration: 50s;
         }
         .lm-marquee-item {
-            font-size: 0.8rem;
+            font-size: 0.82rem;
             font-weight: 700;
-            letter-spacing: 0.18em;
+            letter-spacing: 0.2em;
             text-transform: uppercase;
-            color: rgba(196, 181, 253, 0.06);
-            padding: 0 2rem;
+            color: rgba(196, 181, 253, 0.07);
+            padding: 0 2.2rem;
             user-select: none;
             display: inline-flex;
             align-items: center;
@@ -56,7 +53,7 @@ export const render = (onLogin) => {
         .lm-marquee-logo {
             width: 12px; height: 12px;
             object-fit: contain;
-            opacity: 0.06;
+            opacity: 0.07;
             filter: brightness(0) invert(1);
             flex-shrink: 0;
         }
@@ -65,102 +62,114 @@ export const render = (onLogin) => {
             to   { transform: translateX(-50%); }
         }
 
-        /* Card — glass over purple background */
-        .lm-login-card {
+        /* ===== SPLIT DESKTOP LAYOUT ===== */
+        .lm-layout {
+            display: flex;
+            width: 100%;
+            height: 100vh;
             position: relative;
             z-index: 10;
-            width: 100%;
-            max-width: 480px;
-            margin: 1rem;
-            background: rgba(46, 16, 101, 0.25);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            border: 1px solid rgba(167, 139, 250, 0.2);
-            border-radius: 32px;
-            padding: 3.2rem 3rem;
-            box-shadow:
-                0 0 0 1px rgba(255,255,255,0.04) inset,
-                0 24px 60px -12px rgba(0,0,0,0.4),
-                0 0 80px rgba(124,58,237,0.08);
-            animation: lm-card-in 0.6s cubic-bezier(0.4,0,0.2,1);
-        }
-        @keyframes lm-card-in {
-            from { opacity:0; transform: translateY(30px) scale(0.97); }
-            to   { opacity:1; transform: translateY(0) scale(1); }
         }
 
-        /* Logo area */
-        .lm-logo-wrap {
+        /* Left: Branding panel — transparent over purple bg */
+        .lm-brand-panel {
+            flex: 1;
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 1.2rem;
-            margin-bottom: 2.4rem;
+            justify-content: center;
+            gap: 1.8rem;
+            padding: 5rem;
         }
         .lm-logo-img {
-            width: 90px; height: 90px;
+            width: 110px; height: 110px;
             object-fit: contain;
-            display: block;
             filter: brightness(0) invert(1);
-            animation: lm-glitch 5s steps(1) infinite;
+            animation: lm-glitch 6s steps(1) infinite;
         }
         @keyframes lm-glitch {
             0%  { filter: brightness(0) invert(1); transform: translate(0); }
             2%  { filter: brightness(0) invert(1) drop-shadow(-2px 0 #a78bfa) drop-shadow(2px 0 #c4b5fd); transform: translate(-2px, 1px); }
             4%  { filter: brightness(0) invert(1); transform: translate(2px, -1px); }
-            6%  { filter: brightness(0) invert(1) drop-shadow(2px 0 #7c3aed); transform: translate(0); }
-            8%  { filter: brightness(0) invert(1); transform: translate(-1px, 0); opacity: 0.8; }
+            6%  { filter: brightness(0) invert(1); transform: translate(0); }
+            8%  { filter: brightness(0) invert(1); transform: translate(0); opacity: 0.8; }
             9%  { filter: brightness(0) invert(1); transform: translate(0); opacity: 1; }
-            92% { filter: brightness(0) invert(1); transform: translate(0); }
-            94% { filter: brightness(0) invert(1) drop-shadow(-3px 0 #8b5cf6); transform: translate(-3px, 0); opacity: 0.7; }
-            96% { filter: brightness(0) invert(1); transform: translate(2px, 1px); opacity: 1; }
-            98% { filter: brightness(0) invert(1) drop-shadow(2px 0 #c4b5fd); transform: translate(0); }
+            94% { filter: brightness(0) invert(1); transform: translate(0); }
+            96% { filter: brightness(0) invert(1) drop-shadow(-3px 0 #8b5cf6); transform: translate(-3px, 0); opacity: 0.7; }
+            98% { filter: brightness(0) invert(1); transform: translate(0); opacity: 1; }
             100%{ filter: brightness(0) invert(1); transform: translate(0); }
         }
         .lm-brand-name {
-            font-size: 1.7rem;
-            font-weight: 800;
-            letter-spacing: 0.06em;
-            background: linear-gradient(135deg, #e9d5ff, #c4b5fd, #a78bfa);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
+            font-size: 3.5rem;
+            font-weight: 900;
+            letter-spacing: 0.08em;
+            color: #fff;
+            text-shadow: 0 0 40px rgba(167,139,250,0.4);
+            line-height: 1;
         }
         .lm-brand-sub {
-            font-size: 0.75rem;
-            color: rgba(255, 255, 255, 0.85);
-            margin-top: -0.6rem;
-            letter-spacing: 0.1em;
-            text-transform: uppercase;
+            font-size: 0.9rem;
             font-weight: 600;
+            letter-spacing: 0.22em;
+            text-transform: uppercase;
+            color: rgba(196,181,253,0.6);
             text-align: center;
+        }
+        .lm-brand-divider {
+            width: 60px;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, rgba(167,139,250,0.5), transparent);
+            border-radius: 2px;
+        }
+
+        /* Right: Form panel — DARKER than background */
+        .lm-form-panel {
+            width: 520px;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(5, 2, 15, 0.65);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-left: 1px solid rgba(139,92,246,0.15);
+            padding: 4rem 3.5rem;
+        }
+        .lm-form-inner {
+            width: 100%;
+        }
+        .lm-form-title {
+            font-size: 1.6rem;
+            font-weight: 800;
+            color: #fff;
+            margin-bottom: 0.4rem;
+        }
+        .lm-form-desc {
+            font-size: 0.85rem;
+            color: rgba(196,181,253,0.5);
+            margin-bottom: 2.5rem;
+            letter-spacing: 0.02em;
         }
 
         /* Inputs */
-        .lm-field {
-            margin-bottom: 1.2rem;
-        }
+        .lm-field { margin-bottom: 1.3rem; }
         .lm-field label {
-            display: flex;
-            align-items: center;
-            gap: 0.4rem;
-            font-size: 0.8rem;
+            display: block;
+            font-size: 0.75rem;
             font-weight: 700;
-            color: rgba(196,181,253,0.7);
+            color: rgba(196,181,253,0.6);
             text-transform: uppercase;
-            letter-spacing: 0.08em;
+            letter-spacing: 0.1em;
             margin-bottom: 0.5rem;
         }
-        .lm-input-wrap {
-            position: relative;
-        }
+        .lm-input-wrap { position: relative; }
         .lm-input-icon {
             position: absolute;
             left: 1rem;
             top: 50%;
             transform: translateY(-50%);
-            color: rgba(139,92,246,0.6);
-            font-size: 1.1rem;
+            color: rgba(139,92,246,0.5);
+            font-size: 1rem;
             pointer-events: none;
         }
         .lm-input {
@@ -168,18 +177,18 @@ export const render = (onLogin) => {
             padding: 0.95rem 1rem 0.95rem 2.8rem;
             background: rgba(255,255,255,0.05);
             border: 1px solid rgba(139,92,246,0.2);
-            border-radius: 14px;
+            border-radius: 12px;
             color: #e9d5ff;
-            font-size: 1rem;
+            font-size: 0.95rem;
             font-family: 'Inter', sans-serif;
             transition: all 0.25s ease;
             outline: none;
         }
-        .lm-input::placeholder { color: rgba(196,181,253,0.3); }
+        .lm-input::placeholder { color: rgba(196,181,253,0.25); }
         .lm-input:focus {
             background: rgba(139,92,246,0.08);
-            border-color: rgba(139,92,246,0.6);
-            box-shadow: 0 0 0 4px rgba(124,58,237,0.15), 0 0 20px rgba(139,92,246,0.1);
+            border-color: rgba(139,92,246,0.5);
+            box-shadow: 0 0 0 3px rgba(124,58,237,0.12);
             color: #fff;
         }
 
@@ -188,23 +197,25 @@ export const render = (onLogin) => {
             display: none;
             align-items: center;
             gap: 0.5rem;
-            background: rgba(239,68,68,0.1);
-            border: 1px solid rgba(239,68,68,0.3);
+            background: rgba(239,68,68,0.08);
+            border: 1px solid rgba(239,68,68,0.25);
             border-radius: 10px;
-            padding: 0.75rem 1rem;
+            padding: 0.7rem 1rem;
             margin-bottom: 1.2rem;
             color: #fca5a5;
-            font-size: 0.9rem;
+            font-size: 0.85rem;
             font-weight: 500;
+        }
+        .lm-error.visible {
+            display: flex;
             animation: lm-shake 0.4s ease;
         }
-        .lm-error.visible { display: flex; }
         @keyframes lm-shake {
             0%,100% { transform: translateX(0); }
-            20%     { transform: translateX(-8px); }
-            40%     { transform: translateX(8px); }
-            60%     { transform: translateX(-5px); }
-            80%     { transform: translateX(5px); }
+            20%      { transform: translateX(-6px); }
+            40%      { transform: translateX(6px); }
+            60%      { transform: translateX(-4px); }
+            80%      { transform: translateX(4px); }
         }
 
         /* Button */
@@ -212,7 +223,7 @@ export const render = (onLogin) => {
             width: 100%;
             padding: 1rem;
             border: none;
-            border-radius: 14px;
+            border-radius: 12px;
             background: linear-gradient(135deg, #7c3aed, #6d28d9);
             color: white;
             font-size: 1rem;
@@ -222,28 +233,23 @@ export const render = (onLogin) => {
             cursor: pointer;
             position: relative;
             overflow: hidden;
-            box-shadow: 0 6px 24px rgba(124,58,237,0.4);
+            box-shadow: 0 6px 24px rgba(124,58,237,0.35);
             transition: all 0.25s ease;
             margin-top: 0.5rem;
         }
         .lm-btn:hover:not(:disabled) {
             transform: translateY(-2px);
-            box-shadow: 0 12px 32px rgba(124,58,237,0.55);
+            box-shadow: 0 10px 30px rgba(124,58,237,0.5);
             background: linear-gradient(135deg, #8b5cf6, #7c3aed);
         }
-        .lm-btn:active:not(:disabled) {
-            transform: translateY(0);
-        }
-        .lm-btn:disabled {
-            opacity: 0.7;
-            cursor: not-allowed;
-        }
+        .lm-btn:active:not(:disabled) { transform: translateY(0); }
+        .lm-btn:disabled { opacity: 0.6; cursor: not-allowed; }
         .lm-btn::after {
             content: '';
             position: absolute;
             top: 0; left: -100%;
             width: 60%; height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent);
             transform: skewX(-20deg);
             transition: left 0s;
         }
@@ -251,8 +257,6 @@ export const render = (onLogin) => {
             left: 160%;
             transition: left 0.6s ease;
         }
-
-        /* Success state */
         .lm-btn.success {
             background: linear-gradient(135deg, #059669, #047857);
             box-shadow: 0 6px 24px rgba(5,150,105,0.4);
@@ -260,65 +264,70 @@ export const render = (onLogin) => {
     `;
     document.head.appendChild(style);
 
+    const ITEM = '<span class="lm-marquee-item"><img src="/logo.png?v=3" class="lm-marquee-logo" alt="">LM | GR\u00c1FICA</span>';
+    const ROW  = `<div class="lm-marquee-row">${ITEM.repeat(30)}</div>`;
+
     container.innerHTML = `
-        <div class="lm-login-bg">
+        <div class="lm-bg">
+            <!-- Marquee across full 1920x1080 -->
             <div class="lm-marquee-wrap">
-                ${ Array(18).fill(`<div class="lm-marquee-row">${ Array(30).fill('<span class="lm-marquee-item"><img src="/logo.png?v=3" class="lm-marquee-logo" alt="">LM | GR\u00c1FICA</span>').join('') }</div>`).join('') }
+                ${ROW.repeat(18)}
             </div>
 
-            <div class="lm-login-card">
-                <div class="lm-logo-wrap">
+            <!-- Desktop split layout -->
+            <div class="lm-layout">
+
+                <!-- LEFT: Branding -->
+                <div class="lm-brand-panel">
                     <img src="/logo.png?v=3" alt="LM Logo" class="lm-logo-img">
                     <div class="lm-brand-name">LM | PASSO</div>
-                    <div class="lm-brand-sub">SISTEMA DE GESTÃO LM | GRÁFICA</div>
+                    <div class="lm-brand-divider"></div>
+                    <div class="lm-brand-sub">Sistema de Gestão LM | Gráfica</div>
                 </div>
 
-                <form id="lm-login-form">
-                    <div class="lm-field">
-                        <label>
-                            <ion-icon name="person"></ion-icon> Usuário
-                        </label>
-                        <div class="lm-input-wrap">
-                            <ion-icon name="person-outline" class="lm-input-icon"></ion-icon>
-                            <input type="text" id="lm-username" class="lm-input" placeholder="Digite seu usuário" autocomplete="username" required>
-                        </div>
-                    </div>
+                <!-- RIGHT: Dark form panel -->
+                <div class="lm-form-panel">
+                    <div class="lm-form-inner">
+                        <div class="lm-form-title">Bem-vindo</div>
+                        <div class="lm-form-desc">Faça login para continuar</div>
 
-                    <div class="lm-field">
-                        <label>
-                            <ion-icon name="lock-closed"></ion-icon> Senha
-                        </label>
-                        <div class="lm-input-wrap">
-                            <ion-icon name="lock-closed-outline" class="lm-input-icon"></ion-icon>
-                            <input type="password" id="lm-password" class="lm-input" placeholder="Digite sua senha" autocomplete="current-password" required>
-                        </div>
+                        <form id="lm-login-form">
+                            <div class="lm-field">
+                                <label>Usuário</label>
+                                <div class="lm-input-wrap">
+                                    <ion-icon name="person-outline" class="lm-input-icon"></ion-icon>
+                                    <input type="text" id="lm-username" class="lm-input" placeholder="Digite seu usuário" autocomplete="username" required>
+                                </div>
+                            </div>
+                            <div class="lm-field">
+                                <label>Senha</label>
+                                <div class="lm-input-wrap">
+                                    <ion-icon name="lock-closed-outline" class="lm-input-icon"></ion-icon>
+                                    <input type="password" id="lm-password" class="lm-input" placeholder="Digite sua senha" autocomplete="current-password" required>
+                                </div>
+                            </div>
+                            <div id="lm-error" class="lm-error">
+                                <ion-icon name="alert-circle"></ion-icon>
+                                <span id="lm-error-text">Usuário ou senha incorretos</span>
+                            </div>
+                            <button type="submit" id="lm-submit" class="lm-btn">Entrar</button>
+                        </form>
                     </div>
-
-                    <div id="lm-error" class="lm-error">
-                        <ion-icon name="alert-circle"></ion-icon>
-                        <span id="lm-error-text">Usuário ou senha incorretos</span>
-                    </div>
-
-                    <button type="submit" id="lm-submit" class="lm-btn">
-                        Entrar
-                    </button>
-                </form>
+                </div>
             </div>
         </div>
     `;
 
-    const form = container.querySelector('#lm-login-form');
-    const btn = container.querySelector('#lm-submit');
-    const errorBox = container.querySelector('#lm-error');
+    const form      = container.querySelector('#lm-login-form');
+    const btn       = container.querySelector('#lm-submit');
+    const errorBox  = container.querySelector('#lm-error');
     const errorText = container.querySelector('#lm-error-text');
 
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
-
         const username = container.querySelector('#lm-username').value.trim();
         const password = container.querySelector('#lm-password').value;
 
-        // Hide error, set loading state
         errorBox.classList.remove('visible');
         btn.disabled = true;
         btn.textContent = 'Entrando...';
@@ -329,7 +338,6 @@ export const render = (onLogin) => {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ username, password })
             });
-
             const data = await response.json();
 
             if (response.ok) {
