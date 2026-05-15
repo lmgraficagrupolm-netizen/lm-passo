@@ -97,28 +97,19 @@ export const render = (onLogin) => {
             align-items: center;
             justify-content: center;
         }
-        .lm-logo-ring::before {
-            content: '';
-            position: absolute;
-            width: 90px; height: 90px;
-            border-radius: 50%;
-            background: conic-gradient(from 0deg, #7c3aed, #a78bfa, #7c3aed);
-            animation: lm-spin 4s linear infinite;
-            padding: 3px;
-        }
-        @keyframes lm-spin {
-            to { transform: rotate(360deg); }
-        }
         .lm-logo-img {
             position: relative;
             z-index: 2;
-            width: 80px; height: 80px;
-            border-radius: 20px;
+            width: 100px; height: 100px;
             object-fit: contain;
-            background: #1a0e3a;
-            padding: 10px;
-            box-shadow: 0 8px 32px rgba(124,58,237,0.4);
-            border: 2px solid rgba(139,92,246,0.5);
+            /* Turn white logo into dark purple #1a0e3a */
+            filter: invert(1) sepia(1) saturate(4) hue-rotate(240deg) brightness(0.25);
+            drop-shadow: 0 0 20px rgba(124,58,237,0.5);
+            animation: lm-logo-pulse 3s ease-in-out infinite;
+        }
+        @keyframes lm-logo-pulse {
+            0%, 100% { filter: invert(1) sepia(1) saturate(4) hue-rotate(240deg) brightness(0.25) drop-shadow(0 0 12px rgba(139,92,246,0.3)); }
+            50%       { filter: invert(1) sepia(1) saturate(4) hue-rotate(240deg) brightness(0.32) drop-shadow(0 0 24px rgba(139,92,246,0.6)); }
         }
         .lm-brand-name {
             font-size: 1.7rem;
