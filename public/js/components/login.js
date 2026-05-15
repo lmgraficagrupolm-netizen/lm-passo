@@ -108,7 +108,7 @@ export const render = (onLogin) => {
             animation: lm-spin 4s linear infinite;
             z-index: 0;
         }
-        /* White halo to separate ring from bg */
+        /* Dark purple background circle */
         .lm-logo-ring::after {
             content: '';
             position: absolute;
@@ -121,11 +121,13 @@ export const render = (onLogin) => {
             to { transform: rotate(360deg); }
         }
         .lm-logo-img {
-            position: relative;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
             z-index: 2;
-            width: 68px; height: 68px;
+            width: 64px; height: 64px;
             object-fit: contain;
-            border-radius: 0;
         }
         .lm-brand-name {
             font-size: 1.7rem;
