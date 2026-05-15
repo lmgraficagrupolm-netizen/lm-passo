@@ -1,4 +1,4 @@
-export const render = () => {
+const renderDefault = () => {
     const user = JSON.parse(localStorage.getItem('user') || '{}');
     const clientId = user.client_id;
     const container = document.createElement('div');
@@ -274,4 +274,434 @@ export const render = () => {
 
     loadFinancial();
     return container;
+};
+
+
+﻿const renderArena = () => {
+    const user = JSON.parse(localStorage.getItem('user') || '{}');
+    const clientId = user.client_id;
+    const container = document.createElement('div');
+    
+    // Premium Fintech Orange Theme CSS
+    const style = document.createElement('style');
+    style.innerHTML = `
+        .arena-dashboard-header {
+            background: linear-gradient(135deg, #1e1b4b, #0f172a);
+            border-radius: 24px;
+            padding: 2.5rem;
+            color: white;
+            margin-bottom: -3rem;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 20px 40px -10px rgba(0,0,0,0.3);
+        }
+        .arena-dashboard-header::before {
+            content: '';
+            position: absolute;
+            top: -50%; right: -10%;
+            width: 300px; height: 300px;
+            background: radial-gradient(circle, rgba(249, 115, 22, 0.4) 0%, transparent 70%);
+            border-radius: 50%;
+            filter: blur(40px);
+            pointer-events: none;
+        }
+        .arena-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.8);
+            border-radius: 20px;
+            box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.08), 0 4px 6px -4px rgba(0, 0, 0, 0.04);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            overflow: hidden;
+            position: relative;
+        }
+        .arena-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px -5px rgba(249, 115, 22, 0.15);
+            border-color: rgba(249, 115, 22, 0.3);
+        }
+        .arena-card-main {
+            background: linear-gradient(135deg, #f97316, #ea580c);
+            color: white;
+            border: none;
+            box-shadow: 0 15px 35px -5px rgba(249, 115, 22, 0.4);
+        }
+        .arena-card-main:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 25px 45px -5px rgba(249, 115, 22, 0.5);
+        }
+        .arena-filter-container {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(16px);
+            border-radius: 16px;
+            padding: 1.25rem;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.04);
+            border: 1px solid rgba(255,255,255,0.6);
+            margin-bottom: 2rem;
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            position: relative;
+            z-index: 10;
+        }
+        .arena-filter {
+            flex: 1;
+            min-width: 150px;
+            padding: 0.8rem 1.2rem;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            font-size: 0.95rem;
+            background: white;
+            color: #1e293b;
+            transition: all 0.2s;
+            font-weight: 500;
+        }
+        .arena-filter:focus {
+            outline: none;
+            border-color: #f97316;
+            box-shadow: 0 0 0 4px rgba(249, 115, 22, 0.1);
+        }
+        .arena-table-container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.03);
+            border: 1px solid #f1f5f9;
+            overflow: hidden;
+        }
+        .arena-table-row {
+            transition: all 0.2s ease;
+            border-bottom: 1px solid #f1f5f9;
+        }
+        .arena-table-row:hover td {
+            background-color: #fff7ed !important;
+        }
+        .arena-pill {
+            background: #fff7ed;
+            color: #ea580c;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            border: 1px solid #fed7aa;
+            display: inline-block;
+            margin-top: 4px;
+        }
+    `;
+    document.head.appendChild(style);
+
+    container.innerHTML = `
+        <!-- Fintech Header -->
+        <div class="arena-dashboard-header">
+            <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+                <div>
+                    <h2 style="font-size: 2.2rem; font-weight: 900; margin:0; letter-spacing: -0.02em; display:flex; align-items:center; gap:12px;">
+                        <ion-icon name="analytics"></ion-icon> Relatório Financeiro
+                    </h2>
+                    <p style="color: #94a3b8; margin: 0.5rem 0 0 0; font-size: 1.05rem;">Acompanhe o faturamento e os pedidos da sua conta.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Summary Cards -->
+        <div style="display:grid; grid-template-columns: 1.2fr 1fr 1fr; gap: 1.5rem; padding: 0 1.5rem; position: relative; z-index: 5;">
+            
+            <div class="arena-card arena-card-main" style="padding: 2rem; display:flex; flex-direction:column; justify-content:space-between;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 1rem;">
+                    <span style="font-size: 1rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; opacity: 0.9;">Valor Faturado</span>
+                    <div style="background: rgba(255,255,255,0.2); width: 45px; height: 45px; border-radius: 12px; display:flex; align-items:center; justify-content:center; font-size: 1.5rem;">
+                        <ion-icon name="wallet"></ion-icon>
+                    </div>
+                </div>
+                <div id="cf-total-value" style="font-size: 2.8rem; font-weight: 900; letter-spacing: -0.03em;">R$ 0,00</div>
+            </div>
+            
+            <div class="arena-card" style="padding: 1.8rem; display:flex; flex-direction:column; justify-content:center;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 0.8rem;">
+                    <span style="font-size: 0.9rem; color: #64748b; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em;">Total de Pedidos</span>
+                    <div style="background: #fff7ed; color: #f97316; width: 40px; height: 40px; border-radius: 10px; display:flex; align-items:center; justify-content:center; font-size: 1.2rem;">
+                        <ion-icon name="receipt"></ion-icon>
+                    </div>
+                </div>
+                <div id="cf-total-orders" style="font-size: 2.2rem; font-weight: 800; color: #0f172a;">-</div>
+            </div>
+
+            <div class="arena-card" style="padding: 1.8rem; display:flex; flex-direction:column; justify-content:center;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 0.8rem;">
+                    <span style="font-size: 0.9rem; color: #64748b; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em;">Descontos Aplicados</span>
+                    <div style="background: #fef2f2; color: #ef4444; width: 40px; height: 40px; border-radius: 10px; display:flex; align-items:center; justify-content:center; font-size: 1.2rem;">
+                        <ion-icon name="pricetag"></ion-icon>
+                    </div>
+                </div>
+                <div id="cf-total-discount" style="font-size: 2.2rem; font-weight: 800; color: #ef4444;">R$ 0,00</div>
+            </div>
+
+        </div>
+
+        <div style="margin-top: 3rem;">
+            <!-- Filters -->
+            <div class="arena-filter-container">
+                <div style="flex:100%; margin-bottom:0.5rem; font-weight:700; color:#475569; font-size:0.9rem; text-transform:uppercase; letter-spacing:0.05em;"><ion-icon name="funnel"></ion-icon> Filtros de Busca</div>
+                <input type="text" id="cf-filter-search" class="arena-filter" placeholder="🔍 Buscar por produto ou cliente..." style="flex:2; min-width:250px;">
+                <select id="cf-filter-event" class="arena-filter">
+                    <option value="">🏷️ Todos os Eventos</option>
+                </select>
+                <select id="cf-filter-month" class="arena-filter">
+                    <option value="">📅 Todos os Meses</option>
+                </select>
+                <input type="number" id="cf-filter-min" class="arena-filter" placeholder="R$ Mínimo" step="0.01" min="0">
+                <input type="number" id="cf-filter-max" class="arena-filter" placeholder="R$ Máximo" step="0.01" min="0">
+            </div>
+
+            <div id="cf-monthly-container" style="display:flex; flex-direction:column; gap:2.5rem;"></div>
+        </div>
+    `;
+
+    const monthNames = [
+        'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
+        'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
+    ];
+
+    let allData = [];
+
+    const formatCurrency = (val) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(val);
+
+    const removeAccents = (str) => str.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+
+    const applyFilters = () => {
+        const search = removeAccents(container.querySelector('#cf-filter-search').value.toLowerCase().trim());
+        const monthFilter = container.querySelector('#cf-filter-month').value;
+        const minVal = parseFloat(container.querySelector('#cf-filter-min').value) || 0;
+        const maxVal = parseFloat(container.querySelector('#cf-filter-max').value) || Infinity;
+        const eventFilter = container.querySelector('#cf-filter-event').value;
+
+        const filtered = allData.filter(s => {
+            if (search) {
+                const haystack = removeAccents(`${s.products_summary || ''} ${s.description || ''} ${s.payment_method || ''} ${s.event_name || ''}`.toLowerCase());
+                if (!haystack.includes(search)) return false;
+            }
+            if (monthFilter) {
+                const d = window.parseDBDate(s.created_at);
+                const key = `${d.getFullYear()}-${String(d.getMonth()).padStart(2, '0')}`;
+                if (key !== monthFilter) return false;
+            }
+            if (eventFilter && s.event_name !== eventFilter) return false;
+            const val = s.total_value || 0;
+            if (val < minVal || val > maxVal) return false;
+            return true;
+        });
+
+        renderData(filtered);
+    };
+
+    const renderData = (data) => {
+        let totalGeral = 0;
+        let totalDiscount = 0;
+
+        const months = {};
+        data.forEach(s => {
+            const d = window.parseDBDate(s.created_at);
+            const key = `${d.getFullYear()}-${String(d.getMonth()).padStart(2, '0')}`;
+            if (!months[key]) {
+                months[key] = {
+                    label: `${monthNames[d.getMonth()]} ${d.getFullYear()}`,
+                    year: d.getFullYear(),
+                    month: d.getMonth(),
+                    items: [],
+                    total: 0
+                };
+            }
+            months[key].items.push(s);
+            months[key].total += (s.total_value || 0);
+            totalGeral += (s.total_value || 0);
+            totalDiscount += (s.discount_value || 0);
+        });
+
+        const sortedKeys = Object.keys(months).sort((a, b) => b.localeCompare(a));
+        const monthlyContainer = container.querySelector('#cf-monthly-container');
+
+        if (sortedKeys.length === 0) {
+            monthlyContainer.innerHTML = `
+                <div style="text-align:center; background:white; border:1px dashed #cbd5e1; border-radius:24px; padding:4rem 2rem; box-shadow:0 10px 30px rgba(0,0,0,0.02);">
+                    <ion-icon name="search-outline" style="font-size:4rem; color:#94a3b8; margin-bottom:1rem;"></ion-icon>
+                    <p style="color:#475569; font-size:1.2rem; font-weight:600; margin:0;">Nenhuma transação encontrada</p>
+                    <p style="color:#94a3b8; font-size:0.95rem; margin-top:0.5rem;">Tente ajustar os filtros acima.</p>
+                </div>`;
+        } else {
+            monthlyContainer.innerHTML = sortedKeys.map(key => {
+                const m = months[key];
+                const rows = m.items.map(s => `
+                    <tr class="arena-table-row">
+                        <td style="padding:1.2rem 1.5rem; color:#475569; font-weight:600; font-size:0.95rem;">${window.parseDBDate(s.created_at).toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' })}</td>
+                        <td style="padding:1.2rem 1.5rem; font-size:0.95rem; color:#1e293b;">
+                            ${s.products_summary || '-'}
+                            ${s.event_name ? `<br><span class="arena-pill">🏷️ ${s.event_name}</span>` : ''}
+                        </td>
+                        <td style="padding:1.2rem 1.5rem; font-size:0.95rem; color:#64748b; max-width:250px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${(s.description || '').replace(/"/g, '&quot;')}">${s.description || '-'}</td>
+                        <td style="padding:1.2rem 1.5rem; font-weight:800; color:#0f172a; font-size:1.1rem;">${formatCurrency(s.total_value || 0)}</td>
+                        <td style="padding:1.2rem 1.5rem; color:${(s.discount_value || 0) > 0 ? '#ef4444' : '#94a3b8'}; font-weight:${(s.discount_value || 0) > 0 ? '700' : 'normal'}">${(s.discount_value || 0) > 0 ? `- ${formatCurrency(s.discount_value)}` : '-'}</td>
+                        <td style="padding:1.2rem 1.5rem; color:#475569; font-weight:600;">
+                            <span style="background:#f1f5f9; padding:4px 10px; border-radius:8px;">${s.payment_method || '-'}</span>
+                        </td>
+                    </tr>`
+                ).join('');
+
+                // Payment method breakdown
+                const byMethod = {};
+                m.items.forEach(s => {
+                    const pm = s.payment_method || 'Outros';
+                    if (!byMethod[pm]) byMethod[pm] = { count: 0, total: 0 };
+                    byMethod[pm].count++;
+                    byMethod[pm].total += (s.total_value || 0);
+                });
+                const methodKeys = Object.keys(byMethod).sort();
+                const methodRows = methodKeys.map(pm => `
+                    <tr style="background:#f8fafc;">
+                        <td colspan="3" style="text-align:right; font-size:0.95rem; color:#64748b; padding:12px 24px;">
+                            💳 <b>${pm}</b> <span style="font-weight:500;">(${byMethod[pm].count} pedido${byMethod[pm].count > 1 ? 's' : ''})</span>
+                        </td>
+                        <td style="font-weight:800; color:#1e293b; font-size:1.05rem; padding:12px 24px;">${formatCurrency(byMethod[pm].total)}</td>
+                        <td colspan="2"></td>
+                    </tr>
+                `).join('');
+
+                // Event breakdown inside the month
+                const byEvent = {};
+                m.items.forEach(s => {
+                    if (s.event_name) {
+                        if (!byEvent[s.event_name]) byEvent[s.event_name] = { count: 0, total: 0 };
+                        byEvent[s.event_name].count++;
+                        byEvent[s.event_name].total += (s.total_value || 0);
+                    }
+                });
+                const eventKeys = Object.keys(byEvent).sort();
+                let eventRows = '';
+                if (eventKeys.length > 0) {
+                    eventRows = `<tr style="background:#fff7ed; border-top:1px solid #fed7aa;">
+                        <td colspan="6" style="padding:12px 24px; font-size:0.85rem; font-weight:800; color:#c2410c; text-transform:uppercase; letter-spacing:0.05em;">🏷️ Resumo por Evento:</td>
+                    </tr>` + eventKeys.map(evt => `
+                        <tr style="background:#fffaf5;">
+                            <td colspan="3" style="text-align:right; font-size:0.95rem; color:#9a3412; padding:10px 24px; font-weight:600;">
+                                ${evt} <span style="color:#fb923c">(${byEvent[evt].count} transações)</span>
+                            </td>
+                            <td style="font-weight:800; color:#ea580c; font-size:1.05rem; padding:10px 24px;">${formatCurrency(byEvent[evt].total)}</td>
+                            <td colspan="2"></td>
+                        </tr>
+                    `).join('');
+                }
+
+                const now = new Date();
+                const isCurrentMonth = m.year === now.getFullYear() && m.month === now.getMonth();
+                const closingLabel = isCurrentMonth ? 'Parcial do Mês' : 'Fechamento';
+                const headerBg = isCurrentMonth ? '#f97316' : '#1e293b';
+
+                return `
+                <div class="arena-table-container">
+                    <div style="display:flex; justify-content:space-between; align-items:center; padding:1.5rem 2rem; background:${headerBg}; color:white;">
+                        <h3 style="margin:0; font-size:1.3rem; font-weight:800; letter-spacing:0.02em;">📅 ${m.label}</h3>
+                        <span style="font-size:0.95rem; font-weight:600; background:rgba(255,255,255,0.15); padding:6px 14px; border-radius:20px;">${m.items.length} pedidos</span>
+                    </div>
+                    <div style="overflow-x:auto;">
+                        <table style="width:100%; border-collapse:collapse; min-width:800px;">
+                            <thead style="background:#f8fafc; border-bottom:2px solid #e2e8f0;">
+                                <tr>
+                                    <th style="padding:1.2rem 1.5rem; text-align:left; color:#64748b; font-weight:800; font-size:0.85rem; text-transform:uppercase; letter-spacing:0.05em;">Data</th>
+                                    <th style="padding:1.2rem 1.5rem; text-align:left; color:#64748b; font-weight:800; font-size:0.85rem; text-transform:uppercase; letter-spacing:0.05em;">Produtos / Evento</th>
+                                    <th style="padding:1.2rem 1.5rem; text-align:left; color:#64748b; font-weight:800; font-size:0.85rem; text-transform:uppercase; letter-spacing:0.05em;">Descrição</th>
+                                    <th style="padding:1.2rem 1.5rem; text-align:left; color:#64748b; font-weight:800; font-size:0.85rem; text-transform:uppercase; letter-spacing:0.05em;">Valor</th>
+                                    <th style="padding:1.2rem 1.5rem; text-align:left; color:#64748b; font-weight:800; font-size:0.85rem; text-transform:uppercase; letter-spacing:0.05em;">Desconto</th>
+                                    <th style="padding:1.2rem 1.5rem; text-align:left; color:#64748b; font-weight:800; font-size:0.85rem; text-transform:uppercase; letter-spacing:0.05em;">Pagamento</th>
+                                </tr>
+                            </thead>
+                            <tbody>${rows}</tbody>
+                            <tfoot>
+                                ${methodRows}
+                                ${eventRows}
+                                <tr style="background:#0f172a;">
+                                    <td colspan="3" style="text-align:right; font-size:1.15rem; color:#94a3b8; font-weight:700; padding:20px 24px;">${closingLabel}:</td>
+                                    <td style="font-size:1.4rem; font-weight:900; color:#38bdf8; padding:20px 24px;">${formatCurrency(m.total)}</td>
+                                    <td colspan="2"></td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </div>`;
+            }).join('');
+        }
+
+        // Summary cards
+        container.querySelector('#cf-total-orders').textContent = data.length;
+        container.querySelector('#cf-total-value').textContent = formatCurrency(totalGeral);
+        container.querySelector('#cf-total-discount').textContent = formatCurrency(totalDiscount);
+    };
+
+    const loadFinancial = async () => {
+        if (!clientId) {
+            container.querySelector('#cf-monthly-container').innerHTML = `
+                <div style="text-align:center; background:#fef2f2; border:1px dashed #fca5a5; border-radius:20px; padding:4rem 2rem;">
+                    <ion-icon name="warning" style="font-size:4rem; color:#ef4444; margin-bottom:1rem;"></ion-icon>
+                    <p style="color:#b91c1c; font-size:1.2rem; font-weight:700; margin:0;">Conta n├úo vinculada a um cliente.</p>
+                    <p style="color:#dc2626; margin-top:0.5rem;">Contate o administrador para acesso.</p>
+                </div>`;
+            return;
+        }
+
+        try {
+            const res = await fetch(`/api/reports/client-financial/${clientId}`);
+            const { data } = await res.json();
+            allData = data || [];
+
+            // Populate month and event filters
+            const monthSet = new Set();
+            const eventSet = new Set();
+            allData.forEach(s => {
+                const d = window.parseDBDate(s.created_at);
+                const key = `${d.getFullYear()}-${String(d.getMonth()).padStart(2, '0')}`;
+                monthSet.add(key);
+                if (s.event_name) eventSet.add(s.event_name);
+            });
+            const monthSelect = container.querySelector('#cf-filter-month');
+            const currentVal = monthSelect.value;
+            monthSelect.innerHTML = '<option value="">📅 Todos os Meses</option>' +
+                [...monthSet].sort((a, b) => b.localeCompare(a)).map(key => {
+                    const [y, m] = key.split('-');
+                    return `<option value="${key}" ${key === currentVal ? 'selected' : ''}>${monthNames[parseInt(m)]} ${y}</option>`;
+                }).join('');
+                
+            const eventSelect = container.querySelector('#cf-filter-event');
+            const currentEvent = eventSelect.value;
+            eventSelect.innerHTML = '<option value="">🏷️ Todos os Eventos</option>' + 
+                [...eventSet].sort().map(e => `<option value="${e}" ${e === currentEvent ? 'selected' : ''}>${e}</option>`).join('');
+
+            applyFilters();
+        } catch (e) {
+            console.error('Erro ao carregar financeiro do cliente:', e);
+            container.querySelector('#cf-monthly-container').innerHTML = `
+                <div style="text-align:center; background:#fef2f2; border:1px dashed #fca5a5; border-radius:20px; padding:4rem 2rem;">
+                    <ion-icon name="alert-circle" style="font-size:4rem; color:#ef4444; margin-bottom:1rem;"></ion-icon>
+                    <p style="color:#b91c1c; font-size:1.2rem; font-weight:700; margin:0;">Erro ao carregar dados financeiros.</p>
+                </div>`;
+        }
+    };
+
+    // Filter event listeners
+    container.querySelector('#cf-filter-event').onchange = applyFilters;
+    container.querySelector('#cf-filter-search').oninput = applyFilters;
+    container.querySelector('#cf-filter-month').onchange = applyFilters;
+    container.querySelector('#cf-filter-min').oninput = applyFilters;
+    container.querySelector('#cf-filter-max').oninput = applyFilters;
+
+    loadFinancial();
+    return container;
+};
+
+
+export const render = () => {
+    const user = JSON.parse(localStorage.getItem('user') || '{}');
+    const isArena = user.username === 'cliente_arena' || (user.name && user.name.toLowerCase().includes('arena')) || user.client_id === 7;
+    
+    if (isArena) {
+        return renderArena();
+    } else {
+        return renderDefault();
+    }
 };
