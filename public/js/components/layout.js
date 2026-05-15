@@ -206,7 +206,7 @@ export const render = (user, onLogout, onNavigate) => {
     container.innerHTML = `
         <div class="sidebar" id="sidebar">
             <div class="sidebar-header" style="display:flex; align-items:center; gap:0.5rem; overflow:hidden; margin-bottom:2rem; padding:0.5rem; border-bottom:1px solid rgba(255,255,255,0.1);">
-                <img src="/logo.png" alt="Logo" style="width:32px; height:32px; border-radius:6px; object-fit:contain; flex-shrink:0;">
+                <img src="/logo.png?v=2" alt="Logo" style="width:32px; height:32px; border-radius:6px; object-fit:contain; flex-shrink:0;">
                 <span class="nav-text" translate="no" style="white-space:nowrap; font-size:1.1rem; font-weight:800; letter-spacing:-0.02em;">LM | PASSO</span>
             </div>
             <ul class="nav-links">

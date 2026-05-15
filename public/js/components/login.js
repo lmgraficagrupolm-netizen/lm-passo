@@ -1,10 +1,10 @@
-﻿export const render = (onLogin) => {
+export const render = (onLogin) => {
     const container = document.createElement('div');
     container.className = 'login-container';
     container.innerHTML = `
         <div class="login-box">
             <div style="text-align:center; margin-bottom:1rem;">
-                <img src="/logo.png" alt="Logo" style="width:100px; height:100px; object-fit:contain; border-radius:16px; background:#2e1065; padding:10px;">
+                <img src="/logo.png?v=2" alt="Logo" style="width:100px; height:100px; object-fit:contain; border-radius:16px; background:#2e1065; padding:10px;">
             </div>
             <h2>LM | PASSO</h2>
             <form id="login-form">
