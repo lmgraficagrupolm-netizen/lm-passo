@@ -48,15 +48,42 @@ export const render = (onLogin) => {
             50%       { transform: translateY(-30px) scale(1.05); }
         }
 
-        /* Grid overlay */
-        .lm-grid {
+        /* Scrolling text background */
+        .lm-marquee-wrap {
             position: absolute;
             inset: 0;
-            background-image:
-                linear-gradient(rgba(139,92,246,0.06) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(139,92,246,0.06) 1px, transparent 1px);
-            background-size: 40px 40px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-around;
             pointer-events: none;
+            z-index: 0;
+        }
+        .lm-marquee-row {
+            display: flex;
+            white-space: nowrap;
+            width: max-content;
+            animation: lm-scroll 18s linear infinite;
+        }
+        .lm-marquee-row:nth-child(even) {
+            animation-direction: reverse;
+            animation-duration: 24s;
+        }
+        .lm-marquee-row:nth-child(3n) {
+            animation-duration: 20s;
+        }
+        .lm-marquee-item {
+            font-size: 0.9rem;
+            font-weight: 800;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            color: rgba(196, 181, 253, 0.07);
+            padding: 0 2.5rem;
+            user-select: none;
+        }
+        @keyframes lm-scroll {
+            from { transform: translateX(0); }
+            to   { transform: translateX(-50%); }
         }
 
         /* Card */
@@ -259,7 +286,16 @@ export const render = (onLogin) => {
             <div class="lm-orb lm-orb-1"></div>
             <div class="lm-orb lm-orb-2"></div>
             <div class="lm-orb lm-orb-3"></div>
-            <div class="lm-grid"></div>
+            <div class="lm-marquee-wrap">
+                <div class="lm-marquee-row">${'<span class="lm-marquee-item">LM | GRÁFICA</span>'.repeat(20)}</div>
+                <div class="lm-marquee-row">${'<span class="lm-marquee-item">LM | GRÁFICA</span>'.repeat(20)}</div>
+                <div class="lm-marquee-row">${'<span class="lm-marquee-item">LM | GRÁFICA</span>'.repeat(20)}</div>
+                <div class="lm-marquee-row">${'<span class="lm-marquee-item">LM | GRÁFICA</span>'.repeat(20)}</div>
+                <div class="lm-marquee-row">${'<span class="lm-marquee-item">LM | GRÁFICA</span>'.repeat(20)}</div>
+                <div class="lm-marquee-row">${'<span class="lm-marquee-item">LM | GRÁFICA</span>'.repeat(20)}</div>
+                <div class="lm-marquee-row">${'<span class="lm-marquee-item">LM | GRÁFICA</span>'.repeat(20)}</div>
+                <div class="lm-marquee-row">${'<span class="lm-marquee-item">LM | GRÁFICA</span>'.repeat(20)}</div>
+            </div>
 
             <div class="lm-login-card">
                 <div class="lm-logo-wrap">
