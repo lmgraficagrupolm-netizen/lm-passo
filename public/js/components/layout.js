@@ -4,17 +4,17 @@ export const render = (user, onLogout, onNavigate) => {
 
     // Apply role-based theme
     if (user.role === 'producao') {
-        document.documentElement.style.setProperty('--sidebar-bg', '#1a3a1a');
-        document.documentElement.style.setProperty('--primary', '#22c55e');
-        document.documentElement.style.setProperty('--primary-hover', '#16a34a');
-        document.documentElement.style.setProperty('--bg-color', '#f0fdf4');
-        document.documentElement.style.setProperty('--border', 'rgba(34,197,94,0.2)');
+        document.documentElement.style.setProperty('--sidebar-bg', '#1e3a5f');
+        document.documentElement.style.setProperty('--primary', '#3b82f6');
+        document.documentElement.style.setProperty('--primary-hover', '#2563eb');
+        document.documentElement.style.setProperty('--bg-color', '#f0f4f8');
+        document.documentElement.style.setProperty('--border', '#c7d8e8');
     } else if (user.role === 'vendedor') {
-        document.documentElement.style.setProperty('--sidebar-bg', '#1a0a00');
-        document.documentElement.style.setProperty('--primary', '#f97316');
-        document.documentElement.style.setProperty('--primary-hover', '#ea580c');
-        document.documentElement.style.setProperty('--bg-color', '#fff7ed');
-        document.documentElement.style.setProperty('--border', 'rgba(249,115,22,0.2)');
+        document.documentElement.style.setProperty('--sidebar-bg', '#7c3aed');
+        document.documentElement.style.setProperty('--primary', '#a78bfa');
+        document.documentElement.style.setProperty('--primary-hover', '#8b5cf6');
+        document.documentElement.style.setProperty('--bg-color', '#faf5ff');
+        document.documentElement.style.setProperty('--border', '#ddd6fe');
     } else if (user.role === 'cliente') {
         document.documentElement.style.setProperty('--sidebar-bg', '#065f46');
         document.documentElement.style.setProperty('--primary', '#10b981');
@@ -22,17 +22,17 @@ export const render = (user, onLogout, onNavigate) => {
         document.documentElement.style.setProperty('--bg-color', '#f0fdf4');
         document.documentElement.style.setProperty('--border', '#a7f3d0');
     } else if (user.username === 'gerente') {
-        document.documentElement.style.setProperty('--sidebar-bg', '#1a0800');
-        document.documentElement.style.setProperty('--primary', '#fb923c');
-        document.documentElement.style.setProperty('--primary-hover', '#f97316');
-        document.documentElement.style.setProperty('--bg-color', '#fff7ed');
-        document.documentElement.style.setProperty('--border', 'rgba(251,146,60,0.2)');
+        document.documentElement.style.setProperty('--sidebar-bg', '#4a044e');
+        document.documentElement.style.setProperty('--primary', '#d946ef');
+        document.documentElement.style.setProperty('--primary-hover', '#c026d3');
+        document.documentElement.style.setProperty('--bg-color', '#fdf4ff');
+        document.documentElement.style.setProperty('--border', '#f5d0fe');
     } else {
-        document.documentElement.style.setProperty('--sidebar-bg', '#1a0a00');
-        document.documentElement.style.setProperty('--primary', '#f97316');
-        document.documentElement.style.setProperty('--primary-hover', '#ea580c');
-        document.documentElement.style.setProperty('--bg-color', '#fff7ed');
-        document.documentElement.style.setProperty('--border', 'rgba(249,115,22,0.18)');
+        document.documentElement.style.setProperty('--sidebar-bg', '#2e1065');
+        document.documentElement.style.setProperty('--primary', '#7c3aed');
+        document.documentElement.style.setProperty('--primary-hover', '#6d28d9');
+        document.documentElement.style.setProperty('--bg-color', '#f5f3ff');
+        document.documentElement.style.setProperty('--border', '#e0d4f5');
     }
 
     // Determine Menu Items based on Role
@@ -175,11 +175,9 @@ export const render = (user, onLogout, onNavigate) => {
 
     if (canSeeFinance) {
         menuItems += `
-        <li class="nav-item nav-item-finance">
-            <a class="nav-link nav-link-finance" id="nav-financial" data-view="financial" title="FINANCEIRO">
-                ${icons.financial}
-                <span class="nav-text" translate="no">FINANCEIRO</span>
-                <span class="finance-tag">$</span>
+        <li class="nav-item">
+            <a class="nav-link" id="nav-financial" data-view="financial" title="FINANCEIRO">
+                ${icons.financial} <span class="nav-text" translate="no">FINANCEIRO</span>
             </a>
         </li>
         <li class="nav-item">
