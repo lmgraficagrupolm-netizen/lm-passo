@@ -106,7 +106,7 @@ export const render = (onLogin) => {
         @keyframes lm-spin {
             to { transform: rotate(360deg); }
         }
-        /* Inner dark circle that holds the logo */
+        /* Inner dark circle — counter-rotates to keep logo still */
         .lm-logo-circle {
             width: 100%;
             height: 100%;
@@ -115,6 +115,10 @@ export const render = (onLogin) => {
             display: flex;
             align-items: center;
             justify-content: center;
+            animation: lm-spin-reverse 4s linear infinite;
+        }
+        @keyframes lm-spin-reverse {
+            to { transform: rotate(-360deg); }
         }
         .lm-logo-img {
             width: 62px; height: 62px;
