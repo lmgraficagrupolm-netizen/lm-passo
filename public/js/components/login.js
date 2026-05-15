@@ -264,7 +264,7 @@ export const render = (onLogin) => {
                 <div class="lm-logo-wrap">
                     <img src="/logo.png?v=3" alt="LM Logo" class="lm-logo-img">
                     <div class="lm-brand-name">LM | PASSO</div>
-                    <div class="lm-brand-sub">Sistema de Gestão</div>
+                    <div class="lm-brand-sub">SISTEMA DE GESTÃO LM | GRÁFICA</div>
                 </div>
 
                 <form id="lm-login-form">
