@@ -10,42 +10,9 @@ export const render = (onLogin) => {
             display: flex;
             align-items: center;
             justify-content: center;
-            background: #0d0a1a;
+            background: linear-gradient(160deg, #0d0920 0%, #1a0a3e 40%, #2e1065 70%, #1a0a3e 100%);
             position: relative;
             overflow: hidden;
-        }
-
-        /* Animated orbs */
-        .lm-orb {
-            position: absolute;
-            border-radius: 50%;
-            filter: blur(80px);
-            opacity: 0.5;
-            pointer-events: none;
-            animation: lm-orb-float 8s ease-in-out infinite;
-        }
-        .lm-orb-1 {
-            width: 500px; height: 500px;
-            background: radial-gradient(circle, #7c3aed, transparent 70%);
-            top: -10%; left: -10%;
-            animation-delay: 0s;
-        }
-        .lm-orb-2 {
-            width: 400px; height: 400px;
-            background: radial-gradient(circle, #4c1d95, transparent 70%);
-            bottom: -10%; right: -5%;
-            animation-delay: -4s;
-        }
-        .lm-orb-3 {
-            width: 250px; height: 250px;
-            background: radial-gradient(circle, #8b5cf6, transparent 70%);
-            top: 50%; left: 60%;
-            animation-delay: -2s;
-            opacity: 0.3;
-        }
-        @keyframes lm-orb-float {
-            0%, 100% { transform: translateY(0px) scale(1); }
-            50%       { transform: translateY(-30px) scale(1.05); }
         }
 
         /* Scrolling text background */
@@ -293,9 +260,6 @@ export const render = (onLogin) => {
 
     container.innerHTML = `
         <div class="lm-login-bg">
-            <div class="lm-orb lm-orb-1"></div>
-            <div class="lm-orb lm-orb-2"></div>
-            <div class="lm-orb lm-orb-3"></div>
             <div class="lm-marquee-wrap">
                 ${ Array(18).fill(`<div class="lm-marquee-row">${ Array(20).fill('<span class="lm-marquee-item"><img src="/logo.png?v=3" class="lm-marquee-logo" alt="">LM | GR\u00c1FICA</span>').join('') }</div>`).join('') }
             </div>
