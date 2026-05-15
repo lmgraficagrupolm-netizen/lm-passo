@@ -105,7 +105,7 @@ export const render = (onLogin) => {
             position: relative;
             z-index: 1;
             border-radius: 26px;
-            background: rgba(5, 2, 18, 0.92);
+            background: rgb(8, 3, 22);
             padding: 3rem 2.8rem;
             width: 100%;
         }
