@@ -295,6 +295,16 @@ export const render = (onLogin) => {
                 <div class="lm-marquee-row">${'<span class="lm-marquee-item">LM | GRÁFICA</span>'.repeat(20)}</div>
                 <div class="lm-marquee-row">${'<span class="lm-marquee-item">LM | GRÁFICA</span>'.repeat(20)}</div>
                 <div class="lm-marquee-row">${'<span class="lm-marquee-item">LM | GRÁFICA</span>'.repeat(20)}</div>
+                <div class="lm-marquee-row">${'<span class="lm-marquee-item">LM | GRÁFICA</span>'.repeat(20)}</div>
+                <div class="lm-marquee-row">${'<span class="lm-marquee-item">LM | GRÁFICA</span>'.repeat(20)}</div>
+                <div class="lm-marquee-row">${'<span class="lm-marquee-item">LM | GRÁFICA</span>'.repeat(20)}</div>
+                <div class="lm-marquee-row">${'<span class="lm-marquee-item">LM | GRÁFICA</span>'.repeat(20)}</div>
+                <div class="lm-marquee-row">${'<span class="lm-marquee-item">LM | GRÁFICA</span>'.repeat(20)}</div>
+                <div class="lm-marquee-row">${'<span class="lm-marquee-item">LM | GRÁFICA</span>'.repeat(20)}</div>
+                <div class="lm-marquee-row">${'<span class="lm-marquee-item">LM | GRÁFICA</span>'.repeat(20)}</div>
+                <div class="lm-marquee-row">${'<span class="lm-marquee-item">LM | GRÁFICA</span>'.repeat(20)}</div>
+                <div class="lm-marquee-row">${'<span class="lm-marquee-item">LM | GRÁFICA</span>'.repeat(20)}</div>
+                <div class="lm-marquee-row">${'<span class="lm-marquee-item">LM | GRÁFICA</span>'.repeat(20)}</div>
             </div>
 
             <div class="lm-login-card">
