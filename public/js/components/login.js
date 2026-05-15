@@ -91,42 +91,36 @@ export const render = (onLogin) => {
             gap: 1.2rem;
             margin-bottom: 2.4rem;
         }
-        /* Outer ring that spins */
-        .lm-logo-ring {
-            width: 90px; height: 90px;
-            border-radius: 50%;
-            background: conic-gradient(from 0deg, #7c3aed, #a78bfa, #c4b5fd, #7c3aed);
-            animation: lm-spin 4s linear infinite;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-shrink: 0;
-            box-shadow: 0 0 24px rgba(124,58,237,0.4);
-        }
-        @keyframes lm-spin {
-            to { transform: rotate(360deg); }
-        }
-        /* Inner dark circle — counter-rotates to keep logo still */
+        /* Logo circle — stays still, centered */
         .lm-logo-circle {
-            width: 78px; height: 78px;
+            position: relative;
+            width: 88px; height: 88px;
             border-radius: 50%;
             background: #1a0e3a;
             display: flex;
             align-items: center;
             justify-content: center;
             flex-shrink: 0;
-            animation: lm-spin-reverse 4s linear infinite;
+            box-shadow: 0 0 28px rgba(124,58,237,0.5);
         }
-        @keyframes lm-spin-reverse {
-            to { transform: rotate(-360deg); }
+        /* Spinning ring as pseudo-element — behind the circle */
+        .lm-logo-circle::before {
+            content: '';
+            position: absolute;
+            inset: -3px;
+            border-radius: 50%;
+            background: conic-gradient(from 0deg, #7c3aed, #a78bfa, #c4b5fd, #7c3aed);
+            animation: lm-spin 4s linear infinite;
+            z-index: -1;
+        }
+        @keyframes lm-spin {
+            to { transform: rotate(360deg); }
         }
         .lm-logo-img {
-            width: 50px; height: 50px;
+            width: 54px; height: 54px;
             object-fit: contain;
             display: block;
-            flex-shrink: 0;
-        }
-        .lm-brand-name {
+        }        .lm-brand-name {
             font-size: 1.7rem;
             font-weight: 800;
             letter-spacing: 0.06em;
@@ -277,10 +271,8 @@ export const render = (onLogin) => {
 
             <div class="lm-login-card">
                 <div class="lm-logo-wrap">
-                    <div class="lm-logo-ring">
-                        <div class="lm-logo-circle">
-                            <img src="/logo.png?v=3" alt="LM Logo" class="lm-logo-img">
-                        </div>
+                    <div class="lm-logo-circle">
+                        <img src="/logo.png?v=3" alt="LM Logo" class="lm-logo-img">
                     </div>
                     <div class="lm-brand-name">LM | PASSO</div>
                     <div class="lm-brand-sub">Sistema de Gestão</div>
