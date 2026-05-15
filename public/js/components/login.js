@@ -102,6 +102,7 @@ export const render = (onLogin) => {
             0%, 100% { opacity: 1;   filter: brightness(0) invert(1) drop-shadow(0 0 8px rgba(255,255,255,0.4)); }
             50%       { opacity: 0.6; filter: brightness(0) invert(1) drop-shadow(0 0 0px rgba(255,255,255,0)); }
         }
+        .lm-brand-name {
             font-size: 1.7rem;
             font-weight: 800;
             letter-spacing: 0.06em;
